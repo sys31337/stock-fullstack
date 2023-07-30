@@ -53,9 +53,9 @@ export default class Main {
     Main.mainWindow.loadURL(startUrl);
 
     // development
-    // if (isDev) {
-    //     Main.mainWindow.webContents.openDevTools();
-    // }
+    if (isDev) {
+        Main.mainWindow.webContents.openDevTools();
+    }
 
     Main.mainWindow.on("closed", Main.onClose);
   }
