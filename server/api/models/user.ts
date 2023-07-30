@@ -24,10 +24,12 @@ const usersSchema = new Schema({
     type: String,
     default: 'default.png',
   },
-  isAdmin: {
+  isMainAccount: {
     type: Boolean,
     default: false,
+    unique: true,
   },
+  permissions: [String],
   refreshToken: String,
 }, { timestamps: true });
 

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
 
-import type { IUserIdRequest, IsAdminRequest } from '../types/common';
+import type { IUserIdRequest } from '../types/common';
 
 const auth = (req: IUserIdRequest, res: Response, next: NextFunction): NextFunction => {
   const authHeader = req.headers.authorization;
@@ -15,7 +15,8 @@ const auth = (req: IUserIdRequest, res: Response, next: NextFunction): NextFunct
     req.email = (decoded as { [key: string]: string }).email;
     req.userId = (decoded as { [key: string]: string }).userId;
     const user = await User.findById((decoded as { [key: string]: string }).userId);
-    req.isAdmin = user.isAdmin || false;
+    req.isMainAccount = user.isMainAccount || false;
+    req.permissions = user.permissions;
     return next();
   }) as unknown as NextFunction;
 };
