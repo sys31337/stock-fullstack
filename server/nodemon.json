@@ -1,0 +1,5 @@
+{
+  "watch": ["."],
+  "ext": "ts,js,yaml",
+  "exec": "ts-node ./api/bin/www.ts"
+}

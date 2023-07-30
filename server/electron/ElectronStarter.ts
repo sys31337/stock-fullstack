@@ -4,7 +4,7 @@ import isDev from 'electron-is-dev';
 import http from 'http';
 import path from 'path';
 
-import App from '../express/App';
+import App from '../api/App';
 
 let logger: debug.Debugger;
 
@@ -85,7 +85,6 @@ export default class Main {
     if (isDev) {
       debug.enable("server");
     }
-
     Main.port = Main.normalizePort(process.env.PORT || 3001);
     App.set("port", Main.port);
 

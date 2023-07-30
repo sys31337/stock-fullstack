@@ -8,7 +8,11 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": [
+      "./api/types",
+      "node_modules/@types"
+    ],
   },
   "include": [
     "**/*.ts"
