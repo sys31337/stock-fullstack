@@ -21,4 +21,16 @@ const auth = (req: IUserIdRequest, res: Response, next: NextFunction): NextFunct
   }) as unknown as NextFunction;
 };
 
-export { auth };
+const isAdmin = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).send('USER_NOT_FOUND');
+    if (user.isMainAccount) return next();
+    return res.status(401).send('NOT_ADMIN');
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export { auth, isAdmin };
