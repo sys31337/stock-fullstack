@@ -5,6 +5,7 @@ import http from 'http';
 import path from 'path';
 
 import App from '../api/App';
+import { logError } from '../api/utils';
 
 let logger: debug.Debugger;
 
@@ -31,9 +32,9 @@ export default class Main {
   private static onReady() {
     // development
     if (isDev) {
-      const { default: installExtension, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } = require('electron-devtools-installer');
+      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
       // extensions
-      installExtension([REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS])
+      installExtension([REACT_DEVELOPER_TOOLS])
         .then((name: string) => logger.log(`Added Extension: ${name}`))
         .catch((err: any) => logger.log('An error occurred: ', err));
     }
@@ -43,18 +44,21 @@ export default class Main {
       width: 1366,
       height: 768,
       webPreferences: {
+        enableBlinkFeatures: "WebContentsForceDark",
         nodeIntegration: false,
         worldSafeExecuteJavaScript: true,
+        nodeIntegrationInSubFrames: true,
+        webSecurity: false,
         contextIsolation: true,
         preload: path.join(__dirname, 'Preload.js')
       }
     });
     const startUrl = process.env.ELECTRON_START_URL || `file://${path.join(__dirname, '../client/index.html')}`;
-    Main.mainWindow.loadURL(startUrl);
+    Main.mainWindow.loadURL(startUrl, { userAgent: 'Chrome' });
 
     // development
     if (isDev) {
-        Main.mainWindow.webContents.openDevTools();
+      Main.mainWindow.webContents.openDevTools();
     }
 
     Main.mainWindow.on("closed", Main.onClose);
@@ -112,13 +116,11 @@ export default class Main {
     const bind = (typeof Main.port === "string") ? "Pipe " + Main.port : "Port " + Main.port;
     switch (error.code) {
       case "EACCES":
-        // tslint:disable-next-line:no-console
-        console.error(`${bind} requires elevated privileges`);
+        logError(`${bind} requires elevated privileges`);
         process.exit(1);
         break;
       case "EADDRINUSE":
-        // tslint:disable-next-line:no-console
-        console.error(`${bind} is already in use`);
+        logError(`${bind} is already in use`);
         process.exit(1);
         break;
       default:

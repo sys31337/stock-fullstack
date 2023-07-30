@@ -15,14 +15,94 @@ import {
   useBreakpointValue,
   useDisclosure,
   Image,
+  Button,
 } from '@chakra-ui/react'
 import languages from '@config/languages'
+import { useLogout } from '@shared/hooks/useAuthentication'
+import authService from '@shared/services/auth'
 import i18next, { t } from 'i18next'
-import { AiOutlineClose, AiOutlineMore, AiOutlineRight, AiOutlineDown } from 'react-icons/ai'
+import { AiOutlineClose, AiOutlineMore, AiOutlineRight, AiOutlineDown, AiOutlinePoweroff } from 'react-icons/ai'
+import { useNavigate } from 'react-router-dom'
 
-const AppSideBar = ({ currentPageTitle, currentProfilePicture, children }) => {
+
+const Languages = () => (
+  <Popover trigger={'hover'} placement={'bottom'}>
+    <PopoverTrigger>
+      <Box
+        as="a"
+        href={'#'}
+        fontSize={'sm'}
+        fontWeight={500}
+        _hover={{
+          textDecoration: 'none',
+          color: 'theme.900',
+        }}>
+        {t('language')}
+      </Box>
+    </PopoverTrigger>
+
+    <PopoverContent
+      border={0}
+      boxShadow={'xl'}
+      bg={'white'}
+      rounded={'md'}
+      maxW={'150px'}
+    >
+      <Stack as={'a'} href={'#'}>
+        {languages.map(({ id, label, code }) => <Box
+          key={id}
+          role={'group'}
+          display={'block'}
+          p={2}
+          rounded={'md'}
+          _hover={{ bg: 'gray.100' }}
+          onClick={() => {
+            i18next.changeLanguage(code);
+            // eslint-disable-next-line no-restricted-globals
+            location.reload();
+          }}
+        >
+          <Stack direction={'row'} align={'center'}>
+            <Flex>
+              <Image
+                boxSize='2rem'
+                borderRadius={'100'}
+                src={`/assets/${code}.svg`}
+                alt={label}
+                mr='12px'
+              />
+              <Text
+                transition={'all .3s ease'}
+                _groupHover={{ color: 'pink.400' }}
+                fontWeight={500}>
+                {label}
+              </Text>
+            </Flex>
+          </Stack>
+        </Box>
+        )}
+      </Stack>
+    </PopoverContent>
+  </Popover>
+)
+
+const AppSideBar = ({ children }) => {
   const { isOpen, onToggle } = useDisclosure()
-  console.log(currentPageTitle, currentProfilePicture);
+  const { mutateAsync: logout } = useLogout();
+  const navigate = useNavigate();
+
+  const onLogout = async () => {
+    try {
+      const { token } = authService.loadUserInfo() || { undefined };
+      await logout(token as void);
+      authService.resetUserInfo();
+      navigate('/connexion');
+    } catch (e) {
+      authService.resetUserInfo();
+      navigate('/connexion');
+    }
+  };
+
   return (
     <Box w={'full'}>
       <Flex
@@ -56,82 +136,12 @@ const AppSideBar = ({ currentPageTitle, currentProfilePicture, children }) => {
           <Flex display={{ base: 'none', md: 'flex' }}>
             <DesktopNav />
           </Flex>
-
-          <Popover trigger={'hover'} placement={'bottom'}>
-            <PopoverTrigger>
-              <Box
-                as="a"
-                href={'#'}
-                fontSize={'sm'}
-                fontWeight={500}
-                _hover={{
-                  textDecoration: 'none',
-                  color: 'theme.900',
-                }}>
-                {t('language')}
-              </Box>
-            </PopoverTrigger>
-
-            <PopoverContent
-              border={0}
-              boxShadow={'xl'}
-              bg={'white'}
-              rounded={'md'}
-              maxW={'150px'}
-            >
-              <Stack as={'a'} href={'#'}>
-                {languages.map(({ id, label, code }) => <Box
-                  key={id}
-                  role={'group'}
-                  display={'block'}
-                  p={2}
-                  rounded={'md'}
-                  _hover={{ bg: 'gray.100' }}
-                  onClick={() => {
-                    i18next.changeLanguage(code);
-                    // eslint-disable-next-line no-restricted-globals
-                    location.reload();
-                  }}
-                >
-                  <Stack direction={'row'} align={'center'}>
-                    <Flex>
-                      <Image
-                        boxSize='2rem'
-                        borderRadius={'100'}
-                        src={`/assets/${code}.svg`}
-                        alt={label}
-                        mr='12px'
-                      />
-                      <Text
-                        transition={'all .3s ease'}
-                        _groupHover={{ color: 'pink.400' }}
-                        fontWeight={500}>
-                        {label}
-                      </Text>
-                    </Flex>
-                  </Stack>
-                </Box>
-                )}
-              </Stack>
-            </PopoverContent>
-          </Popover>
-          {/* <Stack
-            flex={{ base: 1, md: 0 }}
-            justify={'flex-end'}
-            direction={'row'}
-            spacing={6}>
-            <Button
-              display={{ base: 'none', md: 'inline-flex' }}
-              fontSize={'sm'}
-              fontWeight={600}
-              color={'white'}
-              bg={'blue.400'}
-              _hover={{
-                bg: 'blue.300',
-              }}>
-              {t('language')}
+          <Flex gap={'10px'} alignItems={'center'}>
+            <Languages />
+            <Button colorScheme={'red'} variant={'ghost'} size={'sm'} gap={1} onClick={onLogout}>
+              <AiOutlinePoweroff /> {t('logout')}
             </Button>
-          </Stack> */}
+          </Flex>
         </Flex>
 
       </Flex>

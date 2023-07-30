@@ -148,8 +148,8 @@ const updateUser = async (req: IUserIdRequest, res: Response, next: NextFunction
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
     if (!user) return res.sendStatus(404);
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
@@ -159,7 +159,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       _id: userId, fullname, profilePicture, refreshToken: currentRefreshToken,
     } = user;
     const accessToken = jwt.sign({
-      userId, fullname, profilePicture, email,
+      userId, fullname, profilePicture, username,
     }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: '1d',
     });
@@ -170,7 +170,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       const curTime = Math.ceil(Date.now() / 1000);
       if (curTime > exp) {
         refreshToken = jwt.sign({
-          userId, fullname, profilePicture, email,
+          userId, fullname, profilePicture, username,
         }, process.env.REFRESH_TOKEN_SECRET, {
           expiresIn: '90d',
         });
@@ -179,7 +179,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       }
     } else {
       refreshToken = jwt.sign({
-        userId, fullname, profilePicture, email,
+        userId, fullname, profilePicture, username,
       }, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });

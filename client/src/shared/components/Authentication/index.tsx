@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const PrivateRoute: FC<Props> = ({ element, children }) => {
-//   const isAuthenticated = useAuthenticated();
-  const isAuthenticated = true;
+  const isAuthenticated = useAuthenticated();
+  //   const isAuthenticated = true;
   return <>{isAuthenticated ? element || children : <Navigate to="/connexion" />}</>;
 };

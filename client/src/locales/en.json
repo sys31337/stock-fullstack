@@ -1,4 +1,11 @@
 {
   "language": "Language",
-  "headerTitle": "My {{appName}} Header Title"
+  "headerTitle": "My {{appName}} Header Title",
+  "authentication": "Authentication",
+  "username": "Username",
+  "email": "Email",
+  "password": "Password",
+  "login": "Login",
+  "submit": "Submit",
+  "logout": "Logout"
 }

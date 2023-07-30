@@ -13,12 +13,11 @@ const createAccountSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-  email: string.required(),
+  username: string.required(),
   password: string.required(),
 });
 
 const updateUserSchema = Joi.object({
-  email: string,
   fullname: string,
   profilePicture: string,
   username: string,

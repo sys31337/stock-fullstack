@@ -1,22 +1,15 @@
 import { extendTheme } from '@chakra-ui/react';
 
 const theme = extendTheme({
-  colors: {
-    transparent: 'transparent',
-    black: '#000',
-    white: {
-      900: '#FAf8fA',
-      100: '#CDCDDE',
-    },
-    theme: {
-      900: '#000',
-      800: '#333',
-      300: '#F9FAFB',
-      200: '#F9FAFB',
-      100: '#425166',
-    },
-    yellow: {
-      900: '#FDE720',
+  components: {
+    Input: {
+      baseStyle: {
+        field: {
+          w: "-webkit-fill-available",
+          my: 1,
+          mb: 3,
+        }
+      }
     },
   },
   fonts: {
