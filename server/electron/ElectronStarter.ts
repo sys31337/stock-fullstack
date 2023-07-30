@@ -46,7 +46,7 @@ export default class Main {
         nodeIntegration: false,
         worldSafeExecuteJavaScript: true,
         contextIsolation: true,
-        // preload: path.join(__dirname, 'Preload.js')
+        preload: path.join(__dirname, 'Preload.js')
       }
     });
     const startUrl = process.env.ELECTRON_START_URL || `file://${path.join(__dirname, '../client/index.html')}`;

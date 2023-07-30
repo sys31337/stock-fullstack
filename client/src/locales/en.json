@@ -1,5 +1,4 @@
 {
-    "translations": {
-      "headerTitle": "My {{appName}} Header Title"
-    }
-  }
+  "language": "Language",
+  "headerTitle": "My {{appName}} Header Title"
+}
