@@ -13,7 +13,7 @@
     "build-all": "yarn run remove-create-dir && cd client && yarn react-build && cd ../server && yarn run build && yarn run electron-build-all",
     "build-win": "yarn run remove-create-dir && cd client && yarn react-build && cd ../server && yarn run build && yarn run electron-build-win && yarn run remove-package-folder && yarn run move-build",
     "build-linux": "yarn run remove-create-dir && cd client && yarn react-build && cd ../server && yarn run build && yarn run electron-build-linux && yarn run remove-package-folder && yarn run move-build",
-    "build-mac": "yarn run remove-create-dir && cd client && yarn react-build && cd ../server && yarn run build && yarn run electron-build-mac && yarn run remove-package-folder && yarn run move-build",
+    "build-mac": "yarn run remove-create-dir && cd client && yarn build && cd ../server && yarn run build && yarn run electron-build-mac && yarn run remove-package-folder && yarn run move-build",
     "test": "cd client && yarn run test-no-watch && cd ../server && yarn run test",
     "test-coverage": "cd client && yarn run test-coverage && cd ../server && yarn run test-coverage"
   },

@@ -4,10 +4,9 @@ import { config } from '@config';
 import i18n from 'i18next';
 import HttpBackend from 'i18next-http-backend';
 
-import constants from '@shared/constants';
 import cacheService from '@shared/services/cache';
 
-const userLang = cacheService.get<string>(constants.USER_LANG_KEY);
+const userLang = cacheService.get<string>('USER_LANG_KEY');
 
 i18n
   .use(HttpBackend)

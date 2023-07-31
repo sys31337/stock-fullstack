@@ -45,8 +45,8 @@ export default class Main {
       height: 768,
       webPreferences: {
         enableBlinkFeatures: "WebContentsForceDark",
+        experimentalFeatures: true,
         nodeIntegration: false,
-        worldSafeExecuteJavaScript: true,
         nodeIntegrationInSubFrames: true,
         webSecurity: false,
         contextIsolation: true,
