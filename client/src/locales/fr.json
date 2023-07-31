@@ -7,5 +7,9 @@
   "password": "Mot de passe",
   "login": "Connecter",
   "submit": "Soumettre",
-  "logout": "Déconnexion"
+  "logout": "Déconnexion",
+  "newBuyBill": "Bon d'achat",
+  "newOrder": "Bon de commande",
+  "newSale": "Bon de livraison",
+  "newInvoice": "Facture"
 }

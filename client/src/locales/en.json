@@ -7,5 +7,9 @@
   "password": "Password",
   "login": "Login",
   "submit": "Submit",
-  "logout": "Logout"
+  "logout": "Logout",
+  "newBuyBill": "New buy bill",
+  "newOrder": "New order",
+  "newSale": "New sale",
+  "newInvoice": "New invoice"
 }

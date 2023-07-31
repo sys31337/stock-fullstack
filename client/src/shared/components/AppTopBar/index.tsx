@@ -25,68 +25,70 @@ import { AiOutlineClose, AiOutlineMore, AiOutlineRight, AiOutlineDown, AiOutline
 import { useNavigate } from 'react-router-dom'
 
 
-const Languages = () => (
-  <Popover trigger={'hover'} placement={'bottom'}>
-    <PopoverTrigger>
-      <Box
-        as="a"
-        href={'#'}
-        fontSize={'sm'}
-        fontWeight={500}
-        _hover={{
-          textDecoration: 'none',
-          color: 'theme.900',
-        }}>
-        {t('language')}
-      </Box>
-    </PopoverTrigger>
-
-    <PopoverContent
-      border={0}
-      boxShadow={'xl'}
-      bg={'white'}
-      rounded={'md'}
-      maxW={'150px'}
-    >
-      <Stack as={'a'} href={'#'}>
-        {languages.map(({ id, label, code }) => <Box
-          key={id}
-          role={'group'}
-          display={'block'}
-          p={2}
-          rounded={'md'}
-          _hover={{ bg: 'gray.100' }}
-          onClick={() => {
-            i18next.changeLanguage(code);
-            // eslint-disable-next-line no-restricted-globals
-            location.reload();
-          }}
-        >
-          <Stack direction={'row'} align={'center'}>
-            <Flex>
-              <Image
-                boxSize='2rem'
-                borderRadius={'100'}
-                src={`/assets/${code}.svg`}
-                alt={label}
-                mr='12px'
-              />
-              <Text
-                transition={'all .3s ease'}
-                _groupHover={{ color: 'pink.400' }}
-                fontWeight={500}>
-                {label}
-              </Text>
-            </Flex>
-          </Stack>
+const Languages = (props) => (
+  <Box {...props}>
+    <Popover trigger={'hover'} placement={'bottom'}>
+      <PopoverTrigger>
+        <Box
+          as="a"
+          href={'#'}
+          fontSize={'sm'}
+          fontWeight={500}
+          _hover={{
+            textDecoration: 'none',
+            color: 'theme.900',
+          }}>
+          {t('language')}
         </Box>
-        )}
-      </Stack>
-    </PopoverContent>
-  </Popover>
+      </PopoverTrigger>
+
+      <PopoverContent
+        border={0}
+        boxShadow={'xl'}
+        bg={'white'}
+        rounded={'md'}
+        maxW={'150px'}
+      >
+        <Stack as={'a'} href={'#'}>
+          {languages.map(({ id, label, code }) => <Box
+            key={id}
+            role={'group'}
+            display={'block'}
+            p={2}
+            rounded={'md'}
+            _hover={{ bg: 'gray.100' }}
+            onClick={() => {
+              i18next.changeLanguage(code);
+              // eslint-disable-next-line no-restricted-globals
+              location.reload();
+            }}
+          >
+            <Stack direction={'row'} align={'center'}>
+              <Flex>
+                <Image
+                  boxSize='2rem'
+                  borderRadius={'100'}
+                  src={`/assets/${code}.svg`}
+                  alt={label}
+                  mr='12px'
+                />
+                <Text
+                  transition={'all .3s ease'}
+                  _groupHover={{ color: 'pink.400' }}
+                  fontWeight={500}>
+                  {label}
+                </Text>
+              </Flex>
+            </Stack>
+          </Box>
+          )}
+        </Stack>
+      </PopoverContent>
+    </Popover>
+  </Box>
 )
 
-const AppSideBar = ({ children }) => {
+const AppTopBar = ({ children }) => {
   const { isOpen, onToggle } = useDisclosure()
   const { mutateAsync: logout } = useLogout();
   const navigate = useNavigate();
@@ -136,10 +138,10 @@ const AppSideBar = ({ children }) => {
           <Flex display={{ base: 'none', md: 'flex' }}>
             <DesktopNav />
           </Flex>
-          <Flex gap={'10px'} alignItems={'center'}>
-            <Languages />
-            <Button colorScheme={'red'} variant={'ghost'} size={'sm'} gap={1} onClick={onLogout}>
-              <AiOutlinePoweroff /> {t('logout')}
+          <Flex alignItems={'center'}>
+            <Languages me={2} />
+            <Button colorScheme={'red'} variant={'ghost'} size={'sm'} onClick={onLogout}>
+              <Box as={AiOutlinePoweroff} me={1} /> {t('logout')}
             </Button>
           </Flex>
         </Flex>
@@ -343,4 +345,4 @@ const NAV_ITEMS: Array<NavItem> = [
   },
 ]
 
-export default AppSideBar;
+export default AppTopBar;
