@@ -7,25 +7,31 @@ import {
 } from '@chakra-ui/react'
 import Card from './components/Card';
 import { modules } from './helpers/modules';
+import cacheService from '@shared/services/cache';
+import { t } from 'i18next';
 
 const Home = () => {
+  const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
+  const { fullname } = userInfo;
+
   return (
     <Box p={4}>
       <Stack spacing={4} as={Container} maxW={'6xl'} textAlign={'center'}>
         <Heading fontSize={{ base: '2xl', sm: '4xl' }} fontWeight={'bold'} color={'gray.900'}>
-          Short heading
+          {t('welcomeUser', { fullname })}
         </Heading>
       </Stack>
 
       <Container maxW={'8xl'} mt={12}>
-        <SimpleGrid columns={4} spacing={5}>
-          {modules.map(({ label, icon, href, keyBind }, key) => (
+        <SimpleGrid columns={4} spacing={10}>
+          {modules.map(({ label, icon, href, keyBind, bg }, key) => (
             <Card
               key={key}
               label={label}
               keyBind={keyBind}
               icon={icon}
               href={href}
+              bg={bg}
             />
           ))}
         </SimpleGrid>

@@ -156,10 +156,10 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).send({ message: 'Wrong Password' });
     }
     const {
-      _id: userId, fullname, profilePicture, refreshToken: currentRefreshToken,
+      _id: userId, fullname, profilePicture, refreshToken: currentRefreshToken, permissions,
     } = user;
     const accessToken = jwt.sign({
-      userId, fullname, profilePicture, username,
+      userId, fullname, profilePicture, username, permissions,
     }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: '1d',
     });
@@ -170,7 +170,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       const curTime = Math.ceil(Date.now() / 1000);
       if (curTime > exp) {
         refreshToken = jwt.sign({
-          userId, fullname, profilePicture, username,
+          userId, fullname, profilePicture, username, permissions,
         }, process.env.REFRESH_TOKEN_SECRET, {
           expiresIn: '90d',
         });
@@ -179,7 +179,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       }
     } else {
       refreshToken = jwt.sign({
-        userId, fullname, profilePicture, username,
+        userId, fullname, profilePicture, username, permissions,
       }, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });

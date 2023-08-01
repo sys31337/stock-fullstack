@@ -5,21 +5,25 @@ import { LiaArchiveSolid, LiaFileInvoiceDollarSolid, LiaHandHoldingUsdSolid } fr
 export const modules = [{
     label: t('newBuyBill'),
     icon: <LiaArchiveSolid color={'black'} size={'36'} />,
-    href: 'newBuyBill',
+    href: 'buy',
     keyBind: 'F1',
+    bg: 'blue.400',
 }, {
     label: t('newOrder'),
     icon: <LiaHandHoldingUsdSolid color={'black'} size={'36'} />,
-    href: 'newOrder',
-    keyBind: 'F1',
+    href: 'order',
+    keyBind: 'F2',
+    bg: 'blue.400',
 }, {
     label: t('newSale'),
     icon: <MdOutlineSell color={'black'} size={'36'} />,
-    href: 'newSale',
-    keyBind: 'F1',
+    href: 'sale',
+    keyBind: 'F3',
+    bg: 'blue.400',
 }, {
     label: t('newInvoice'),
     icon: <LiaFileInvoiceDollarSolid color={'black'} size={'36'} />,
-    href: 'newInvoice',
-    keyBind: 'F1',
+    href: 'invoice',
+    keyBind: 'F4',
+    bg: 'blue.400',
 }]

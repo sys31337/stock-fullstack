@@ -8,51 +8,50 @@ import {
 } from '@chakra-ui/react';
 
 interface CardProps {
-  label: string
-  keyBind: string
-  icon: ReactElement
-  href: string
+  label: string;
+  keyBind: string;
+  icon: ReactElement;
+  href: string;
+  bg: string;
 }
 
-const Card = ({ label, keyBind, icon, href }: CardProps) => (
+const Card = ({
+  label, keyBind, icon, href, bg,
+}: CardProps) => (
   <Box
     as={'a'}
     href={href}
     target={'_blank'}
-    w={'90%'}
+    w={'100%'}
     borderWidth="1px"
-    borderRadius="2xl"
+    borderRadius="3xl"
     pos={'relative'}
-    overflow="hidden"
-    bg={'gray.400'}
+    bg={bg || 'gray.400'}
     mx={5}
     p={5}>
     <Flex
-      mt={1}
       align={'center'}
       justify={'center'}
       fontSize={'sm'}
       pos={'absolute'}
-      bg={'gray.600'}
-      top={2}
-      right={2}
-      p={2}
-      borderRadius={'full'}
-      h={5}
-      w={5}
+      bg={'gray.800'}
+      top={-2}
+      right={-2}
+      p={5}
+      borderRadius={'2xl'}
+      h={8}
+      w={8}
     >
       {keyBind}
     </Flex>
-    <Flex align={'center'} me={2}>
+    <Flex align={'center'} gap={4}>
       <Flex
-        w={16}
-        h={16}
-        p={0}
+        minW={20}
+        minH={20}
         align={'center'}
         justify={'center'}
         color={'white'}
-        rounded={'full'}
-        me={5}
+        borderRadius={'2xl'}
         bg={'gray.100'}>
         {icon}
       </Flex>

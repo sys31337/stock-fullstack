@@ -27,8 +27,8 @@ const Authentication = () => {
   const navigate = useNavigate();
 
   const initialValues = {
-    username: '',
-    password: '',
+    username: 'admin',
+    password: '123123',
   };
   const onSubmit = async (values, { setSubmitting }: { setSubmitting: (v: boolean) => void }) => {
     const { username, password } = values;
@@ -39,11 +39,12 @@ const Authentication = () => {
 
       const userData = {
         user_id: parsedData.userId,
-        full_name: parsedData.fullname,
-        business_name: parsedData.businessName,
+        fullname: parsedData.fullname,
         token: res.data.accessToken,
         refreshToken: res.data.refreshToken,
+        permissions: res.data.permissions,
       };
+
       cacheService.set('PROFILE_PICTURE', parsedData.profilePicture || 'default.png');
       authService.saveUserInfo(userData);
       navigate('/');

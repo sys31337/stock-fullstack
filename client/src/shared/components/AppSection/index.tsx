@@ -11,7 +11,7 @@ const AppSection = () => {
   const [currentProfilePicture, setCurrentProfilePicture] = useState<string>('default.png');
 
   return (
-    <Box w="100vw" h="100vh" bg="white">
+    <Box w="100vw" h="100vh" bg="#F8F8F8">
       <Flex color="white" h="100%">
         <AppTopBar>
           <Box flex="1">

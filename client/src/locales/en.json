@@ -1,6 +1,6 @@
 {
   "language": "Language",
-  "headerTitle": "My {{appName}} Header Title",
+  "welcomeUser": "Welcome {{fullname}}",
   "authentication": "Authentication",
   "username": "Username",
   "email": "Email",

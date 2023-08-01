@@ -33,11 +33,11 @@ const refreshAccessToken = async (refreshToken) => {
   const {
     data: { accessToken: token, refreshToken: newRefreshToken, googleToken },
   } = response;
-  const { userId: user_id, fullname: full_name } = parseJwt(token);
+  const { userId, fullname } = parseJwt(token);
 
   const userData = {
-    user_id,
-    full_name,
+    userId,
+    fullname,
     token,
     refreshToken: newRefreshToken,
     googleToken,
