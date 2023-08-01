@@ -74,7 +74,7 @@ const Languages = (props) => (
                 />
                 <Text
                   transition={'all .3s ease'}
-                  _groupHover={{ color: 'pink.400' }}
+                  _groupHover={{ color: 'blue.400' }}
                   fontWeight={500}>
                   {label}
                 </Text>
@@ -213,12 +213,12 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
       display={'block'}
       p={2}
       rounded={'md'}
-      _hover={{ bg: useColorModeValue('pink.50', 'gray.900') }}>
+      _hover={{ bg: useColorModeValue('blue.50', 'gray.900') }}>
       <Stack direction={'row'} align={'center'}>
         <Box>
           <Text
             transition={'all .3s ease'}
-            _groupHover={{ color: 'pink.400' }}
+            _groupHover={{ color: 'blue.400' }}
             fontWeight={500}>
             {label}
           </Text>
@@ -232,7 +232,7 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
           justify={'flex-end'}
           align={'center'}
           flex={1}>
-          <Icon color={'pink.400'} w={5} h={5} as={AiOutlineRight} />
+          <Icon color={'blue.400'} w={5} h={5} as={AiOutlineRight} />
         </Flex>
       </Stack>
     </Box>
@@ -306,6 +306,10 @@ interface NavItem {
 
 const NAV_ITEMS: Array<NavItem> = [
   {
+    label: 'Home',
+    href: '/',
+  },
+  {
     label: 'Inspiration',
     children: [
       {
@@ -334,10 +338,6 @@ const NAV_ITEMS: Array<NavItem> = [
         href: '#',
       },
     ],
-  },
-  {
-    label: 'Learn Design',
-    href: '#',
   },
   {
     label: 'Hire Designers',
