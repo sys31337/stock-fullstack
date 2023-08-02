@@ -8,8 +8,20 @@
   "login": "Connecter",
   "submit": "Soumettre",
   "logout": "Déconnexion",
-  "newBuyBill": "Bon d'achat",
+  "newReceiptBill": "Bon de réception",
   "newOrder": "Bon de commande",
   "newSale": "Bon de livraison",
-  "newInvoice": "Facture"
+  "newInvoice": "Facture",
+  "products": "Produits",
+  "barCode": "Code a barre",
+  "designation": "Désignation",
+  "quantity": "Quantité",
+  "units": "Unités",
+  "buyPrice": "Prix d'achat",
+  "sellPrice_1": "Prix de vente 1",
+  "sellPrice_2": "Prix de vente 2",
+  "sellPrice_3": "Prix de vente 3",
+  "total": "Totale",
+  "addProduct": "Ajouter un produit"
+
 }

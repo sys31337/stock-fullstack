@@ -7,8 +7,6 @@ const isDev = true || configOverride.isDev;
 const baseAppUrl = import.meta.env.VITE_API_URL;
 const appUrl = import.meta.env.VITE_FRONTEND_URL;
 
-console.log(baseAppUrl)
-
 export const config = {
   baseAppUrl,
   appUrl,

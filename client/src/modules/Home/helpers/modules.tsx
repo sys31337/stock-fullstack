@@ -3,9 +3,9 @@ import { MdOutlineSell } from 'react-icons/md';
 import { LiaArchiveSolid, LiaFileInvoiceDollarSolid, LiaHandHoldingUsdSolid } from 'react-icons/lia';
 
 export const modules = [{
-    label: t('newBuyBill'),
+    label: t('newReceiptBill'),
     icon: <LiaArchiveSolid color={'black'} size={'36'} />,
-    href: 'buy',
+    href: 'receipt',
     keyBind: 'F1',
     bg: 'blue.400',
 }, {

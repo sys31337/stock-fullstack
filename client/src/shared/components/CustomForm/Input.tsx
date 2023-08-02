@@ -1,71 +1,142 @@
 import React, { ReactNode } from 'react';
 import {
-  Box, Text, FormControl, FormLabel, Input, Textarea, BoxProps, Select,
+  Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As,
 } from '@chakra-ui/react';
 import Any from '@shared/types/any';
+import { Select } from 'chakra-react-select';
+import { SingleDatepicker } from 'chakra-dayzed-datepicker';
+import "./styles.css"
 
-type CustomInputProps = BoxProps & {
+interface SelectOptions {
+  value: string;
+  label: string
+}
+
+type CustomInputProps = {
   name: string;
   label: string;
   type?: string;
-  handleChange: (e: React.ChangeEvent<Any>) => void;
-  handleBlur: (e: React.ChangeEvent<Any>) => void;
-  defaultValue: string | number;
+  handleChange?: (e: React.ChangeEvent<Any>) => void;
+  setFieldValue?: (fieldName: string, value: Date | string) => void;
+  handleBlur?: (e: React.ChangeEvent<Any>) => void;
+  defaultValue: string | Date | number;
   errorMessage?: ReactNode;
   isTextArea?: boolean;
+  isDate?: boolean;
   isSelect?: boolean;
-  children?: ReactNode
+  icon?: As;
+  selectOptions?: SelectOptions[]
 }
 
 const CustomInput = (props: CustomInputProps) => {
   const {
-    name, label, type, handleChange, handleBlur, defaultValue, errorMessage, isTextArea, isSelect, children, ...rest
+    name, label, type, handleChange, handleBlur, defaultValue, errorMessage, isTextArea, isSelect, isDate, selectOptions, setFieldValue, icon, ...rest
   } = props;
+
+  const OnSelectChange = (payload) => {
+    const { value } = payload;
+    setFieldValue && setFieldValue(name, value);
+  };
+
   return (
-    <Box {...rest}>
-      <FormControl id={name}>
-        <FormLabel color={errorMessage ? 'red' : ''}>
-          {label}
-          {errorMessage && (
-            <Text as={'span'} color={'red'} ms={1}>*</Text>
+    <FormControl id={name}>
+      <FormLabel color={errorMessage ? 'red' : 'theme.900'} my={2}>
+        {label}
+        {errorMessage && (
+          <Text as={'span'} color={'red'} ms={1}>*</Text>
+        )}
+      </FormLabel>
+      {isSelect ? (
+        <Select
+          isSearchable={true}
+          name={name}
+          options={selectOptions as Any}
+          placeholder={label}
+          size={'md'}
+          closeMenuOnSelect={true}
+          onChange={OnSelectChange}
+          defaultValue={defaultValue}
+          chakraStyles={{
+            control: (provided) => ({
+              ...provided,
+              borderRadius: 'xl',
+              bg: 'white'
+            }),
+            dropdownIndicator: (provided) => ({
+              ...provided,
+              color: 'theme.900',
+              w: '32px',
+              bg: 'white'
+            }),
+            menu: (provided) => ({
+              ...provided,
+              color: 'theme.900',
+            }),
+            menuList: (provided) => ({
+              ...provided,
+              p: 0,
+              borderRadius: 'xl'
+            }),
+            singleValue: (provided) => ({
+              ...provided,
+              color: 'theme.900'
+            })
+          }}
+          classNamePrefix='chakra-react-select'
+          colorScheme='purple'
+        />
+      ) : (isDate ? (
+        <SingleDatepicker
+          configs={{
+            dateFormat: 'dd/MM/yyyy',
+          }}
+          propsConfigs={{
+            popoverCompProps: {
+              popoverContentProps: {
+                background: 'white',
+                color: 'blue.500',
+              },
+            },
+            inputProps: {
+              borderRadius: 'xl',
+              bg: 'white',
+              color: 'theme.900'
+            }
+          }}
+          date={defaultValue as Date}
+          onDateChange={(date) => setFieldValue && setFieldValue(name, date)}
+          {...rest}
+        />
+      ) : (
+        <InputGroup>
+          {icon && (
+            <InputLeftElement pointerEvents='none' m={'auto'}>
+              <Icon as={icon} color={'gray'} size={24} />
+            </InputLeftElement>
           )}
-        </FormLabel>
-        {isSelect ? (
-          <Select
-            onChange={handleChange}
-            name={name}
-            size={'lg'}
-            bg={'theme.700'}
-            borderRadius={'xl'}
-            borderColor={errorMessage ? 'red' : 'theme.600'}
-            _focus={{
-              bg: 'theme.900',
-              boxShadow: 'none !important',
-            }}
-            onBlur={handleBlur}
-            defaultValue={defaultValue}
-          >
-            {children}
-          </Select>
-        ) : (
           <Input
             as={isTextArea ? Textarea as Any : Input}
             type={type || 'text'}
+            pl={icon ? 9 : 3}
             name={name}
-            size={'lg'}
-            bg={'theme.700'}
+            size={'md'}
+            bg={'white'}
+            color={'theme.900'}
             borderRadius={'xl'}
             borderColor={errorMessage ? 'red' : 'theme.600'}
             _focus={{
-              bg: 'theme.900',
+              bg: 'gray.50',
               boxShadow: 'none !important',
             }}
             onChange={handleChange}
             onBlur={handleBlur}
-            defaultValue={defaultValue} />
-        )}
-      </FormControl>
-    </Box >
+            defaultValue={defaultValue as string | number}
+            {...rest}
+          />
+        </InputGroup>
+      ))
+      }
+    </FormControl >
   );
 };
 

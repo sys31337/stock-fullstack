@@ -9,7 +9,7 @@ const Authentication = React.lazy(() => import('./modules/Authentication'));
 const Home = React.lazy(() => import('./modules/Home'));
 
 /* Modules */
-const Buy = React.lazy(() => import('./modules/Buy'));
+const Receipt = React.lazy(() => import('./modules/Receipt'));
 const Sale = React.lazy(() => import('./modules/Sale'));
 const Order = React.lazy(() => import('./modules/Order'));
 const Invoice = React.lazy(() => import('./modules/Invoice'));
@@ -25,7 +25,7 @@ const App = () => (
           <PrivateRoute>
             <Routes>
               <Route path="*" element={<Home />} />
-              <Route path="buy" element={<Buy />} />
+              <Route path="receipt" element={<Receipt />} />
               <Route path="sale" element={<Sale />} />
               <Route path="order" element={<Order />} />
               <Route path="invoice" element={<Invoice />} />

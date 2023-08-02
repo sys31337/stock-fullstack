@@ -8,8 +8,19 @@
   "login": "Login",
   "submit": "Submit",
   "logout": "Logout",
-  "newBuyBill": "New buy bill",
+  "newReceiptBill": "New receipt bill",
   "newOrder": "New order",
   "newSale": "New sale",
-  "newInvoice": "New invoice"
+  "newInvoice": "New invoice",
+  "products": "Products",
+  "barCode": "Barcode",
+  "designation": "Designation",
+  "quantity": "Quantity",
+  "units": "Units",
+  "buyPrice": "Buy price",
+  "sellPrice_1": "Sell price 1",
+  "sellPrice_2": "Sell price 2",
+  "sellPrice_3": "Sell price 3",
+  "total": "Total",
+  "addProduct": "Add Product"
 }

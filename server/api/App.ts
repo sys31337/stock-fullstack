@@ -34,6 +34,7 @@ app.use(cors({
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.get('/', (_req, res) => res.sendStatus(200));
 
 /** Initialise mongoose connection */
 connectDB();

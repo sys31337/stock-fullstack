@@ -30,15 +30,6 @@ export default class Main {
   }
 
   private static onReady() {
-    // development
-    if (isDev) {
-      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
-      // extensions
-      installExtension([REACT_DEVELOPER_TOOLS])
-        .then((name: string) => logger.log(`Added Extension: ${name}`))
-        .catch((err: any) => logger.log('An error occurred: ', err));
-    }
-
     Main.mainWindow = new Main.BrowserWindow({
       // kiosk: true,
       width: 1366,

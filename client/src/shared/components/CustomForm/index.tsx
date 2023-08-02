@@ -1,12 +1,14 @@
 import React from 'react';
 import { t } from 'i18next';
+import { Box, Button } from '@chakra-ui/react';
 
-const CustomForm = ({ handleSubmit, children }) => {
+const CustomForm = (props) => {
+  const { handleSubmit, children, ...rest } = props
   return (
-    <form onSubmit={handleSubmit}>
+    <Box as={'form'} onSubmit={handleSubmit} {...rest}>
       {children}
-      <button type="submit">{t('submit')}</button>
-    </form>
+      <Button colorScheme='green' mt={5} type="submit">{t('submit')}</Button>
+    </Box>
   )
 }
 
