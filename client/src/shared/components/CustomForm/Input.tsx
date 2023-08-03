@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import {
-  Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As,
+  Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As, InputProps,
 } from '@chakra-ui/react';
 import Any from '@shared/types/any';
 import { Select } from 'chakra-react-select';
@@ -12,7 +12,7 @@ interface SelectOptions {
   label: string
 }
 
-type CustomInputProps = {
+type CustomInputProps = InputProps & {
   name: string;
   label: string;
   type?: string;
@@ -20,6 +20,7 @@ type CustomInputProps = {
   setFieldValue?: (fieldName: string, value: Date | string) => void;
   handleBlur?: (e: React.ChangeEvent<Any>) => void;
   defaultValue: string | Date | number;
+  value?: string | Date | number;
   errorMessage?: ReactNode;
   isTextArea?: boolean;
   isDate?: boolean;
@@ -30,7 +31,7 @@ type CustomInputProps = {
 
 const CustomInput = (props: CustomInputProps) => {
   const {
-    name, label, type, handleChange, handleBlur, defaultValue, errorMessage, isTextArea, isSelect, isDate, selectOptions, setFieldValue, icon, ...rest
+    name, label, type, handleChange, handleBlur, defaultValue, value, errorMessage, isTextArea, isSelect, isDate, selectOptions, setFieldValue, icon, ...rest
   } = props;
 
   const OnSelectChange = (payload) => {
@@ -130,6 +131,7 @@ const CustomInput = (props: CustomInputProps) => {
             }}
             onChange={handleChange}
             onBlur={handleBlur}
+            value={value as string | number}
             defaultValue={defaultValue as string | number}
             {...rest}
           />

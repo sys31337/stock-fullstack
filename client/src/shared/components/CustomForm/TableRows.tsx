@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { Tr, Td, Input, Button } from '@chakra-ui/react';
+import { Tr, Td, Input, Button, InputGroup, InputLeftElement } from '@chakra-ui/react';
 import { BiTrash } from 'react-icons/bi';
+import { BsPercent } from 'react-icons/bs';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [total, setTotal] = useState(0);
   const updateTotal = (e) => {
     handleChange(index, e)
-    const { quantity, stack, buyPrice } = data;
-    setTotal(parseInt(quantity || 0, 10) * parseInt(stack || 0, 10) * parseInt(buyPrice || 0, 10))
+    const { quantity, stack, buyPrice, tva } = data;
+    const total = parseInt(quantity || 0, 10) * parseInt(stack || 0, 10) * parseInt(buyPrice || 0, 10)
+    const productTva = total * tva / 100;
+    setTotal(total - productTva)
   }
-  const { id, barCode, productName, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
+  const { id, barCode, tva, productName, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
 
   return (
     <Tr key={id}>
@@ -30,7 +33,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           color={'theme.900'}
           type={'text'}
           name="barCode"
-          defaultValue={id}
+          defaultValue={barCode}
           onChange={(e) => (handleChange(index, e))}
         />
       </Td>
@@ -148,6 +151,26 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           onBlur={(e) => handleBlur(index, e)}
           onChange={(e) => handleChange(index, e)}
         />
+      </Td>
+      <Td px={1}>
+        <InputGroup>
+          <InputLeftElement pointerEvents='none' ps={2} w={'2ch'}>
+            <BsPercent color='gray' />
+          </InputLeftElement>
+          <Input
+            // textAlign={'center'}
+            p={'0 0 0 25px'}
+            // px={0}
+            bg={'white'}
+            borderColor={'gray.200'}
+            borderRadius={'xl'}
+            color={'theme.900'}
+            type={'number'}
+            name="tva"
+            defaultValue={tva}
+            onChange={(e) => (updateTotal(e))}
+          />
+        </InputGroup>
       </Td>
       <Td px={1}>
         <Input

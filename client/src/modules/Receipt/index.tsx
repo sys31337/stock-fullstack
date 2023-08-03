@@ -1,14 +1,20 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Container, Flex, Heading, Stack, Text } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel } from 'react-icons/bi';
+import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
 import ProductsTable from '@shared/components/CustomForm/ProductsTable';
 import { randomId } from '@shared/functions/words';
+import Any from '@shared/types/any';
 
 const Receipt = () => {
+  const [orderTotal, setOrderTotal] = useState(0);
+  const [orderPaid, setOrderPaid] = useState(0);
+  const [orderDebts, setOrderDebts] = useState(0);
+
   const [productsValues, setProductsValues] = useState([{
     id: randomId(),
     barCode: '',
@@ -19,6 +25,8 @@ const Receipt = () => {
     sellPrice_1: 0,
     sellPrice_2: 0,
     sellPrice_3: 0,
+    total: 0,
+    tva: 19,
   }]);
 
   const initialValues = {
@@ -26,8 +34,28 @@ const Receipt = () => {
     category: '',
     description: '',
     supplier: '',
+    orderTotal,
+    orderPaid,
+    orderDebts,
     date: new Date() as unknown as string,
   }
+
+  useEffect(() => {
+    const tt = productsValues.reduce(
+      (sum, product) => {
+        const { buyPrice, quantity, stack, tva } = product;
+        const preTotal = quantity * stack * buyPrice;
+        const productTva = preTotal * tva / 100;
+        const total = preTotal - productTva
+        return sum + total;
+      },
+      0
+    );
+    console.log(tt)
+    setOrderTotal(tt)
+    setOrderPaid(0)
+    setOrderDebts(0)
+  }, [productsValues])
 
   const onSubmit = (values) => {
     console.log({ ...values, products: productsValues })
@@ -108,7 +136,40 @@ const Receipt = () => {
             defaultValue={values.description}
             errorMessage={errors.description && touched.description && errors.description}
           />
-
+          <Flex display={'flex'} gap={5}>
+            <CustomInput
+              name="orderTotal"
+              label="Order Total"
+              icon={FcNews}
+              // variant={'filled'}
+              bg={'gray.200'}
+              outline={'transparent'}
+              defaultValue={orderTotal}
+              isReadOnly={true}
+              value={orderTotal as Any}
+              errorMessage={errors.orderTotal && touched.orderTotal && errors.orderTotal}
+            />
+            <CustomInput
+              name="orderPaid"
+              label="Paid Amount"
+              icon={FcPaid}
+              handleChange={handleChange}
+              handleBlur={handleBlur}
+              defaultValue={orderPaid}
+              value={orderPaid}
+              errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
+            />
+            <CustomInput
+              name="orderDebts"
+              label="Order Debts"
+              icon={FcDebt}
+              handleChange={handleChange}
+              handleBlur={handleBlur}
+              defaultValue={orderDebts}
+              value={orderDebts}
+              errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
+            />
+          </Flex>
         </CustomForm>
       </Container>
     </Box >

@@ -8,6 +8,7 @@ import { randomId } from "@shared/functions/words";
 const decimalInputs = ['sellPrice_1', 'sellPrice_2', 'sellPrice_3', 'buyPrice', 'total']
 
 const ProductsTable = ({ productsValues, setProductsValues }) => {
+
   const addTableRows = () => {
     const rowsInput = {
       id: randomId(),
@@ -19,6 +20,8 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
       sellPrice_1: 0,
       sellPrice_2: 0,
       sellPrice_3: 0,
+      total: 0,
+      tva: 19,
     }
     setProductsValues([...productsValues, rowsInput])
   }
@@ -55,6 +58,7 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
               <Th textAlign={'center'} w={'16ch'} color={'red.500'}>{t('sellPrice_1')}</Th>
               <Th textAlign={'center'} w={'16ch'} color={'blue.500'}>{t('sellPrice_2')}</Th>
               <Th textAlign={'center'} w={'16ch'} color={'green.500'}>{t('sellPrice_3')}</Th>
+              <Th textAlign={'center'} w={'5ch'}>{t('tva')}</Th>
               <Th textAlign={'center'} w={'20ch'}>{t('total')}</Th>
             </Tr>
           </Thead>
