@@ -5,10 +5,12 @@ import { useFormik } from 'formik'
 import { BiLabel } from 'react-icons/bi';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
-import ProductsInputs from '@shared/components/CustomForm/ProductsInputs';
+import ProductsTable from '@shared/components/CustomForm/ProductsTable';
+import { randomId } from '@shared/functions/words';
 
 const Receipt = () => {
   const [productsValues, setProductsValues] = useState([{
+    id: randomId(),
     barCode: '',
     productName: '',
     quantity: 0,
@@ -95,7 +97,7 @@ const Receipt = () => {
           </Container>
           <Text fontWeight={400} fontSize={24} align={'center'} pt={5}>{t('products')}</Text>
 
-          <ProductsInputs productsValues={productsValues} setProductsValues={setProductsValues} />
+          <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
 
           <CustomInput
             name="description"
