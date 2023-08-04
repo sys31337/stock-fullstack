@@ -49,6 +49,7 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
           <TableCaption><Button colorScheme={'green'} onClick={addTableRows} borderRadius={'full'} px={10}>{t('addProduct')}</Button></TableCaption>
           <Thead>
             <Tr>
+              <Th textAlign={'left'} w={'1px'}>#</Th>
               <Th textAlign={'left'} w={'10px'}><BiTrash size={16} /></Th>
               <Th textAlign={'center'} w={'24ch'}>{t('barCode')}</Th>
               <Th textAlign={'center'}>{t('designation')}</Th>

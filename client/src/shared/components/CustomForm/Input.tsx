@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import {
-  Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As, InputProps,
+  Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As, InputProps, InputRightElement, Tag,
 } from '@chakra-ui/react';
 import Any from '@shared/types/any';
 import { Select } from 'chakra-react-select';
@@ -14,24 +14,40 @@ interface SelectOptions {
 
 type CustomInputProps = InputProps & {
   name: string;
-  label: string;
+  label?: string;
   type?: string;
   handleChange?: (e: React.ChangeEvent<Any>) => void;
   setFieldValue?: (fieldName: string, value: Date | string) => void;
   handleBlur?: (e: React.ChangeEvent<Any>) => void;
-  defaultValue: string | Date | number;
+  defaultValue?: string | Date | number;
   value?: string | Date | number;
   errorMessage?: ReactNode;
   isTextArea?: boolean;
   isDate?: boolean;
   isSelect?: boolean;
   icon?: As;
+  currency?: string;
   selectOptions?: SelectOptions[]
 }
 
 const CustomInput = (props: CustomInputProps) => {
   const {
-    name, label, type, handleChange, handleBlur, defaultValue, value, errorMessage, isTextArea, isSelect, isDate, selectOptions, setFieldValue, icon, ...rest
+    name,
+    label,
+    type,
+    handleChange,
+    handleBlur,
+    defaultValue,
+    value,
+    errorMessage,
+    isTextArea,
+    isSelect,
+    isDate,
+    selectOptions,
+    setFieldValue,
+    icon,
+    currency,
+    ...rest
   } = props;
 
   const OnSelectChange = (payload) => {
@@ -41,12 +57,14 @@ const CustomInput = (props: CustomInputProps) => {
 
   return (
     <FormControl id={name}>
-      <FormLabel color={errorMessage ? 'red' : 'theme.900'} my={2}>
-        {label}
-        {errorMessage && (
-          <Text as={'span'} color={'red'} ms={1}>*</Text>
-        )}
-      </FormLabel>
+      {label && (
+        <FormLabel color={errorMessage ? 'red' : 'theme.900'} my={!label ? 0 : 2}>
+          {label}
+          {errorMessage && (
+            <Text as={'span'} color={'red'} ms={1}>*</Text>
+          )}
+        </FormLabel>
+      )}
       {isSelect ? (
         <Select
           isSearchable={true}
@@ -135,10 +153,15 @@ const CustomInput = (props: CustomInputProps) => {
             defaultValue={defaultValue as string | number}
             {...rest}
           />
+          {currency && (
+            <InputRightElement pointerEvents='none' color={'theme.900'} me={2}>
+              <Tag variant='subtle' colorScheme='teal'>DZD</Tag>
+            </InputRightElement>
+          )}
         </InputGroup>
       ))
       }
-    </FormControl >
+    </FormControl>
   );
 };
 

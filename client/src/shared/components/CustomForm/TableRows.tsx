@@ -3,6 +3,7 @@ import { Tr, Td, Input, Button, InputGroup, InputLeftElement } from '@chakra-ui/
 import { BiTrash } from 'react-icons/bi';
 import { BsPercent } from 'react-icons/bs';
 import { price } from '@shared/functions/words';
+import CustomInput from './Input';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [total, setTotal] = useState(0);
@@ -11,12 +12,15 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     const { quantity, stack, buyPrice, tva } = data;
     const total = parseInt(quantity || 0, 10) * parseInt(stack || 0, 10) * parseInt(buyPrice || 0, 10)
     const productTva = total * tva / 100;
-    setTotal(total - productTva)
+    setTotal(total + productTva)
   }
   const { id, barCode, tva, productName, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
 
   return (
     <Tr key={id}>
+      <Td color={'theme.900'}>
+        {index + 1}
+      </Td>
       <Td p={0} w={'5px'} textAlign={'center'}>
         {(index !== 0 || products.length > 1) && (
           <Button px={0} variant={'ghost'} onClick={() => (deleteTableRows(id))}>
@@ -172,22 +176,38 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
         </InputGroup>
       </Td>
       <Td px={1}>
-        <Input
+        <CustomInput
           textAlign={'center'}
           px={2}
-          variant={'unstyled'}
+          // variant={'unstyled'}
           _focusVisible={{
             boxShadow: 'unset',
             border: 'unset'
           }}
-          borderColor={'gray.200'}
+          bg={'transparent'}
+          border={0}
           borderRadius={'xl'}
           color={'theme.900'}
           type={'number'}
           name="total"
           isReadOnly={true}
           value={price(`${total}`)}
+          currency='DZD'
         />
+
+        {/* <CustomInput
+          flex={1}
+          name="orderDebts"
+          label="Order Debts"
+          icon={FcDebt}
+          handleChange={handleChange}
+          handleBlur={handleBlur}
+          defaultValue={orderDebts}
+          value={orderDebts}
+          errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
+          currency='DZD'
+        /> */}
+
       </Td>
     </Tr>)
 }
