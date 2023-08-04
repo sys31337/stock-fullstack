@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Container, Flex, Heading, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Container, Flex, Heading, Stack, Text } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
-import { BiLabel } from 'react-icons/bi';
+import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
 import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
 import ProductsTable from '@shared/components/CustomForm/ProductsTable';
-import { randomId } from '@shared/functions/words';
+import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
 
 const Receipt = () => {
-  const [orderTotal, setOrderTotal] = useState(0);
-  const [orderPaid, setOrderPaid] = useState(0);
-  const [orderDebts, setOrderDebts] = useState(0);
+  const [orderTotal, setOrderTotal] = useState('0.00');
+  const [orderPaid, setOrderPaid] = useState('0.00');
+  const [orderDebts, setOrderDebts] = useState('0.00');
 
   const [productsValues, setProductsValues] = useState([{
     id: randomId(),
@@ -41,7 +41,7 @@ const Receipt = () => {
   }
 
   useEffect(() => {
-    const tt = productsValues.reduce(
+    const total = productsValues.reduce(
       (sum, product) => {
         const { buyPrice, quantity, stack, tva } = product;
         const preTotal = quantity * stack * buyPrice;
@@ -51,11 +51,9 @@ const Receipt = () => {
       },
       0
     );
-    console.log(tt)
-    setOrderTotal(tt)
-    setOrderPaid(0)
-    setOrderDebts(0)
-  }, [productsValues])
+    setOrderTotal(price(`${total}`))
+    setOrderDebts(price(`${total - Number(orderPaid)}`))
+  }, [productsValues, orderPaid, orderDebts])
 
   const onSubmit = (values) => {
     console.log({ ...values, products: productsValues })
@@ -137,38 +135,54 @@ const Receipt = () => {
             errorMessage={errors.description && touched.description && errors.description}
           />
           <Flex display={'flex'} gap={5}>
-            <CustomInput
-              name="orderTotal"
-              label="Order Total"
-              icon={FcNews}
-              // variant={'filled'}
-              bg={'gray.200'}
-              outline={'transparent'}
-              defaultValue={orderTotal}
-              isReadOnly={true}
-              value={orderTotal as Any}
-              errorMessage={errors.orderTotal && touched.orderTotal && errors.orderTotal}
-            />
-            <CustomInput
-              name="orderPaid"
-              label="Paid Amount"
-              icon={FcPaid}
-              handleChange={handleChange}
-              handleBlur={handleBlur}
-              defaultValue={orderPaid}
-              value={orderPaid}
-              errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
-            />
-            <CustomInput
-              name="orderDebts"
-              label="Order Debts"
-              icon={FcDebt}
-              handleChange={handleChange}
-              handleBlur={handleBlur}
-              defaultValue={orderDebts}
-              value={orderDebts}
-              errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
-            />
+            <Flex flex={1} align={'flex-end'}>
+              <CustomInput
+                name="orderTotal"
+                label="Order Total"
+                icon={FcNews}
+                // variant={'filled'}
+                bg={'gray.200'}
+                outline={'transparent'}
+                defaultValue={orderTotal}
+                isReadOnly={true}
+                value={orderTotal as Any}
+                errorMessage={errors.orderTotal && touched.orderTotal && errors.orderTotal}
+              />
+            </Flex>
+
+            <Flex flex={1} align={'flex-end'} gap={5}>
+              <CustomInput
+                name="orderPaid"
+                label="Paid Amount"
+                type={'number'}
+                icon={FcPaid}
+                handleChange={(e) => setOrderPaid(e.target.value)}
+                handleBlur={(e) => setOrderPaid(price(e.target.value))}
+                defaultValue={price(orderPaid)}
+                value={orderPaid}
+                errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
+              />
+              <Button colorScheme={'green'} size={'md'} borderRadius={'xl'} px={5}>
+                <Flex gap={1} align={'center'} fontWeight={400}>
+                  <BiSolidCheckCircle color={'white'} />
+                  {t('fully_paid')}
+                </Flex>
+              </Button>
+            </Flex>
+
+            <Flex flex={1} align={'flex-end'}>
+              <CustomInput
+                flex={1}
+                name="orderDebts"
+                label="Order Debts"
+                icon={FcDebt}
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                defaultValue={orderDebts}
+                value={orderDebts}
+                errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
+              />
+            </Flex>
           </Flex>
         </CustomForm>
       </Container>

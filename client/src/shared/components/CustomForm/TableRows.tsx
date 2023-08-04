@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tr, Td, Input, Button, InputGroup, InputLeftElement } from '@chakra-ui/react';
 import { BiTrash } from 'react-icons/bi';
 import { BsPercent } from 'react-icons/bs';
+import { price } from '@shared/functions/words';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [total, setTotal] = useState(0);
@@ -90,18 +91,18 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           color={'theme.900'}
           type={'number'}
           name="buyPrice"
-          defaultValue={buyPrice}
+          defaultValue={price(buyPrice)}
           onChange={(e) => (updateTotal(e))}
-          onBlur={(e) => handleBlur(index, e)}
+          onBlur={(e) => handleBlur(e)}
         />
       </Td>
       <Td px={1}>
         <Input
           textAlign={'center'}
           px={2}
-          bg={(parseInt(sellPrice_1, 10) < parseInt(buyPrice, 10) && parseInt(sellPrice_1, 10) !== 0)
+          bg={(Number(sellPrice_1) < Number(buyPrice) && Number(sellPrice_1) !== 0)
             ? 'red.100'
-            : ((parseInt(sellPrice_1, 10) === parseInt(buyPrice, 10) && parseInt(sellPrice_1, 10) !== 0)
+            : ((Number(sellPrice_1) === Number(buyPrice) && Number(sellPrice_1) !== 0)
               ? 'yellow.100'
               : 'white')}
           borderColor={'gray.200'}
@@ -109,8 +110,8 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           color={'theme.900'}
           type={'number'}
           name="sellPrice_1"
-          defaultValue={sellPrice_1}
-          onBlur={(e) => handleBlur(index, e)}
+          defaultValue={price(sellPrice_1)}
+          onBlur={(e) => handleBlur(e)}
           onChange={(e) => handleChange(index, e)}
         />
       </Td>
@@ -118,9 +119,9 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
         <Input
           textAlign={'center'}
           px={2}
-          bg={(parseInt(sellPrice_2, 10) < parseInt(buyPrice, 10) && parseInt(sellPrice_2, 10) !== 0)
+          bg={(Number(sellPrice_2) < Number(buyPrice) && Number(sellPrice_2) !== 0)
             ? 'red.100'
-            : ((parseInt(sellPrice_2, 10) === parseInt(buyPrice, 10) && parseInt(sellPrice_2, 10) !== 0)
+            : ((Number(sellPrice_2) === Number(buyPrice) && Number(sellPrice_2) !== 0)
               ? 'yellow.100'
               : 'white')}
           borderColor={'gray.200'}
@@ -128,8 +129,8 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           color={'theme.900'}
           type={'number'}
           name="sellPrice_2"
-          defaultValue={sellPrice_2}
-          onBlur={(e) => handleBlur(index, e)}
+          defaultValue={price(sellPrice_2)}
+          onBlur={(e) => handleBlur(e)}
           onChange={(e) => handleChange(index, e)}
         />
       </Td>
@@ -137,9 +138,9 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
         <Input
           textAlign={'center'}
           px={2}
-          bg={(parseInt(sellPrice_3, 10) < parseInt(buyPrice, 10) && parseInt(sellPrice_3, 10) !== 0)
+          bg={(Number(sellPrice_3) < Number(buyPrice) && Number(sellPrice_3) !== 0)
             ? 'red.100'
-            : ((parseInt(sellPrice_3, 10) === parseInt(buyPrice, 10) && parseInt(sellPrice_1, 10) !== 0)
+            : ((Number(sellPrice_3) === Number(buyPrice) && Number(sellPrice_3) !== 0)
               ? 'yellow.100'
               : 'white')}
           borderColor={'gray.200'}
@@ -147,8 +148,8 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           color={'theme.900'}
           type={'number'}
           name="sellPrice_3"
-          defaultValue={sellPrice_3}
-          onBlur={(e) => handleBlur(index, e)}
+          defaultValue={price(sellPrice_3)}
+          onBlur={(e) => handleBlur(e)}
           onChange={(e) => handleChange(index, e)}
         />
       </Td>
@@ -158,9 +159,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
             <BsPercent color='gray' />
           </InputLeftElement>
           <Input
-            // textAlign={'center'}
             p={'0 0 0 25px'}
-            // px={0}
             bg={'white'}
             borderColor={'gray.200'}
             borderRadius={'xl'}
@@ -187,7 +186,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           type={'number'}
           name="total"
           isReadOnly={true}
-          value={parseFloat(total as unknown as string).toFixed(2)}
+          value={price(`${total}`)}
         />
       </Td>
     </Tr>)

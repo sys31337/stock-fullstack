@@ -3,7 +3,7 @@ import TableRows from "./TableRows";
 import { Button, Table, TableCaption, TableContainer, Tbody, Th, Thead, Tr } from "@chakra-ui/react";
 import { t } from "i18next";
 import { BiTrash } from "react-icons/bi";
-import { randomId } from "@shared/functions/words";
+import { price, randomId } from "@shared/functions/words";
 
 const decimalInputs = ['sellPrice_1', 'sellPrice_2', 'sellPrice_3', 'buyPrice', 'total']
 
@@ -33,13 +33,13 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
   const handleChange = (index, e) => {
     const { name, value } = e.target;
     const rowsInput = [...productsValues];
-    rowsInput[index][name] = decimalInputs.includes(name) ? parseFloat(value || 0).toFixed(2) : value;
+    rowsInput[index][name] = decimalInputs.includes(name) ? price(value) : value;
     setProductsValues(rowsInput);
   }
 
-  const handleBlur = (index, e) => {
+  const handleBlur = (e) => {
     const { name, value } = e.target;
-    e.target.value = decimalInputs.includes(name) ? parseFloat(value || 0).toFixed(2) : value;
+    e.target.value = decimalInputs.includes(name) ? price(value) : value;
   }
 
   return (
