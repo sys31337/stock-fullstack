@@ -29,6 +29,11 @@ const usersSchema = new Schema({
     default: false,
     unique: true,
   },
+  type: {
+    type: String,
+    enum: ['USER', 'VENDOR'],
+    default: 'USER'
+  },
   permissions: [String],
   refreshToken: String,
 }, { timestamps: true });
