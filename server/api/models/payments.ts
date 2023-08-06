@@ -6,14 +6,9 @@ const paymentsSchema = new Schema({
     type: Date,
     required: true,
   },
-  client: {
+  customer: {
     type: Schema.Types.ObjectId,
-    refPath: 'clientModel',
-  },
-  clientModel: {
-    type: String,
-    required: true,
-    enum: ['Supplier', 'Client']
+    ref: 'Customer',
   },
   addedAmount: {
     type: Number,
