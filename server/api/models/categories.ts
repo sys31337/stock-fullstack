@@ -3,6 +3,7 @@ import { requiredString } from './helpers/common';
 
 const categoriesSchema = new Schema({
   name: requiredString,
+  description: String,
   products: [{
     type: Schema.Types.ObjectId,
     ref: 'Product',
