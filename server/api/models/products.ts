@@ -8,6 +8,7 @@ export const productsSchema = new Schema({
   quantity: requiredNumber,
   stack: requiredNumber,
   buyPrice: requiredNumber,
+  reserved: Number,
   sellPrice_1: requiredNumber,
   sellPrice_2: requiredNumber,
   sellPrice_3: requiredNumber,
@@ -17,6 +18,10 @@ export const productsSchema = new Schema({
     ...requiredNumber,
     default: 19,
   },
+  category: {
+    type: Schema.Types.ObjectId,
+    ref: 'Category',
+  },
   supplier: {
     type: Schema.Types.ObjectId,
     ref: 'Product',
@@ -25,7 +30,11 @@ export const productsSchema = new Schema({
     type: String,
     enum: ['CLIENT', 'SUPPLIER'],
     default: 'SUPPLIER'
-  }
+  },
+  notify: {
+    type: Boolean,
+    default: true,
+  },
 }, { timestamps: true });
 
 const Product = model('Product', productsSchema);
