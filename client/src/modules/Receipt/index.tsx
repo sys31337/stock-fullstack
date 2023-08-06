@@ -109,6 +109,7 @@ const Receipt = () => {
                 name="supplier"
                 label="Supplier"
                 setFieldValue={setFieldValue}
+                onFocus={() => console.log('first')}
                 handleBlur={handleBlur}
                 defaultValue={values.supplier}
                 errorMessage={errors.supplier && touched.supplier && errors.supplier}
@@ -159,7 +160,6 @@ const Receipt = () => {
                   border: '1px solid',
                   borderColor: 'gray.300'
                 }}
-                defaultValue={orderTotalHT}
                 isReadOnly={true}
                 value={orderTotalHT as Any}
                 errorMessage={errors.orderTotalHT && touched.orderTotalHT && errors.orderTotalHT}
@@ -178,7 +178,6 @@ const Receipt = () => {
                   border: '1px solid',
                   borderColor: 'gray.300'
                 }}
-                defaultValue={orderTotalTTC}
                 isReadOnly={true}
                 value={orderTotalTTC as Any}
                 errorMessage={errors.orderTotalTTC && touched.orderTotalTTC && errors.orderTotalTTC}
@@ -201,7 +200,6 @@ const Receipt = () => {
                 }}
                 handleChange={handleChange}
                 handleBlur={handleBlur}
-                defaultValue={orderDebts}
                 value={orderDebts}
                 errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
                 currency='DZD'
@@ -215,7 +213,6 @@ const Receipt = () => {
                 icon={FcPaid}
                 handleChange={(e) => setOrderPaid(e.target.value)}
                 handleBlur={(e) => setOrderPaid(price(e.target.value))}
-                defaultValue={price(orderPaid)}
                 value={orderPaid}
                 errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
                 currency='DZD'

@@ -103,6 +103,7 @@ const CustomInput = (props: CustomInputProps) => {
           }}
           classNamePrefix='chakra-react-select'
           colorScheme='purple'
+          {...rest as unknown as Any} 
         />
       ) : (isDate ? (
         <SingleDatepicker
