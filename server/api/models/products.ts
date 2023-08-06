@@ -22,14 +22,9 @@ export const productsSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Category',
   },
-  supplier: {
+  customer: {
     type: Schema.Types.ObjectId,
-    ref: 'Product',
-  },
-  supplierType: {
-    type: String,
-    enum: ['CLIENT', 'SUPPLIER'],
-    default: 'SUPPLIER'
+    ref: 'Customer',
   },
   notify: {
     type: Boolean,
