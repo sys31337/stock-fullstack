@@ -6,13 +6,15 @@ import { price } from '@shared/functions/words';
 import CustomInput from './Input';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
-  const [total, setTotal] = useState(0);
+  const [totalHT, setTotalHT] = useState(0);
+  const [totalTTC, setTotalTTC] = useState(0);
   const updateTotal = (e) => {
     handleChange(index, e)
     const { quantity, stack, buyPrice, tva } = data;
     const total = parseInt(quantity || 0, 10) * parseInt(stack || 0, 10) * parseInt(buyPrice || 0, 10)
     const productTva = total * tva / 100;
-    setTotal(total + productTva)
+    setTotalHT(total);
+    setTotalTTC(total + productTva);
   }
   const { id, barCode, tva, productName, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
 
@@ -179,7 +181,6 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
         <CustomInput
           textAlign={'center'}
           px={2}
-          // variant={'unstyled'}
           _focusVisible={{
             boxShadow: 'unset',
             border: 'unset'
@@ -189,25 +190,30 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           borderRadius={'xl'}
           color={'theme.900'}
           type={'number'}
-          name="total"
+          name="totalHT"
           isReadOnly={true}
-          value={price(`${total}`)}
+          value={price(`${totalHT}`)}
           currency='DZD'
         />
-
-        {/* <CustomInput
-          flex={1}
-          name="orderDebts"
-          label="Order Debts"
-          icon={FcDebt}
-          handleChange={handleChange}
-          handleBlur={handleBlur}
-          defaultValue={orderDebts}
-          value={orderDebts}
-          errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
+      </Td>
+      <Td px={1}>
+        <CustomInput
+          textAlign={'center'}
+          px={2}
+          _focusVisible={{
+            boxShadow: 'unset',
+            border: 'unset'
+          }}
+          bg={'transparent'}
+          border={0}
+          borderRadius={'xl'}
+          color={'theme.900'}
+          type={'number'}
+          name="totalTTC"
+          isReadOnly={true}
+          value={price(`${totalTTC}`)}
           currency='DZD'
-        /> */}
-
+        />
       </Td>
     </Tr>)
 }

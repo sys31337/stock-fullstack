@@ -11,7 +11,8 @@ export const productsSchema = new Schema({
   sellPrice_1: requiredNumber,
   sellPrice_2: requiredNumber,
   sellPrice_3: requiredNumber,
-  total: requiredNumber,
+  totalHT: requiredNumber,
+  totalTTC: requiredNumber,
   tva: {
     ...requiredNumber,
     default: 19,

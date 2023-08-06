@@ -26,7 +26,8 @@ const Receipt = () => {
     sellPrice_1: 0,
     sellPrice_2: 0,
     sellPrice_3: 0,
-    total: 0,
+    totalHT: 0,
+    totalTTC: 0,
     tva: 19,
   }]);
 
