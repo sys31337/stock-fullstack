@@ -11,10 +11,12 @@ import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
 import { useGetAllCustomers } from '@shared/hooks/useCustomers';
 import { useGetAllCategories } from '@shared/hooks/useCategories';
+import { useGetLatestBillNumber } from '@shared/hooks/useBill';
 
 const Receipt = () => {
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
+  const { data: latestBillNumber } = useGetLatestBillNumber('BUY');
   const [orderTotalHT, setOrderTotalHT] = useState('0.00');
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
@@ -36,7 +38,7 @@ const Receipt = () => {
   }]);
 
   const initialValues = {
-    title: '',
+    orderId: latestBillNumber ? latestBillNumber + 1 : 0,
     category: '',
     description: '',
     supplier: '',
@@ -92,13 +94,13 @@ const Receipt = () => {
           <Container maxW={'8xl'} mt={12}>
             <Flex display={'flex'} gap={5}>
               <CustomInput
-                name="title"
-                label="Title"
+                name="orderId"
+                label="Numero"
                 icon={BiLabel}
                 handleChange={handleChange}
                 handleBlur={handleBlur}
-                defaultValue={values.title}
-                errorMessage={errors.title && touched.title && errors.title}
+                defaultValue={values.orderId}
+                errorMessage={errors.orderId && touched.orderId && errors.orderId}
               />
               <CustomInput
                 name="date"

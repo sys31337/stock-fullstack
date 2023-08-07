@@ -1,8 +1,19 @@
 import axiosInstance from "@shared/services/api";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-export const useCreateBill = () => useMutation((data) => axiosInstance.request({
+const useCreateBill = () => useMutation((data) => axiosInstance.request({
   method: 'POST',
   url: 'bills',
   data,
 }));
+
+const useGetLatestBillNumber = (type: string) => useQuery(
+  ['Get latest bill number'],
+  async () => axiosInstance
+    .request({
+      url: `bills/${type}`,
+    })
+    .then(({ data }) => data),
+);
+
+export { useCreateBill, useGetLatestBillNumber };

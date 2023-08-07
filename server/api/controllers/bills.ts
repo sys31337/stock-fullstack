@@ -30,7 +30,30 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
   }
 }
 
+const getLatestBillOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { type } = req.params;
+    const latestBillOfType = await Bill.find({ type }).lean();
+    console.log(type);
+    console.log(latestBillOfType);
+    return res.status(200).send(latestBillOfType);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+const getAllBills = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const bills = await Bill.find();
+    return res.status(200).send(bills);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export {
   createOne,
   updateOne,
+  getLatestBillOfType,
+  getAllBills,
 }
