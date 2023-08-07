@@ -38,7 +38,8 @@ const Receipt = () => {
   }]);
 
   const initialValues = {
-    orderId: latestBillNumber ? latestBillNumber + 1 : 0,
+    orderId: 0,
+    // orderId: latestBillNumber && latestBillNumber ? latestBillNumber + 1 : 0,
     category: '',
     description: '',
     supplier: '',
