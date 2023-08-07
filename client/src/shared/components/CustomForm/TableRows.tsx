@@ -13,6 +13,8 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     const { quantity, stack, buyPrice, tva } = data;
     const total = parseInt(quantity || 0, 10) * parseInt(stack || 0, 10) * parseInt(buyPrice || 0, 10)
     const productTva = total * tva / 100;
+    data.totalHT = total;
+    data.totalTTC = total + productTva;
     setTotalHT(total);
     setTotalTTC(total + productTva);
   }
