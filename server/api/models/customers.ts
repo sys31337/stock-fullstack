@@ -15,6 +15,11 @@ const customersSchema = new Schema({
     type: Number,
     default: 0
   },
+  type: {
+    type: String,
+    enum: ['Client', 'Supplier'],
+    default: 'Client'
+  },
   products: [{
     type: Schema.Types.ObjectId,
     ref: 'Product',

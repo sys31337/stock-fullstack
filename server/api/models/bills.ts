@@ -8,14 +8,17 @@ const billsSchema = new Schema({
   category: {
     type: Schema.Types.ObjectId,
     ref: 'Category',
+    required: true,
   },
   customer: {
     type: Schema.Types.ObjectId,
     ref: 'Customer',
+    required: true,
   },
   type: {
     type: String,
     enum: ['BUY', 'SALE', 'ORDER'],
+    required: true,
   },
   createdBy: {
     type: Schema.Types.ObjectId,
@@ -33,6 +36,7 @@ const billsSchema = new Schema({
   paymentMethod: {
     type: String,
     default: 'Cash',
+    required: true,
   },
   pricingCategory: {
     type: Number,
