@@ -9,8 +9,12 @@ import CustomInput from '@shared/components/CustomForm/Input'
 import ProductsTable from '@shared/components/CustomForm/ProductsTable';
 import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
+import { useGetAllCustomers } from '@shared/hooks/useCustomers';
+import { useGetAllCategories } from '@shared/hooks/useCategories';
 
 const Receipt = () => {
+  const { data: allCustomers, refetch } = useGetAllCustomers();
+  const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
   const [orderTotalHT, setOrderTotalHT] = useState('0.00');
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
@@ -109,29 +113,26 @@ const Receipt = () => {
                 name="supplier"
                 label="Supplier"
                 setFieldValue={setFieldValue}
-                onFocus={() => console.log('first')}
+                onFocus={() => refetch()}
                 handleBlur={handleBlur}
                 defaultValue={values.supplier}
                 errorMessage={errors.supplier && touched.supplier && errors.supplier}
-                selectOptions={[
-                  { value: "blue", label: "Blue" },
-                  { value: "purple", label: "Purple" },
-                  { value: "red", label: "Red" },
-                ]}
+                selectOptions={
+                  allCustomers && [...allCustomers, { name: 'Unspecified', _id: 0 }].map((customer) => ({ label: customer.name, value: customer._id }))
+                }
                 isSelect={true}
               />
               <CustomInput
                 name="category"
                 label="Category"
                 setFieldValue={setFieldValue}
+                onFocus={() => refetchCategories()}
                 handleBlur={handleBlur}
                 defaultValue={values.category}
                 errorMessage={errors.category && touched.category && errors.category}
-                selectOptions={[
-                  { value: "blue", label: "Blue" },
-                  { value: "purple", label: "Purple" },
-                  { value: "red", label: "Red" },
-                ]}
+                selectOptions={
+                  allCategories && [...allCategories, { name: 'Unspecified', _id: 0 }].map((category) => ({ label: category.name, value: category._id }))
+                }
                 isSelect={true}
               />
             </Flex>
