@@ -16,11 +16,22 @@ import { useGetLatestBillNumber } from '@shared/hooks/useBill';
 const Receipt = () => {
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
-  const { data: latestBillNumber } = useGetLatestBillNumber('BUY');
+  const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('BUY');
   const [orderTotalHT, setOrderTotalHT] = useState('0.00');
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
   const [orderDebts, setOrderDebts] = useState('0.00');
+  const [initialValues, setInitialValues] = useState({
+    orderId: 0,
+    category: '',
+    description: '',
+    supplier: '',
+    orderTotalHT,
+    orderTotalTTC,
+    orderPaid,
+    orderDebts,
+    date: new Date() as unknown as string,
+  });
 
   const [productsValues, setProductsValues] = useState([{
     id: randomId(),
@@ -36,19 +47,6 @@ const Receipt = () => {
     totalTTC: 0,
     tva: 19,
   }]);
-
-  const initialValues = {
-    orderId: 0,
-    // orderId: latestBillNumber && latestBillNumber ? latestBillNumber + 1 : 0,
-    category: '',
-    description: '',
-    supplier: '',
-    orderTotalHT,
-    orderTotalTTC,
-    orderPaid,
-    orderDebts,
-    date: new Date() as unknown as string,
-  }
 
   useEffect(() => {
     const totalTTC = productsValues.reduce(
@@ -74,13 +72,22 @@ const Receipt = () => {
     setOrderDebts(price(`${totalTTC - Number(orderPaid)}`))
   }, [productsValues, orderPaid, orderDebts])
 
+  useEffect(() => {
+    if (isFetched) {
+      setInitialValues((prev) => {
+        console.log({ ...prev, orderId: latestBillNumber })
+        return { ...prev, orderId: latestBillNumber }
+      })
+    }
+    console.log({ orderId: latestBillNumber })
+  }, [isFetched, latestBillNumber]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
 
   const onSubmit = (values) => {
     console.log({ ...values, products: productsValues })
   }
 
-  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit });
+  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
 
   return (
     <Box p={4}>
@@ -100,7 +107,7 @@ const Receipt = () => {
                 icon={BiLabel}
                 handleChange={handleChange}
                 handleBlur={handleBlur}
-                defaultValue={values.orderId}
+                value={values.orderId}
                 errorMessage={errors.orderId && touched.orderId && errors.orderId}
               />
               <CustomInput
