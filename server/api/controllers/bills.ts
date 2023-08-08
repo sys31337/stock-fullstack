@@ -9,8 +9,8 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       createBy: userId,
     }
-    const insertProduct = await Bill.create(payload);
-    return res.status(200).send(insertProduct);
+    const createBill = await Bill.create(payload);
+    return res.status(200).send(createBill);
   } catch (error) {
     return next(error);
   }
@@ -23,8 +23,8 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       updatedBy: userId,
     }
-    const insertProduct = await Bill.create(payload);
-    return res.status(200).send(insertProduct);
+    const updateBill = await Bill.create(payload);
+    return res.status(200).send(updateBill);
   } catch (error) {
     return next(error);
   }
@@ -33,10 +33,8 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 const getLatestBillOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type } = req.params;
-    const latestBillOfType = await Bill.find({ type }).lean();
-    console.log(type);
-    console.log(latestBillOfType);
-    return res.status(200).send(latestBillOfType);
+    const latestBillOfType = await Bill.findOne({ type }, {}, { sort: { 'createdAt': -1 } });
+    return res.status(200).send(latestBillOfType.orderId);
   } catch (error) {
     return next(error);
   }

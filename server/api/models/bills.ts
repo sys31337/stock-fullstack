@@ -8,12 +8,10 @@ const billsSchema = new Schema({
   category: {
     type: Schema.Types.ObjectId,
     ref: 'Category',
-    required: true,
   },
   customer: {
     type: Schema.Types.ObjectId,
     ref: 'Customer',
-    required: true,
   },
   type: {
     type: String,
