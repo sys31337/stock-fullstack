@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@chakra-ui/react';
-import { withRouter } from '@shared/hooks/withRouter';
+// import { withRouter } from '@shared/hooks/withRouter';
 import { BsBack } from 'react-icons/bs';
 
 const SubNav = () => (
@@ -10,4 +10,5 @@ const SubNav = () => (
   </Button>
 );
 
-export default withRouter(SubNav);
+// export default withRouter(SubNav);
+export default SubNav;
