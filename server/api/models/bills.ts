@@ -4,7 +4,7 @@ import { productsSchema } from './products';
 
 const billsSchema = new Schema({
   billDate: requiredString,
-  orderId: requiredString,
+  orderId: requiredNumber,
   category: {
     type: Schema.Types.ObjectId,
     ref: 'Category',

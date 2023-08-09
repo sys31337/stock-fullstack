@@ -34,7 +34,7 @@ const getLatestBillOfType = async (req: IUserIdRequest, res: Response, next: Nex
   try {
     const { type } = req.params;
     const latestBillOfType = await Bill.findOne({ type }, {}, { sort: { 'createdAt': -1 } });
-    return res.status(200).send(latestBillOfType.orderId);
+    return res.status(200).send(`${latestBillOfType.orderId}`);
   } catch (error) {
     return next(error);
   }

@@ -11,12 +11,13 @@ import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
 import { useGetAllCustomers } from '@shared/hooks/useCustomers';
 import { useGetAllCategories } from '@shared/hooks/useCategories';
-import { useGetLatestBillNumber } from '@shared/hooks/useBill';
+import { useCreateBill, useGetLatestBillNumber } from '@shared/hooks/useBill';
 
 const Receipt = () => {
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('BUY');
+  const { mutateAsync: createBill } = useCreateBill();
   const [orderTotalHT, setOrderTotalHT] = useState('0.00');
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
@@ -25,12 +26,12 @@ const Receipt = () => {
     orderId: 0,
     category: '',
     description: '',
-    supplier: '',
+    customer: '',
     orderTotalHT,
     orderTotalTTC,
     orderPaid,
     orderDebts,
-    date: new Date() as unknown as string,
+    billDate: new Date() as unknown as string,
   });
 
   const [productsValues, setProductsValues] = useState([{
@@ -74,17 +75,31 @@ const Receipt = () => {
 
   useEffect(() => {
     if (isFetched) {
-      setInitialValues((prev) => {
-        console.log({ ...prev, orderId: latestBillNumber })
-        return { ...prev, orderId: latestBillNumber }
-      })
+      setInitialValues((prev) => ({ ...prev, orderId: latestBillNumber + 1 }))
     }
-    console.log({ orderId: latestBillNumber })
   }, [isFetched, latestBillNumber]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
 
-  const onSubmit = (values) => {
-    console.log({ ...values, products: productsValues })
+  const onSubmit = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        paymentMethod: 'CASH',
+        type: 'BUY',
+        products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => ({
+          ...rest,
+          buyPrice: parseInt(buyPrice as unknown as string, 10),
+          quantity: parseInt(quantity as unknown as string, 10),
+          sellPrice_1: parseInt(sellPrice_1 as unknown as string, 10),
+          sellPrice_2: parseInt(sellPrice_2 as unknown as string, 10),
+          sellPrice_3: parseInt(sellPrice_3 as unknown as string, 10),
+          stack: parseInt(stack as unknown as string, 10),
+        }))
+      }
+      await createBill(payload);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
@@ -115,18 +130,18 @@ const Receipt = () => {
                 label="Date"
                 setFieldValue={setFieldValue}
                 handleBlur={handleBlur}
-                defaultValue={values.date}
-                errorMessage={errors.date && touched.date && errors.date}
+                defaultValue={values.billDate}
+                errorMessage={errors.billDate && touched.billDate && errors.billDate}
                 isDate={true}
               />
               <CustomInput
-                name="supplier"
-                label="Supplier"
+                name="customer"
+                label="Customer"
                 setFieldValue={setFieldValue}
                 onFocus={() => refetch()}
                 handleBlur={handleBlur}
-                defaultValue={values.supplier}
-                errorMessage={errors.supplier && touched.supplier && errors.supplier}
+                defaultValue={values.customer}
+                errorMessage={errors.customer && touched.customer && errors.customer}
                 selectOptions={
                   allCustomers && [...allCustomers, { name: 'Unspecified', _id: 0 }].map((customer) => ({ label: customer.name, value: customer._id }))
                 }

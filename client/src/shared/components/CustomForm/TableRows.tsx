@@ -69,7 +69,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           borderColor={'gray.200'}
           borderRadius={'xl'}
           color={'theme.900'}
-          type={'text'}
+          type={'number'}
           name="quantity"
           defaultValue={quantity}
           onChange={(e) => (updateTotal(e))}
@@ -83,7 +83,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
           borderColor={'gray.200'}
           borderRadius={'xl'}
           color={'theme.900'}
-          type={'text'}
+          type={'number'}
           name="stack"
           defaultValue={stack}
           onChange={(e) => (updateTotal(e))}
