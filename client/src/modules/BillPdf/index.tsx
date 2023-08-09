@@ -1,39 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Text } from '@react-pdf/renderer';
-import SalerSection from './helpers/SalerSection';
+import React, { useState, useEffect } from 'react';
 
-import VisitInfo from './helpers/VisitInfo';
+import ReceiptBill from './helpers/ReceiptBill';
 import Loading from '@shared/components/Loading';
 import PageLayout from '@shared/components/PDF/Layout';
-import styles from '@shared/components/PDF/styles';
-import SubNav from '@shared/components/SubNav';
+import { Box } from '@chakra-ui/react';
 
-const VisitVoucher = () => {
+const BillPdf = () => {
   const [loading, setLoading] = useState(true);
-  const [visit, setVisit] = useState(0);
-  const getVisit = useCallback(() => {
-    setVisit(1)
+  useEffect(() => {
     setLoading(false)
   }, []);
 
-  useEffect(() => {
-    getVisit();
-  }, [getVisit]);
-
   if (loading) return <Loading />;
 
-  const salerName = 'test';
-
   return loading ? <Loading /> : (
-    <>
-      <SubNav />
+    <Box h={'100vh'}>
       <PageLayout>
-        <Text style={[styles.docTitle, { marginTop: 90, fontSize: 18, textDecoration: 'underline' }]}>Bon de visite</Text>
-        <VisitInfo visit={visit} />
-        <SalerSection salerName={salerName} />
+        <ReceiptBill />
       </PageLayout>
-    </>
+    </Box>
   );
 };
 
-export default VisitVoucher;
+export default BillPdf;
