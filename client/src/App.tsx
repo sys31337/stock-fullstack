@@ -13,11 +13,13 @@ const Receipt = React.lazy(() => import('./modules/Receipt'));
 const Sale = React.lazy(() => import('./modules/Sale'));
 const Order = React.lazy(() => import('./modules/Order'));
 const Invoice = React.lazy(() => import('./modules/Invoice'));
+const BillPdf = React.lazy(() => import('./modules/BillPdf'));
 /* Modules */
 
 const App = () => (
   <Routes>
     <Route path="connexion/*" element={<Authentication />} />
+    <Route path="billpdf/*" element={<BillPdf />} />
     <Route element={<AppSection />}>
       <Route
         path="/*"
