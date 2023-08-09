@@ -1,6 +1,7 @@
 import { model, Schema } from 'mongoose';
+import { IUser } from '../types/IUser';
 
-const usersSchema = new Schema({
+const usersSchema = new Schema<IUser>({
   username: {
     type: String,
     unique: true,
@@ -38,5 +39,5 @@ const usersSchema = new Schema({
   refreshToken: String,
 }, { timestamps: true });
 
-const User = model('User', usersSchema);
+const User = model<IUser>('User', usersSchema);
 export default User;
