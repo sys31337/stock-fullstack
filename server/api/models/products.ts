@@ -1,7 +1,8 @@
 import { model, Schema } from 'mongoose';
 import { requiredNumber, requiredString } from './helpers/common';
+import { IProduct } from '../types/IProducts';
 
-export const productsSchema = new Schema({
+export const productsSchema = new Schema<IProduct>({
   id: requiredString,
   barCode: requiredString,
   productName: requiredString,
@@ -12,8 +13,6 @@ export const productsSchema = new Schema({
   sellPrice_1: requiredNumber,
   sellPrice_2: requiredNumber,
   sellPrice_3: requiredNumber,
-  totalHT: requiredNumber,
-  totalTTC: requiredNumber,
   tva: {
     ...requiredNumber,
     default: 19,
@@ -32,5 +31,5 @@ export const productsSchema = new Schema({
   },
 }, { timestamps: true });
 
-const Product = model('Product', productsSchema);
+const Product = model<IProduct>('Product', productsSchema);
 export default Product;
