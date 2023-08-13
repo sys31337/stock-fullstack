@@ -13,7 +13,7 @@ const ReceiptBill = () => {
   return (
     <Box h={'100vh'}>
       <PageLayout>
-        <ReceiptBillPdf id={id} data={data} />
+        <ReceiptBillPdf data={data} />
       </PageLayout>
     </Box>
   )

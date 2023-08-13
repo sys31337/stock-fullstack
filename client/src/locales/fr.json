@@ -10,6 +10,8 @@
   "logout": "Déconnexion",
   "newReceiptBill": "Bon de réception",
   "newReceiptBillLabel": "Créer un nouveau bon de réception",
+  "receiptBillId": "Bon de réception N°",
+  "date": "Date",
   "newOrder": "Bon de commande",
   "newSale": "Bon de livraison",
   "newInvoice": "Facture",

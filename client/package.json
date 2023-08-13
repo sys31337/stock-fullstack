@@ -21,6 +21,7 @@
     "axios": "^1.4.0",
     "chakra-dayzed-datepicker": "^0.2.9",
     "chakra-react-select": "^4.7.0",
+    "dayjs": "^1.11.9",
     "dayzed": "^3.2.3",
     "formik": "^2.4.2",
     "framer-motion": "^10.15.0",

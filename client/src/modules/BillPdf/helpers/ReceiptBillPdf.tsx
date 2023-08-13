@@ -1,13 +1,41 @@
 import React from 'react';
 import { View, Text } from '@react-pdf/renderer';
 import styles from '@shared/components/PDF/styles';
+import { t } from 'i18next';
+import dayjs from 'dayjs';
 
-const ReceiptBillPdf = ({ id, data }) => {
+const ReceiptBillPdf = ({ data }) => {
 
-  console.log(data);
+  const { billDate,
+    orderId,
+    // type,
+    // orderTotalHT,
+    // orderTotalTTC,
+    // orderPaid,
+    // orderDebts,
+    // paymentMethod,
+    // description
+  } = data;
   return (
     <View style={{ padding: 20 }}>
-      <Text style={{ textAlign: 'center' }}>Bill: {id}</Text>
+      <View style={{
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+      }}>
+        <View style={{
+          backgroundColor: '#ddd',
+          padding: 10,
+          paddingHorizontal: 20,
+          borderRadius: 10,
+          marginBottom: 5,
+          fontSize: 12
+        }}>
+          <Text>{t('receiptBillId')} {orderId}</Text>
+          <Text>{t('date')} {dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Text>
+          <Text>{t('receiptBillId')} {orderId}</Text>
+        </View>
+      </View>
       <View style={styles.table}>
         <View style={styles.tableHead}>
           <View style={styles.tableCol}>
