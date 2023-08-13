@@ -16,4 +16,13 @@ const useGetLatestBillNumber = (type: string) => useQuery(
     .then(({ data }) => data),
 );
 
-export { useCreateBill, useGetLatestBillNumber };
+const useGetBillInfo = (id: string) => useQuery(
+  ['Get bill information', id],
+  async () => axiosInstance
+    .request({
+      url: `bills/info/${id}`,
+    })
+    .then(({ data }) => data),
+);
+
+export { useCreateBill, useGetLatestBillNumber, useGetBillInfo };

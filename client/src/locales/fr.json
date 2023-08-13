@@ -9,6 +9,7 @@
   "submit": "Soumettre",
   "logout": "Déconnexion",
   "newReceiptBill": "Bon de réception",
+  "newReceiptBillLabel": "Créer un nouveau bon de réception",
   "newOrder": "Bon de commande",
   "newSale": "Bon de livraison",
   "newInvoice": "Facture",
@@ -23,6 +24,7 @@
   "sellPrice_3": "Prix de vente 3",
   "total": "Totale",
   "addProduct": "Ajouter un produit",
-  "fully_paid": "Payé"
-
+  "fully_paid": "Payé",
+  "productsList": "Liste des produits",
+  "productsListSublabel": "Gérer vos produits"
 }

@@ -21,7 +21,7 @@ import languages from '@config/languages'
 import { useLogout } from '@shared/hooks/useAuthentication'
 import authService from '@shared/services/auth'
 import i18next, { t } from 'i18next'
-import { AiOutlineClose, AiOutlineMore, AiOutlineRight, AiOutlineDown, AiOutlinePoweroff } from 'react-icons/ai'
+import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFillRightCircle } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -130,15 +130,16 @@ const AppTopBar = ({ children }) => {
         </Flex>
         <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'space-between' }} alignItems={'center'} px={5}>
           <Text
+            flex={1} justifyContent={'flex-end'}
             textAlign={useBreakpointValue({ base: 'center', md: 'left' })}
             fontFamily={'heading'}
             color={useColorModeValue('gray.800', 'white')}>
             Logo
           </Text>
-          <Flex display={{ base: 'none', md: 'flex' }}>
+          <Flex display={{ base: 'none', md: 'flex' }} flex={1} justifyContent={'center'}>
             <DesktopNav />
           </Flex>
-          <Flex alignItems={'center'}>
+          <Flex alignItems={'center'} flex={1} justifyContent={'flex-end'}>
             <Languages me={2} />
             <Button colorScheme={'red'} variant={'ghost'} size={'sm'} onClick={onLogout}>
               <Box as={AiOutlinePoweroff} me={1} /> {t('logout')}
@@ -169,6 +170,7 @@ const DesktopNav = () => {
             <PopoverTrigger>
               <Box
                 as="a"
+                
                 p={2}
                 href={navItem.href ?? '#'}
                 fontSize={'sm'}
@@ -185,6 +187,7 @@ const DesktopNav = () => {
             {navItem.children && (
               <PopoverContent
                 border={0}
+                mt={2}
                 boxShadow={'xl'}
                 bg={popoverContentBgColor}
                 p={4}
@@ -212,13 +215,14 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
       role={'group'}
       display={'block'}
       p={2}
-      rounded={'md'}
+      px={3}
+      rounded={'lg'}
       _hover={{ bg: useColorModeValue('blue.50', 'gray.900') }}>
       <Stack direction={'row'} align={'center'}>
         <Box>
           <Text
             transition={'all .3s ease'}
-            _groupHover={{ color: 'blue.400' }}
+            _groupHover={{ color: 'blue.500' }}
             fontWeight={500}>
             {label}
           </Text>
@@ -232,7 +236,7 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
           justify={'flex-end'}
           align={'center'}
           flex={1}>
-          <Icon color={'blue.400'} w={5} h={5} as={AiOutlineRight} />
+          <Icon color={'blue.400'} w={5} h={5} as={AiFillRightCircle} />
         </Flex>
       </Stack>
     </Box>
@@ -310,17 +314,17 @@ const NAV_ITEMS: Array<NavItem> = [
     href: '/',
   },
   {
-    label: 'Inspiration',
+    label: t('products'),
     children: [
       {
-        label: 'Explore Design Work',
-        subLabel: 'Trending Design to inspire you',
-        href: '#',
+        label: t('productsList'),
+        subLabel: t('productsListSublabel'),
+        href: 'products',
       },
       {
-        label: 'New & Noteworthy',
-        subLabel: 'Up-and-coming Designers',
-        href: '#',
+        label: t('newReceiptBill'),
+        subLabel: t('newReceiptBillLabel'),
+        href: 'receipt',
       },
     ],
   },

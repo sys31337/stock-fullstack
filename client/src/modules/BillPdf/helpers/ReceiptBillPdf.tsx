@@ -1,14 +1,13 @@
 import React from 'react';
-// import PropTypes from 'prop-types';
 import { View, Text } from '@react-pdf/renderer';
-// import { format } from 'date-fns';
 import styles from '@shared/components/PDF/styles';
 
-const ReceiptBill = () => {
-  // const billDate = new Date();
+const ReceiptBillPdf = ({ id, data }) => {
+
+  console.log(data);
   return (
     <View style={{ padding: 20 }}>
-      <Text style={{ textAlign: 'center' }}>Bill</Text>
+      <Text style={{ textAlign: 'center' }}>Bill: {id}</Text>
       <View style={styles.table}>
         <View style={styles.tableHead}>
           <View style={styles.tableCol}>
@@ -39,8 +38,11 @@ const ReceiptBill = () => {
           </View>
         </View>
       </View>
+      <Text>
+        {JSON.stringify(data)}
+      </Text>
     </View>
   );
 };
 
-export default ReceiptBill;
+export default ReceiptBillPdf;
