@@ -7,10 +7,11 @@ const router = express.Router();
 
 const billBeautifier = (req: Request, res: Response, next: NextFunction) => {
   const { category, customer, ...rest } = req.body;
+  console.log(': %s :', category)
   req.body = {
     ...rest,
-    ...(category !== '0' && category),
-    ...(customer !== '0' && customer),
+    ...(category.length === 24 && { category }),
+    ...(customer.length === 24 && { customer }),
   }
   next();
 }

@@ -9,6 +9,7 @@ import Card from './components/Card';
 import { modules } from './helpers/modules';
 import cacheService from '@shared/services/cache';
 import { t } from 'i18next';
+import Receipt from '@modules/Receipt';
 
 const Home = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
@@ -24,6 +25,7 @@ const Home = () => {
 
       <Container maxW={'8xl'} mt={12}>
         <SimpleGrid columns={4} spacing={10}>
+          <Receipt />
           {modules.map(({ label, icon, href, keyBind, bg }, key) => (
             <Card
               key={key}

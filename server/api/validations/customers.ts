@@ -6,12 +6,12 @@ const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createCustomerSchema = Joi.object({
   fullname: string.required(),
-  address: string,
-  phoneNumber: string,
-  email: string,
-  rc: string,
-  nif: string,
-  nar: string,
+  address: string.optional().allow(''),
+  phoneNumber: string.optional().allow(''),
+  email: string.optional().allow(''),
+  rc: string.optional().allow(''),
+  nif: string.optional().allow(''),
+  nar: string.optional().allow(''),
   type: string.required().valid('Client', 'Supplier'),
 });
 

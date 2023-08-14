@@ -75,6 +75,7 @@ const CustomInput = (props: CustomInputProps) => {
           closeMenuOnSelect={true}
           onChange={OnSelectChange}
           defaultValue={defaultValue}
+          isOptionSelected={'Client'}
           chakraStyles={{
             control: (provided) => ({
               ...provided,

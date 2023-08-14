@@ -28,5 +28,14 @@
   "addProduct": "Ajouter un produit",
   "fully_paid": "Payé",
   "productsList": "Liste des produits",
-  "productsListSublabel": "Gérer vos produits"
+  "productsListSublabel": "Gérer vos produits",
+  "fullname": "Nom Complet",
+  "address": "Adresse",
+  "phoneNumber": "Numéro de téléphone",
+  "rc": "Registre de commerce",
+  "nif": "Numéro Fiscale",
+  "nar": "Numéro d'article",
+  "addCustomer": "Ajouter un client/fournisseur",
+  "actionPerformed" : "Action effectuée",
+  "actionPerformedSuccessfully": "Action effectuée avec succés"
 }

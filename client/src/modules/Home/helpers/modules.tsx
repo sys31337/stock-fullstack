@@ -1,14 +1,8 @@
 import { t } from 'i18next';
 import { MdOutlineSell } from 'react-icons/md';
-import { LiaArchiveSolid, LiaFileInvoiceDollarSolid, LiaHandHoldingUsdSolid } from 'react-icons/lia';
+import { LiaFileInvoiceDollarSolid, LiaHandHoldingUsdSolid } from 'react-icons/lia';
 
 export const modules = [{
-    label: t('newReceiptBill'),
-    icon: <LiaArchiveSolid color={'black'} size={'36'} />,
-    href: 'receipt',
-    keyBind: 'F1',
-    bg: 'blue.400',
-}, {
     label: t('newOrder'),
     icon: <LiaHandHoldingUsdSolid color={'black'} size={'36'} />,
     href: 'order',

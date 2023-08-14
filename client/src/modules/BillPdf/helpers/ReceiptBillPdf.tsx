@@ -33,7 +33,6 @@ const ReceiptBillPdf = ({ data }) => {
         }}>
           <Text>{t('receiptBillId')} {orderId}</Text>
           <Text>{t('date')} {dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Text>
-          <Text>{t('receiptBillId')} {orderId}</Text>
         </View>
       </View>
       <View style={styles.table}>

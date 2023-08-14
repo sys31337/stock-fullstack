@@ -27,7 +27,13 @@ const theme = extendTheme({
         color: 'theme.900'
       }
     },
-
+    Modal: {
+      baseStyle: () => ({
+        dialog: {
+          bg: 'white',
+        },      
+      })
+    }
   },
   fonts: {
     heading: '\'Montserrat\', sans-serif',
