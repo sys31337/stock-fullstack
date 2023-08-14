@@ -13,7 +13,10 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
-  useToast
+  useToast,
+  Stack,
+  Icon,
+  useColorModeValue
 } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
@@ -31,8 +34,13 @@ import { LiaArchiveSolid } from 'react-icons/lia';
 import CustomerModal from '@modules/Customer';
 import showToast from '@shared/functions/showToast';
 import { AxiosError } from 'axios';
+import { AiFillRightCircle } from 'react-icons/ai';
 
-const Receipt = () => {
+interface ReceiptProps {
+  isFromTopBar?: boolean;
+}
+
+const Receipt = ({ isFromTopBar }: ReceiptProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
@@ -140,47 +148,82 @@ const Receipt = () => {
   }
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
-
+  const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
     <Box>
-      <Box
-        onClick={onOpen}
-        w={'100%'}
-        borderWidth="1px"
-        borderRadius="3xl"
-        pos={'relative'}
-        bg={'blue.400'}
-        mx={5}
-        p={5}>
-        <Flex
-          align={'center'}
-          justify={'center'}
-          fontSize={'sm'}
-          pos={'absolute'}
-          bg={'gray.800'}
-          top={-2}
-          right={-2}
-          p={5}
-          borderRadius={'2xl'}
-          h={8}
-          w={8}
-        >
-          F1
-        </Flex>
-        <Flex align={'center'} gap={4}>
+      {isFromTopBar ? (
+        <Box
+          cursor={'pointer'}
+          onClick={onOpen}
+          role={'group'}
+          display={'block'}
+          p={2}
+          px={3}
+          rounded={'lg'}
+          _hover={{ bg: hoverBackground }}>
+          <Stack direction={'row'} align={'center'}>
+            <Box>
+              <Text
+                transition={'all .3s ease'}
+                _groupHover={{ color: 'blue.500' }}
+                fontWeight={500}>
+                {t('newReceiptBill')}
+              </Text>
+              <Text fontSize={'sm'}>{t('newReceiptBillLabel')}</Text>
+            </Box>
+            <Flex
+              transition={'all .3s ease'}
+              transform={'translateX(-10px)'}
+              opacity={0}
+              _groupHover={{ opacity: '100%', transform: 'translateX(0)' }}
+              justify={'flex-end'}
+              align={'center'}
+              flex={1}>
+              <Icon color={'blue.400'} w={5} h={5} as={AiFillRightCircle} />
+            </Flex>
+          </Stack>
+        </Box>
+      ) : (
+        <Box
+          onClick={onOpen}
+          cursor={'pointer'}
+          w={'100%'}
+          borderWidth="1px"
+          borderRadius="3xl"
+          pos={'relative'}
+          bg={'blue.400'}
+          mx={5}
+          p={5}>
           <Flex
-            minW={20}
-            minH={20}
             align={'center'}
             justify={'center'}
-            color={'white'}
+            fontSize={'sm'}
+            pos={'absolute'}
+            bg={'gray.800'}
+            top={-2}
+            right={-2}
+            p={5}
             borderRadius={'2xl'}
-            bg={'gray.100'}>
-            <LiaArchiveSolid color={'black'} size={'36'} />
+            h={8}
+            w={8}
+          >
+            F1
           </Flex>
-          <Heading size="md">{t('newReceiptBill')}</Heading>
-        </Flex>
-      </Box>
+          <Flex align={'center'} gap={4}>
+            <Flex
+              minW={20}
+              minH={20}
+              align={'center'}
+              justify={'center'}
+              color={'white'}
+              borderRadius={'2xl'}
+              bg={'gray.100'}>
+              <LiaArchiveSolid color={'black'} size={'36'} />
+            </Flex>
+            <Heading size="md">{t('newReceiptBill')}</Heading>
+          </Flex>
+        </Box>
+      )}
 
       <Modal isOpen={isOpen} size={'full'} onClose={onClose}>
         <ModalOverlay />
