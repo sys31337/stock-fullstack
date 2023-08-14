@@ -18,6 +18,7 @@ import {
   Button,
 } from '@chakra-ui/react'
 import languages from '@config/languages'
+import Receipt from '@modules/Receipt'
 import { useLogout } from '@shared/hooks/useAuthentication'
 import authService from '@shared/services/auth'
 import i18next, { t } from 'i18next'
@@ -195,7 +196,7 @@ const DesktopNav = () => {
                 minW={'sm'}>
                 <Stack>
                   {navItem.children.map((child) => (
-                    <DesktopSubNav key={child.label} {...child} />
+                    child.component ? (child.component) : <DesktopSubNav key={child.label} {...child} />
                   ))}
                 </Stack>
               </PopoverContent>
@@ -302,10 +303,11 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
 }
 
 interface NavItem {
-  label: string
-  subLabel?: string
-  children?: Array<NavItem>
-  href?: string
+  label: string;
+  subLabel?: string;
+  children?: Array<NavItem>;
+  href?: string;
+  component?: JSX.Element;
 }
 
 const NAV_ITEMS: Array<NavItem> = [
@@ -325,6 +327,7 @@ const NAV_ITEMS: Array<NavItem> = [
         label: t('newReceiptBill'),
         subLabel: t('newReceiptBillLabel'),
         href: 'receipt',
+        component: <Receipt isFromTopBar />
       },
     ],
   },
