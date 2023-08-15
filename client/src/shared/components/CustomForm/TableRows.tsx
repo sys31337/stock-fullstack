@@ -17,7 +17,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     setProductName(data.productName)
   }, [data])
 
-  const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.includes(query)
+  const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase())
 
   const updateTotal = (e) => {
     handleChange(index, e)
