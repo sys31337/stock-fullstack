@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, useDisclosure, useToast } from '@chakra-ui/react'
-import { FaUserPlus } from 'react-icons/fa';
+import { BiSolidCategory } from 'react-icons/bi';
 import CustomInput from '@shared/components/CustomForm/Input';
 import CustomForm from '@shared/components/CustomForm';
 import { useFormik } from 'formik';
@@ -39,7 +39,7 @@ const CategoryModal = () => {
   return (
     <>
       <Button onClick={onOpen} w={'fit-content'} p={0} borderRadius={'xl'} size={'sm'} m={1} colorScheme={'green'}>
-        <FaUserPlus />
+        <BiSolidCategory />
       </Button>
       <CustomModal
         modalProps={{ size: '2xl', isCentered: true }}
