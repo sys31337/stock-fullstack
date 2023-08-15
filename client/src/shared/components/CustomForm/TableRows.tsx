@@ -12,9 +12,12 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
   const [totalTTC, setTotalTTC] = useState(0);
   const [productName, setProductName] = useState('');
   const { data: allProducts, isFetched } = useGetAllProducts();
+
   useEffect(() => {
     setProductName(data.productName)
   }, [data])
+
+  const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.includes(query)
 
   const updateTotal = (e) => {
     handleChange(index, e)
@@ -40,6 +43,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     data.sellPrice_2 = sellPrice_2;
     data.sellPrice_3 = sellPrice_3;
     setTotalHT(0);
+    setTotalTTC(0);
   };
 
   return (
@@ -71,10 +75,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
             />
           </Td>
           <Td px={1}>
-            <AutoComplete rollNavigation freeSolo={true} filter={(query, optionValue, optionLabel) => {
-              return optionLabel.includes(query)
-              // return true;
-            }} onSelectOption={(selectedItems) => {
+            <AutoComplete rollNavigation freeSolo={true} filter={filterProductsList} onSelectOption={(selectedItems) => {
               const e = { target: { name: 'productName', value: selectedItems.item.label } };
               handleChange(index, e);
               setProductName(selectedItems.item.label);

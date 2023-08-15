@@ -5,7 +5,7 @@ import CustomInput from '@shared/components/CustomForm/Input';
 import CustomForm from '@shared/components/CustomForm';
 import { useFormik } from 'formik';
 import { t } from 'i18next';
-import { useCreateCustomer } from './api/useCustomer';
+import { useCreateCustomer } from '@shared/hooks/useCustomers';
 import { AxiosError } from 'axios';
 import showToast from '@shared/functions/showToast';
 import { Payload } from '@shared/types/payload';
@@ -45,7 +45,7 @@ const CustomerModal = () => {
   const selectOptions = [{ label: 'Client', value: 'Client' }, { label: 'Supplier', value: 'Supplier' }];
   return (
     <>
-      <Button onClick={onOpen} w={'fit-content'} p={0} borderRadius={'full'} colorScheme={'green'}>
+      <Button onClick={onOpen} w={'fit-content'} p={0} borderRadius={'xl'} size={'sm'} m={1} colorScheme={'green'}>
         <FaUserPlus />
       </Button>
       <Modal onClose={onClose} size={'2xl'} isOpen={isOpen} isCentered>

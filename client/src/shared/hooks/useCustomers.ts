@@ -1,5 +1,7 @@
 import axiosInstance from "@shared/services/api";
-import { useQuery } from "@tanstack/react-query";
+import queryClient from "@shared/services/queryClient";
+import { Payload } from "@shared/types/payload";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useGetAllCustomers = () => useQuery(
   ['Get all customers'],
@@ -28,8 +30,15 @@ const useGetSuppliers = () => useQuery(
     .then(({ data }) => data),
 );
 
+const useCreateCustomer = () => useMutation((payload: Payload) => axiosInstance.request({
+  method: 'POST',
+  url: 'customers',
+  data: payload,
+}), { onSuccess: () => queryClient.invalidateQueries(['Get all customers']) });
+
 export {
-  useGetAllCustomers, 
+  useCreateCustomer,
+  useGetAllCustomers,
   useGetClients,
   useGetSuppliers,
 }

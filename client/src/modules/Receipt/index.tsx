@@ -31,10 +31,11 @@ import { useGetAllCustomers } from '@shared/hooks/useCustomers';
 import { useGetAllCategories } from '@shared/hooks/useCategories';
 import { useCreateBill, useGetLatestBillNumber } from '@shared/hooks/useBill';
 import { LiaArchiveSolid } from 'react-icons/lia';
-import CustomerModal from '@modules/Customer';
+import CustomerModal from '@shared/components/Customer';
 import showToast from '@shared/functions/showToast';
 import { AxiosError } from 'axios';
 import { AiFillRightCircle } from 'react-icons/ai';
+import CategoryModal from '@shared/components/Category';
 
 interface ReceiptProps {
   isTopBar?: boolean;
@@ -273,7 +274,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
                         />
                         <CustomerModal />
                       </Box>
-                      <Box flex={1}>
+                      <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
                         <CustomInput
                           name="category"
                           label="Category"
@@ -287,6 +288,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
                           }
                           isSelect={true}
                         />
+                        <CategoryModal />
                       </Box>
                     </Flex>
                   </Container>

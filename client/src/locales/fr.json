@@ -37,5 +37,8 @@
   "nar": "Numéro d'article",
   "addCustomer": "Ajouter un client/fournisseur",
   "actionPerformed" : "Action effectuée",
-  "actionPerformedSuccessfully": "Action effectuée avec succés"
+  "actionPerformedSuccessfully": "Action effectuée avec succés",
+  "categoryName": "Nom du catégorie",
+  "addCategory": "Ajouter une catégorie",
+  "description": "Déscription"
 }
