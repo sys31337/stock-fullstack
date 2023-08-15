@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, SimpleGrid, useDisclosure, useToast } from '@chakra-ui/react'
+import { Button, SimpleGrid, useDisclosure, useToast } from '@chakra-ui/react'
 import { FaUserPlus } from 'react-icons/fa';
 import CustomInput from '@shared/components/CustomForm/Input';
 import CustomForm from '@shared/components/CustomForm';
@@ -10,6 +10,7 @@ import { AxiosError } from 'axios';
 import showToast from '@shared/functions/showToast';
 import { Payload } from '@shared/types/payload';
 import Any from '@shared/types/any';
+import CustomModal from '../CustomModal';
 
 const CustomerModal = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -48,40 +49,38 @@ const CustomerModal = () => {
       <Button onClick={onOpen} w={'fit-content'} p={0} borderRadius={'xl'} size={'sm'} m={1} colorScheme={'green'}>
         <FaUserPlus />
       </Button>
-      <Modal onClose={onClose} size={'2xl'} isOpen={isOpen} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{t('addCustomer')}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <CustomForm handleSubmit={handleSubmit}>
-              <SimpleGrid columns={2} spacing={1}>
-                <CustomInput
-                  name="type"
-                  label="Type"
-                  setFieldValue={setFieldValue}
-                  handleBlur={handleBlur}
-                  errorMessage={errors.type && touched.type && errors.type}
-                  selectOptions={selectOptions}
-                  defaultValue={selectOptions && selectOptions[0] as Any}
-                  isSelect={true}
-                />
-                {['fullname', 'address', 'phoneNumber', 'email', 'rc', 'nif', 'nar'].map((field, k) => (
-                  <CustomInput
-                    key={k}
-                    name={field}
-                    label={t(field)}
-                    handleChange={handleChange}
-                    handleBlur={handleBlur}
-                    value={values[field]}
-                    errorMessage={errors[field] && touched[field] && errors[field]}
-                  />
-                ))}
-              </SimpleGrid>
-            </CustomForm>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <CustomModal
+        modalProps={{ size: '2xl', isCentered: true }}
+        isOpen={isOpen}
+        onClose={onClose}
+        title={t('addCustomer')}
+      >
+        <CustomForm handleSubmit={handleSubmit}>
+          <SimpleGrid columns={2} spacing={1}>
+            <CustomInput
+              name="type"
+              label="Type"
+              setFieldValue={setFieldValue}
+              handleBlur={handleBlur}
+              errorMessage={errors.type && touched.type && errors.type}
+              selectOptions={selectOptions}
+              defaultValue={selectOptions && selectOptions[0] as Any}
+              isSelect={true}
+            />
+            {['fullname', 'address', 'phoneNumber', 'email', 'rc', 'nif', 'nar'].map((field, k) => (
+              <CustomInput
+                key={k}
+                name={field}
+                label={t(field)}
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                value={values[field]}
+                errorMessage={errors[field] && touched[field] && errors[field]}
+              />
+            ))}
+          </SimpleGrid>
+        </CustomForm>
+      </CustomModal>
     </>
   )
 }

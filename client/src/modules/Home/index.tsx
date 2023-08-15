@@ -22,7 +22,6 @@ const Home = () => {
           {t('welcomeUser', { fullname })}
         </Heading>
       </Stack>
-
       <Container maxW={'8xl'} mt={12}>
         <SimpleGrid columns={4} spacing={10}>
           <Receipt />
@@ -38,6 +37,7 @@ const Home = () => {
           ))}
         </SimpleGrid>
       </Container>
+      
     </Box>
   )
 }

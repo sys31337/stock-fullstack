@@ -6,12 +6,6 @@ import {
   Flex,
   Heading,
   Text,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
   useDisclosure,
   useToast,
   Stack,
@@ -22,6 +16,8 @@ import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
 import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
+import { LiaArchiveSolid } from 'react-icons/lia';
+import { AiFillRightCircle, AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
 import ProductsTable from '@shared/components/CustomForm/ProductsTable';
@@ -30,19 +26,20 @@ import Any from '@shared/types/any';
 import { useGetAllCustomers } from '@shared/hooks/useCustomers';
 import { useGetAllCategories } from '@shared/hooks/useCategories';
 import { useCreateBill, useGetLatestBillNumber } from '@shared/hooks/useBill';
-import { LiaArchiveSolid } from 'react-icons/lia';
 import CustomerModal from '@shared/components/Customer';
 import showToast from '@shared/functions/showToast';
 import { AxiosError } from 'axios';
-import { AiFillRightCircle } from 'react-icons/ai';
 import CategoryModal from '@shared/components/Category';
+import CustomModal from '@shared/components/CustomModal';
+import Alert from '@shared/components/Alert';
 
 interface ReceiptProps {
   isTopBar?: boolean;
 }
 
 const Receipt = ({ isTopBar }: ReceiptProps) => {
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const toast = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
@@ -52,6 +49,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
   const [orderDebts, setOrderDebts] = useState('0.00');
+  const [receiptBillId, setReceiptBillId] = useState('');
   const [initialValues, setInitialValues] = useState({
     orderId: 0,
     category: '',
@@ -116,6 +114,10 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
         ...values,
         paymentMethod: 'CASH',
         type: 'BUY',
+        orderTotalHT: orderTotalHT,
+        orderTotalTTC: orderTotalTTC,
+        orderPaid: orderPaid,
+        orderDebts: orderDebts,
         products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => ({
           ...rest,
           buyPrice: parseInt(buyPrice as unknown as string, 10),
@@ -126,7 +128,9 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
           stack: parseInt(stack as unknown as string, 10),
         }))
       }
-      await createBill(payload);
+      const { data: newBill } = await createBill(payload);
+      setReceiptBillId(newBill._id);
+      onAlertOpen();
       showToast(
         toast,
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success', isClosable: false, },
@@ -228,168 +232,186 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
           </Flex>
         </Box>
       )}
-
-      <Modal isOpen={isOpen} size={'full'} onClose={onClose}>
-        <ModalOverlay bg='blackAlpha.300' backdropFilter='blur(5px) hue-rotate(10deg)' />
-        <ModalContent bg={'white'} borderRadius={'xl'} overflowWrap={'unset'} minH={'90vh'} w={'95vw'} mt={'5vh'}>
-          <ModalHeader>{t('newReceiptBill')}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Box p={4}>
-              <Container maxW={'full'}>
-                <CustomForm handleSubmit={handleSubmit}>
-                  <Container maxW={'8xl'}>
-                    <Flex display={'flex'} gap={5}>
-                      <Box flex={1}>
-                        <CustomInput
-                          name="orderId"
-                          label="Numero"
-                          icon={BiLabel}
-                          handleChange={handleChange}
-                          handleBlur={handleBlur}
-                          value={values.orderId}
-                          errorMessage={errors.orderId && touched.orderId && errors.orderId}
-                        />
-                      </Box>
-                      <Box flex={1}>
-                        <CustomInput
-                          name="date"
-                          label="Date"
-                          setFieldValue={setFieldValue}
-                          handleBlur={handleBlur}
-                          defaultValue={values.billDate}
-                          errorMessage={errors.billDate && touched.billDate && errors.billDate}
-                          isDate={true}
-                        />
-                      </Box>
-                      <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
-                        <CustomInput
-                          name="customer"
-                          label="Customer"
-                          setFieldValue={setFieldValue}
-                          onFocus={() => refetch()}
-                          handleBlur={handleBlur}
-                          errorMessage={errors.customer && touched.customer && errors.customer}
-                          selectOptions={
-                            allCustomers && [...allCustomers, { fullname: 'Unspecified', _id: 0 }].map((customer) => ({ label: customer.fullname, value: customer._id }))
-                          }
-                          isSelect={true}
-                        />
-                        <CustomerModal />
-                      </Box>
-                      <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
-                        <CustomInput
-                          name="category"
-                          label="Category"
-                          setFieldValue={setFieldValue}
-                          onFocus={() => refetchCategories()}
-                          handleBlur={handleBlur}
-                          defaultValue={values.category}
-                          errorMessage={errors.category && touched.category && errors.category}
-                          selectOptions={
-                            allCategories && [...allCategories, { name: 'Unspecified', _id: 0 }].map((category) => ({ label: category.name, value: category._id }))
-                          }
-                          isSelect={true}
-                        />
-                        <CategoryModal />
-                      </Box>
-                    </Flex>
-                  </Container>
-                  <Text fontWeight={400} fontSize={24} align={'center'} pt={5}>{t('products')}</Text>
-                  <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
+      <CustomModal
+        modalProps={{ size: 'full' }}
+        overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
+        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '90vh', w: '95vw', mt: '5vh', }}
+        isOpen={isOpen}
+        onClose={onClose}
+        title={t('newReceiptBill')}
+      >
+        <Box p={4}>
+          <Container maxW={'full'}>
+            <CustomForm handleSubmit={handleSubmit}>
+              <Container maxW={'8xl'}>
+                <Flex display={'flex'} gap={5}>
+                  <Box flex={1}>
+                    <CustomInput
+                      name="orderId"
+                      label="Numero"
+                      icon={BiLabel}
+                      handleChange={handleChange}
+                      handleBlur={handleBlur}
+                      value={values.orderId}
+                      errorMessage={errors.orderId && touched.orderId && errors.orderId}
+                    />
+                  </Box>
+                  <Box flex={1}>
+                    <CustomInput
+                      name="date"
+                      label="Date"
+                      setFieldValue={setFieldValue}
+                      handleBlur={handleBlur}
+                      defaultValue={values.billDate}
+                      errorMessage={errors.billDate && touched.billDate && errors.billDate}
+                      isDate={true}
+                    />
+                  </Box>
+                  <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
+                    <CustomInput
+                      name="customer"
+                      label="Customer"
+                      setFieldValue={setFieldValue}
+                      onFocus={() => refetch()}
+                      handleBlur={handleBlur}
+                      errorMessage={errors.customer && touched.customer && errors.customer}
+                      selectOptions={
+                        allCustomers && [...allCustomers, { fullname: 'Unspecified', _id: 0 }].map((customer) => ({ label: customer.fullname, value: customer._id }))
+                      }
+                      isSelect={true}
+                    />
+                    <CustomerModal />
+                  </Box>
+                  <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
+                    <CustomInput
+                      name="category"
+                      label="Category"
+                      setFieldValue={setFieldValue}
+                      onFocus={() => refetchCategories()}
+                      handleBlur={handleBlur}
+                      defaultValue={values.category}
+                      errorMessage={errors.category && touched.category && errors.category}
+                      selectOptions={
+                        allCategories && [...allCategories, { name: 'Unspecified', _id: 0 }].map((category) => ({ label: category.name, value: category._id }))
+                      }
+                      isSelect={true}
+                    />
+                    <CategoryModal />
+                  </Box>
+                </Flex>
+              </Container>
+              <Text fontWeight={400} fontSize={24} align={'center'} pt={5}>{t('products')}</Text>
+              <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
+              <CustomInput
+                name="description"
+                label="Description"
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                isTextArea={true}
+                defaultValue={values.description}
+                errorMessage={errors.description && touched.description && errors.description}
+              />
+              <Flex display={'flex'} gap={5} mt={5}>
+                <Flex flex={1} align={'flex-end'} gap={3}>
                   <CustomInput
-                    name="description"
-                    label="Description"
+                    name="orderTotalHT"
+                    label="Order Total (HT)"
+                    icon={FcNews}
+                    bg={'gray.200'}
+                    outline={'transparent'}
+                    _focus={{
+                      bg: 'gray.200',
+                      border: '1px solid',
+                      borderColor: 'gray.300'
+                    }}
+                    isReadOnly={true}
+                    value={orderTotalHT as Any}
+                    errorMessage={errors.orderTotalHT && touched.orderTotalHT && errors.orderTotalHT}
+                    currency='DZD'
+                  />
+                </Flex>
+                <Flex flex={1} align={'flex-end'} gap={5}>
+                  <CustomInput
+                    name="orderTotalTTC"
+                    label="Order Total (TTC)"
+                    icon={FcNews}
+                    bg={'gray.200'}
+                    outline={'transparent'}
+                    _focus={{
+                      bg: 'gray.200',
+                      border: '1px solid',
+                      borderColor: 'gray.300'
+                    }}
+                    isReadOnly={true}
+                    value={orderTotalTTC as Any}
+                    errorMessage={errors.orderTotalTTC && touched.orderTotalTTC && errors.orderTotalTTC}
+                    currency='DZD'
+                  />
+                </Flex>
+                <Flex flex={1} align={'flex-end'}>
+                  <CustomInput
+                    flex={1}
+                    name="orderDebts"
+                    label="Order Debts"
+                    icon={FcDebt}
+                    bg={'gray.200'}
+                    isReadOnly={true}
+                    outline={'transparent'}
+                    _focus={{
+                      bg: 'gray.200',
+                      border: '1px solid',
+                      borderColor: 'gray.300'
+                    }}
                     handleChange={handleChange}
                     handleBlur={handleBlur}
-                    isTextArea={true}
-                    defaultValue={values.description}
-                    errorMessage={errors.description && touched.description && errors.description}
+                    value={orderDebts}
+                    errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
+                    currency='DZD'
                   />
-                  <Flex display={'flex'} gap={5} mt={5}>
-                    <Flex flex={1} align={'flex-end'} gap={3}>
-                      <CustomInput
-                        name="orderTotalHT"
-                        label="Order Total (HT)"
-                        icon={FcNews}
-                        bg={'gray.200'}
-                        outline={'transparent'}
-                        _focus={{
-                          bg: 'gray.200',
-                          border: '1px solid',
-                          borderColor: 'gray.300'
-                        }}
-                        isReadOnly={true}
-                        value={orderTotalHT as Any}
-                        errorMessage={errors.orderTotalHT && touched.orderTotalHT && errors.orderTotalHT}
-                        currency='DZD'
-                      />
+                </Flex>
+                <Flex flex={1} align={'flex-end'} gap={2}>
+                  <CustomInput
+                    name="orderPaid"
+                    label="Paid Amount"
+                    type={'number'}
+                    icon={FcPaid}
+                    handleChange={(e) => setOrderPaid(e.target.value)}
+                    handleBlur={(e) => setOrderPaid(price(e.target.value))}
+                    value={orderPaid}
+                    errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
+                    currency='DZD'
+                  />
+                  <Button colorScheme={'green'} size={'md'} borderRadius={'xl'} px={5} onClick={setFullyPaid}>
+                    <Flex gap={1} align={'center'} fontWeight={400}>
+                      <BiSolidCheckCircle color={'white'} />
+                      {t('fully_paid')}
                     </Flex>
-                    <Flex flex={1} align={'flex-end'} gap={5}>
-                      <CustomInput
-                        name="orderTotalTTC"
-                        label="Order Total (TTC)"
-                        icon={FcNews}
-                        bg={'gray.200'}
-                        outline={'transparent'}
-                        _focus={{
-                          bg: 'gray.200',
-                          border: '1px solid',
-                          borderColor: 'gray.300'
-                        }}
-                        isReadOnly={true}
-                        value={orderTotalTTC as Any}
-                        errorMessage={errors.orderTotalTTC && touched.orderTotalTTC && errors.orderTotalTTC}
-                        currency='DZD'
-                      />
-                    </Flex>
-                    <Flex flex={1} align={'flex-end'}>
-                      <CustomInput
-                        flex={1}
-                        name="orderDebts"
-                        label="Order Debts"
-                        icon={FcDebt}
-                        bg={'gray.200'}
-                        isReadOnly={true}
-                        outline={'transparent'}
-                        _focus={{
-                          bg: 'gray.200',
-                          border: '1px solid',
-                          borderColor: 'gray.300'
-                        }}
-                        handleChange={handleChange}
-                        handleBlur={handleBlur}
-                        value={orderDebts}
-                        errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
-                        currency='DZD'
-                      />
-                    </Flex>
-                    <Flex flex={1} align={'flex-end'} gap={2}>
-                      <CustomInput
-                        name="orderPaid"
-                        label="Paid Amount"
-                        type={'number'}
-                        icon={FcPaid}
-                        handleChange={(e) => setOrderPaid(e.target.value)}
-                        handleBlur={(e) => setOrderPaid(price(e.target.value))}
-                        value={orderPaid}
-                        errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
-                        currency='DZD'
-                      />
-                      <Button colorScheme={'green'} size={'md'} borderRadius={'xl'} px={5} onClick={setFullyPaid}>
-                        <Flex gap={1} align={'center'} fontWeight={400}>
-                          <BiSolidCheckCircle color={'white'} />
-                          {t('fully_paid')}
-                        </Flex>
-                      </Button>
-                    </Flex>
-                  </Flex>
-                </CustomForm>
-              </Container>
-            </Box >
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+                  </Button>
+                </Flex>
+              </Flex>
+            </CustomForm>
+          </Container>
+        </Box>
+      </CustomModal>
+      <Alert
+        isOpen={isAlertOpen}
+        onClose={onAlertClose}
+        header={t('billCreated')}
+        body={t('billCreatedSuccessfully')}
+        footer={
+          <Flex gap={2}>
+            <Button colorScheme='red' fontWeight={400} borderRadius={'2xl'} onClick={onAlertClose}>
+              {t('close')}
+            </Button>
+            <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${receiptBillId}`}>
+              <AiFillFilePdf /> {t('print')}
+            </Button>
+            <Button colorScheme='green' fontWeight={400} borderRadius={'2xl'}>
+              <AiFillFilePdf /> {t('edit')}
+            </Button>
+          </Flex>
+        }
+      />
     </Box>
   )
 }

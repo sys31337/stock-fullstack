@@ -42,5 +42,8 @@
   "addCategory": "Ajouter une catégorie",
   "description": "Déscription",
   "saleBillId": "Bon de livraison N°",
-  "orderId": "Bon de commande N°"
+  "orderId": "Bon de commande N°",
+  "close": "Fermer",
+  "print": "Imprimer",
+  "edit": "Modifier"
 }
