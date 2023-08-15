@@ -3,19 +3,22 @@ import Bill from '../models/bills';
 import { IUserIdRequest } from '../types/common';
 import { buyBillProductHandler } from '../functions/products';
 import { getLatestBill } from '../functions/bills';
+import { IProduct } from '../types/IProducts';
 
 const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { body, userId } = req;
     const { type, products } = body;
+    const { category, customer } = body;
     const payload = {
       ...body,
       orderId: parseInt(await getLatestBill(type), 10) + 1,
       createBy: userId,
     }
-    if (type === 'BUY') buyBillProductHandler(products);
 
-    const createBill = await Bill.create(payload);
+    if (type === 'BUY') buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })));
+
+    const createBill = await new Bill(payload).save();
     return res.status(200).send(createBill);
   } catch (error) {
     return next(error);

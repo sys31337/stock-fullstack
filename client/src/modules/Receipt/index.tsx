@@ -138,6 +138,9 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
       setProductsValues([{
         id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
       }]);
+      setOrderTotalHT('0.00');
+      setOrderTotalTTC('0.00');
+      setFullyPaid();
       onClose();
     } catch (err) {
       const error = err as AxiosError;
