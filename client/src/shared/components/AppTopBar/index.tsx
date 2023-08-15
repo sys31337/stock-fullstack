@@ -22,6 +22,7 @@ import Receipt from '@modules/Receipt'
 import { useLogout } from '@shared/hooks/useAuthentication'
 import authService from '@shared/services/auth'
 import i18next, { t } from 'i18next'
+import { Fragment } from 'react'
 import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFillRightCircle } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 
@@ -171,7 +172,6 @@ const DesktopNav = () => {
             <PopoverTrigger>
               <Box
                 as="a"
-                
                 p={2}
                 href={navItem.href ?? '#'}
                 fontSize={'sm'}
@@ -196,7 +196,7 @@ const DesktopNav = () => {
                 minW={'sm'}>
                 <Stack>
                   {navItem.children.map((child) => (
-                    child.component ? (child.component) : <DesktopSubNav key={child.label} {...child} />
+                    child.component ? (<Fragment key={child.label}>{child.component}</Fragment>) : <DesktopSubNav key={child.label} {...child} />
                   ))}
                 </Stack>
               </PopoverContent>
@@ -327,7 +327,7 @@ const NAV_ITEMS: Array<NavItem> = [
         label: t('newReceiptBill'),
         subLabel: t('newReceiptBillLabel'),
         href: 'receipt',
-        component: <Receipt isFromTopBar />
+        component: <Receipt isTopBar />
       },
     ],
   },

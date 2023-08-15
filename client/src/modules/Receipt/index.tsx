@@ -37,10 +37,10 @@ import { AxiosError } from 'axios';
 import { AiFillRightCircle } from 'react-icons/ai';
 
 interface ReceiptProps {
-  isFromTopBar?: boolean;
+  isTopBar?: boolean;
 }
 
-const Receipt = ({ isFromTopBar }: ReceiptProps) => {
+const Receipt = ({ isTopBar }: ReceiptProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
@@ -151,7 +151,7 @@ const Receipt = ({ isFromTopBar }: ReceiptProps) => {
   const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
     <Box>
-      {isFromTopBar ? (
+      {isTopBar ? (
         <Box
           cursor={'pointer'}
           onClick={onOpen}
@@ -226,8 +226,8 @@ const Receipt = ({ isFromTopBar }: ReceiptProps) => {
       )}
 
       <Modal isOpen={isOpen} size={'full'} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent bg={'white'}>
+        <ModalOverlay bg='blackAlpha.300' backdropFilter='blur(5px) hue-rotate(10deg)' />
+        <ModalContent bg={'white'} borderRadius={'xl'} overflowWrap={'unset'} minH={'90vh'} w={'95vw'} mt={'5vh'}>
           <ModalHeader>{t('newReceiptBill')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
