@@ -40,5 +40,7 @@
   "actionPerformedSuccessfully": "Action effectuée avec succés",
   "categoryName": "Nom du catégorie",
   "addCategory": "Ajouter une catégorie",
-  "description": "Déscription"
+  "description": "Déscription",
+  "saleBillId": "Bon de livraison N°",
+  "orderId": "Bon de commande N°"
 }

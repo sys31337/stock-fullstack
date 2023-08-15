@@ -1,4 +1,4 @@
-import { StyleSheet } from '@react-pdf/renderer';
+import { StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   table: {
@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   tableHead: {
     margin: "auto",
     flexDirection: "row",
-    backgroundColor: '#ccc'
+    backgroundColor: "#ccc"
   },
   tableRow: {
     margin: "auto",
@@ -29,6 +29,19 @@ const styles = StyleSheet.create({
     margin: "auto",
     paddingVertical: 5,
     fontSize: 10
+  },
+  billFooter: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 5,
+    fontSize: 10
+  },
+  orderPaymentInfo: {
+    fontSize: 10,
+    textAlign: "left",
+    alignItems: "flex-end"
   }
 });
 

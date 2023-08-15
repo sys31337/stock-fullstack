@@ -3,18 +3,20 @@ import { View, Text } from '@react-pdf/renderer';
 import styles from '@shared/components/PDF/styles';
 import { t } from 'i18next';
 import dayjs from 'dayjs';
+import { price } from '@shared/functions/words';
 
 const ReceiptBillPdf = ({ data }) => {
 
   const { billDate,
     orderId,
-    // type,
-    // orderTotalHT,
-    // orderTotalTTC,
-    // orderPaid,
-    // orderDebts,
-    // paymentMethod,
-    // description
+    type,
+    products,
+    orderTotalHT,
+    orderTotalTTC,
+    orderPaid,
+    orderDebts,
+    paymentMethod,
+    description
   } = data;
   return (
     <View style={{ padding: 20 }}>
@@ -31,43 +33,79 @@ const ReceiptBillPdf = ({ data }) => {
           marginBottom: 5,
           fontSize: 12
         }}>
-          <Text>{t('receiptBillId')} {orderId}</Text>
+          {type === 'BUY' && (<Text>{t('receiptBillId')} {orderId}</Text>)}
+          {type === 'SALE' && (<Text>{t('saleBillId')} {orderId}</Text>)}
+          {type === 'ORDER' && (<Text>{t('orderId')} {orderId}</Text>)}
           <Text>{t('date')} {dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Text>
         </View>
       </View>
       <View style={styles.table}>
         <View style={styles.tableHead}>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>Product</Text>
+          <View style={{ ...styles.tableCol, width: '5%' }}>
+            <Text style={styles.tableCell}>#</Text>
           </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>Type</Text>
+          <View style={{ ...styles.tableCol, width: '15%' }}>
+            <Text style={styles.tableCell}>Ref</Text>
           </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>Period</Text>
+          <View style={{ ...styles.tableCol, width: '35%' }}>
+            <Text style={styles.tableCell}>Désignation</Text>
           </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>Price</Text>
+          <View style={{ ...styles.tableCol, width: '10%' }}>
+            <Text style={styles.tableCell}>Quantité</Text>
+          </View>
+          <View style={{ ...styles.tableCol, width: '10%' }}>
+            <Text style={styles.tableCell}>Prix</Text>
+          </View>
+          <View style={{ ...styles.tableCol, width: '12.5%' }}>
+            <Text style={styles.tableCell}>Total (HT)</Text>
+          </View>
+          <View style={{ ...styles.tableCol, width: '12.5%' }}>
+            <Text style={styles.tableCell}>Total (TTC)</Text>
           </View>
         </View>
-        <View style={styles.tableRow}>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>React-PDF</Text>
-          </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>3 User </Text>
-          </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>2019-02-20 - 2020-02-19</Text>
-          </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCell}>5€</Text>
-          </View>
+        {products.map(({ barCode, productName, quantity, stack, buyPrice, tva }, k) => {
+          const productTotal = buyPrice * quantity * stack;
+          const productTva = buyPrice * quantity * stack * tva / 100;
+          return (
+            <View style={styles.tableRow} key={k}>
+              <View style={{ ...styles.tableCol, width: '5%' }}>
+                <Text style={styles.tableCell}>{k + 1}</Text>
+              </View>
+              <View style={{ ...styles.tableCol, width: '15%' }}>
+                <Text style={styles.tableCell}>{barCode}</Text>
+              </View>
+              <View style={{ ...styles.tableCol, width: '35%' }}>
+                <Text style={styles.tableCell}>{productName}</Text>
+              </View>
+              <View style={{ ...styles.tableCol, width: '10%' }}>
+                <Text style={styles.tableCell}>{`${quantity} × ${stack}`}</Text>
+              </View>
+              <View style={{ ...styles.tableCol, width: '10%' }}>
+                <Text style={styles.tableCell}>{price(`${buyPrice}`)}</Text>
+              </View>
+              <View style={{ ...styles.tableCol, width: '12.5%' }}>
+                <Text style={styles.tableCell}>{price(`${productTotal}`)}</Text>
+              </View>
+              <View style={{ ...styles.tableCol, width: '12.5%' }}>
+                <Text style={styles.tableCell}>{price(`${productTotal + productTva}`)}</Text>
+              </View>
+            </View>
+          )
+        })}
+      </View>
+      <View style={styles.billFooter}>
+        <View>
+          {description && (<Text>Note: {description}</Text>)}
+        </View>
+
+        <View style={styles.orderPaymentInfo}>
+          <Text>Totale (HT):  {price(orderTotalHT)} DA</Text>
+          <Text>Totale (TTC):  {price(orderTotalTTC)} DA</Text>
+          <Text>Montant payé:  {price(orderPaid)} DA</Text>
+          <Text>Dettes:  {price(orderDebts)} DA</Text>
+          <Text>Méthode de paiement:  {paymentMethod}</Text>
         </View>
       </View>
-      <Text>
-        {JSON.stringify(data)}
-      </Text>
     </View>
   );
 };
