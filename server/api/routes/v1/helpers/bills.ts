@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { auth } from '../../../middlewares/auth';
-import { getAllBills, createOne, updateOne, getLatestBillOfType, getSingleBill, } from '../../../controllers/bills';
+import { getAllBills, createOne, updateOne, getBillsOfType, getSingleBill, } from '../../../controllers/bills';
 import { createBillValidator } from '../../../validations/bills';
 
 const router = express.Router();
@@ -20,7 +20,7 @@ router.route('/')
   .post(auth, billBeautifier, createBillValidator, createOne);
 
 router.route('/:type')
-  .get(auth, getLatestBillOfType);
+  .get(auth, getBillsOfType);
 
 router.route('/info/:id')
   .get(auth, getSingleBill)

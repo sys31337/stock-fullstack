@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react'
 import languages from '@config/languages'
 import Receipt from '@modules/Receipt'
+import AllReceiptBills from '@modules/Receipt/AllReceiptBills'
 import { useLogout } from '@shared/hooks/useAuthentication'
 import authService from '@shared/services/auth'
 import i18next, { t } from 'i18next'
@@ -316,7 +317,7 @@ const NAV_ITEMS: Array<NavItem> = [
     href: '/',
   },
   {
-    label: t('products'),
+    label: t('stock'),
     children: [
       {
         label: t('productsList'),
@@ -328,6 +329,12 @@ const NAV_ITEMS: Array<NavItem> = [
         subLabel: t('newReceiptBillLabel'),
         href: 'receipt',
         component: <Receipt isTopBar />
+      },
+      {
+        label: t('allReceiptBill'),
+        subLabel: t('allReceiptBillLabel'),
+        href: 'receipt',
+        component: <AllReceiptBills isTopBar />
       },
     ],
   },

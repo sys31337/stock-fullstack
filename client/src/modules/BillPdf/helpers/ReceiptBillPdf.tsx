@@ -24,11 +24,11 @@ const ReceiptBillPdf = ({ data }) => {
       <View style={styles.billHeader}>
         <View style={styles.billInfo}>
           <View style={styles.Elements}>
-            <Text style={{fontWeight: 'bold'}}>{t('customer')}:</Text>
-            <Text>{customer.fullname}</Text>
+            <Text style={{ fontWeight: 'bold' }}>{t('customer')}:</Text>
+            <Text>{customer?.fullname || t('counter')}</Text>
           </View>
           <View style={styles.Elements}>
-            <Text style={{fontWeight: 'bold'}}>{t('date')}:</Text>
+            <Text style={{ fontWeight: 'bold' }}>{t('date')}:</Text>
             <Text>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Text>
           </View>
         </View>
@@ -80,13 +80,13 @@ const ReceiptBillPdf = ({ data }) => {
                 <Text style={styles.tableCell}>{`${quantity} × ${stack}`}</Text>
               </View>
               <View style={{ ...styles.tableCol, width: '10%' }}>
-                <Text style={{...styles.tableCell, fontWeight: 'bold'}}>{price(`${buyPrice}`)}</Text>
+                <Text style={{ ...styles.tableCell, fontWeight: 'bold' }}>{price(`${buyPrice}`)}</Text>
               </View>
               <View style={{ ...styles.tableCol, width: '12.5%' }}>
-                <Text style={{...styles.tableCell, fontWeight: 'bold'}}>{price(`${productTotal}`)}</Text>
+                <Text style={{ ...styles.tableCell, fontWeight: 'bold' }}>{price(`${productTotal}`)}</Text>
               </View>
               <View style={{ ...styles.tableCol, width: '12.5%' }}>
-                <Text style={{...styles.tableCell, fontWeight: 'bold'}}>{price(`${productTotal + productTva}`)}</Text>
+                <Text style={{ ...styles.tableCell, fontWeight: 'bold' }}>{price(`${productTotal + productTva}`)}</Text>
               </View>
             </View>
           )
@@ -94,7 +94,7 @@ const ReceiptBillPdf = ({ data }) => {
       </View>
       <View style={styles.billFooter}>
         <View>
-          {description && (<Text>Note: {description}</Text>)}
+          {!!description && (<Text>Note: {description}</Text>)}
         </View>
 
         <View style={styles.orderPaymentInfo}>

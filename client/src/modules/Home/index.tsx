@@ -10,6 +10,7 @@ import { modules } from './helpers/modules';
 import cacheService from '@shared/services/cache';
 import { t } from 'i18next';
 import Receipt from '@modules/Receipt';
+import AllReceiptBills from '@modules/Receipt/AllReceiptBills';
 
 const Home = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
@@ -35,9 +36,10 @@ const Home = () => {
               bg={bg}
             />
           ))}
+          <AllReceiptBills />
         </SimpleGrid>
       </Container>
-      
+
     </Box>
   )
 }

@@ -39,10 +39,12 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
   }
 }
 
-const getLatestBillOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type } = req.params;
-    return res.status(200).send(await getLatestBill(type));
+    const bills = await Bill.find({ type }, {}, { sort: { 'createdAt': -1 } }).populate('customer category');
+    return res.status(200).send(bills);
+    // return res.status(200).send(await getLatestBill(type));
   } catch (error) {
     return next(error);
   }
@@ -70,7 +72,7 @@ const getSingleBill = async (req: IUserIdRequest, res: Response, next: NextFunct
 export {
   createOne,
   updateOne,
-  getLatestBillOfType,
+  getBillsOfType,
   getAllBills,
   getSingleBill,
 }

@@ -7,13 +7,22 @@ const useCreateBill = () => useMutation((data) => axiosInstance.request({
   data,
 }));
 
+const useGetAllBills = (type: string) => useQuery(
+  ['Get all bills of type', type],
+  async () => axiosInstance
+    .request({
+      url: `bills/${type}`,
+    })
+    .then(({ data }) => data),
+);
+
 const useGetLatestBillNumber = (type: string) => useQuery(
   ['Get latest bill number'],
   async () => axiosInstance
     .request({
       url: `bills/${type}`,
     })
-    .then(({ data }) => data),
+    .then(({ data }) => data.pop().orderId),
 );
 
 const useGetBillInfo = (id: string) => useQuery(
@@ -25,4 +34,4 @@ const useGetBillInfo = (id: string) => useQuery(
     .then(({ data }) => data),
 );
 
-export { useCreateBill, useGetLatestBillNumber, useGetBillInfo };
+export { useCreateBill, useGetLatestBillNumber, useGetBillInfo, useGetAllBills };

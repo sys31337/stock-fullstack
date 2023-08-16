@@ -15,9 +15,9 @@ export const modules = [{
     keyBind: 'F3',
     bg: 'blue.400',
 }, {
-    label: t('newInvoice'),
-    icon: <LiaFileInvoiceDollarSolid color={'black'} size={'36'} />,
-    href: 'invoice',
-    keyBind: 'F4',
-    bg: 'blue.400',
+  label: t('newInvoice'),
+  icon: <LiaFileInvoiceDollarSolid color={'black'} size={'36'} />,
+  href: 'invoice',
+  keyBind: 'F4',
+  bg: 'blue.400',
 }]

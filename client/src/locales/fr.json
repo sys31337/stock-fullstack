@@ -30,6 +30,8 @@
   "fully_paid": "Payé",
   "productsList": "Liste des produits",
   "productsListSublabel": "Gérer vos produits",
+  "allReceiptBill": "Tous les bons de réception",
+  "allReceiptBillLabel": "Afficher tous les bons de réception",
   "fullname": "Nom Complet",
   "address": "Adresse",
   "phoneNumber": "Numéro de téléphone",
@@ -48,5 +50,7 @@
   "print": "Imprimer",
   "edit": "Modifier",
   "customer": "Customer",
-  "reference": "Réf"
+  "reference": "Réf",
+  "receiptBills": "Tous les bons de réception",
+  "stock": "Stock"
 }
