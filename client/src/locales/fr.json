@@ -52,5 +52,8 @@
   "customer": "Customer",
   "reference": "Réf",
   "receiptBills": "Tous les bons de réception",
-  "stock": "Stock"
+  "stock": "Stock",
+  "counter": "Comptoir",
+  "undefined": "Undefiné",
+  "productsCounter": "Nombre d'articles"
 }
