@@ -42,7 +42,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type } = req.params;
-    const bills = await Bill.find({ type }, {}, { sort: { 'createdAt': -1 } }).populate('customer category');
+    const bills = await Bill.find({ type }).populate('customer category');
     return res.status(200).send(bills);
     // return res.status(200).send(await getLatestBill(type));
   } catch (error) {
