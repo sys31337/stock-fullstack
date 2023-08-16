@@ -18,6 +18,7 @@ import {
   Button,
 } from '@chakra-ui/react'
 import languages from '@config/languages'
+import Products from '@modules/Products'
 import Receipt from '@modules/Receipt'
 import AllReceiptBills from '@modules/Receipt/AllBills'
 import { useLogout } from '@shared/hooks/useAuthentication'
@@ -323,6 +324,7 @@ const NAV_ITEMS: Array<NavItem> = [
         label: t('productsList'),
         subLabel: t('productsListSublabel'),
         href: 'products',
+        component: <Products isTopBar />
       },
       {
         label: t('newReceiptBill'),
