@@ -19,7 +19,7 @@ import {
 } from '@chakra-ui/react'
 import languages from '@config/languages'
 import Receipt from '@modules/Receipt'
-import AllReceiptBills from '@modules/Receipt/AllReceiptBills'
+import AllReceiptBills from '@modules/Receipt/AllBills'
 import { useLogout } from '@shared/hooks/useAuthentication'
 import authService from '@shared/services/auth'
 import i18next, { t } from 'i18next'
