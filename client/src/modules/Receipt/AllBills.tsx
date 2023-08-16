@@ -49,7 +49,7 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
       || customer?.fullname.toLowerCase().includes(filter.toLowerCase())
       || price(orderTotalTTC) === price(filter)
       || price(orderTotalHT) === price(filter)
-      || orderId === filter
+      || orderId === Number(filter)
       || description.toLowerCase().includes(filter.toLowerCase())
     ))
     : getAllReceiptBills;
