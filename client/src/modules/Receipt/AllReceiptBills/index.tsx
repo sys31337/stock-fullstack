@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -25,6 +25,8 @@ import { LiaFileInvoiceDollarSolid } from 'react-icons/lia';
 import { useGetAllBills } from '@shared/hooks/useBill';
 import dayjs from 'dayjs';
 import { sortByOrderId } from '@shared/functions/array';
+import Pagination from '@shared/components/Pagination';
+import { price } from '@shared/functions/words';
 
 interface AllReceiptBillsProps {
   isTopBar?: boolean;
@@ -33,6 +35,12 @@ interface AllReceiptBillsProps {
 const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: getAllReceiptBills, isFetched } = useGetAllBills('BUY');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 10;
+  const startIndex = (+currentPage - 1) * itemsPerPage;
+  const endIndex = (+currentPage - 1) * itemsPerPage + itemsPerPage;
+
   const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
     <>
@@ -112,7 +120,8 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
       <CustomModal
         modalProps={{ size: 'full' }}
         overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
-        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '90vh', w: '95vw', mt: '5vh', }}
+        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '95vh', maxH: '95vh', w: '97.5vw', mt: '2.5vh', }}
+        bodyProps={{ overflow: 'scroll' }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('allReceiptBill')}
@@ -126,21 +135,21 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
                     <Th w={'5ch'}>#</Th>
                     <Th>{t('customer')}</Th>
                     <Th>{t('date')}</Th>
-                    <Th>{t('customer')}</Th>
+                    <Th>{t('productsCounter')}</Th>
                     <Th>{t('category')}</Th>
                     <Th>{t('total')}</Th>
                     <Th textAlign={'end'}>{t('actions')}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {isFetched && getAllReceiptBills.sort(sortByOrderId).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
+                  {isFetched && getAllReceiptBills.sort(sortByOrderId).slice(startIndex, endIndex).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
                     <Tr key={k}>
                       <Td>{orderId}</Td>
+                      <Td>{customer?.fullname || t('counter')}</Td>
                       <Td>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Td>
-                      <Td>{customer?.fullname}</Td>
-                      <Td>{category?.name}</Td>
                       <Td>{products.length}</Td>
-                      <Td>{orderTotalTTC}</Td>
+                      <Td>{category?.name || t('undefined')}</Td>
+                      <Td>{price(orderTotalTTC)} DA</Td>
                       <Td>
                         <Flex gap={1} justifyContent={'flex-end'}>
                           <Button colorScheme='blue' p={0} size={'sm'} fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${_id}`}>
@@ -159,6 +168,13 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
                 </Tbody>
               </Table>
             </TableContainer>
+            <Pagination
+              className="pagination-bar"
+              currentPage={currentPage}
+              totalCount={getAllReceiptBills?.length}
+              pageSize={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
           </Container>
         </Box>
       </CustomModal>
