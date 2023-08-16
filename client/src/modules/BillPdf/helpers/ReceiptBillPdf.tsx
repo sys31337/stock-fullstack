@@ -16,27 +16,26 @@ const ReceiptBillPdf = ({ data }) => {
     orderPaid,
     orderDebts,
     paymentMethod,
-    description
+    description,
+    customer,
   } = data;
   return (
     <View style={{ padding: 20 }}>
-      <View style={{
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-      }}>
-        <View style={{
-          backgroundColor: '#ddd',
-          padding: 10,
-          paddingHorizontal: 20,
-          borderRadius: 10,
-          marginBottom: 5,
-          fontSize: 12
-        }}>
-          {type === 'BUY' && (<Text>{t('receiptBillId')} {orderId}</Text>)}
-          {type === 'SALE' && (<Text>{t('saleBillId')} {orderId}</Text>)}
-          {type === 'ORDER' && (<Text>{t('orderId')} {orderId}</Text>)}
-          <Text>{t('date')} {dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Text>
+      <View style={styles.billHeader}>
+        <View style={styles.billInfo}>
+          <View style={styles.Elements}>
+            <Text style={{fontWeight: 'bold'}}>{t('customer')}:</Text>
+            <Text>{customer.fullname}</Text>
+          </View>
+          <View style={styles.Elements}>
+            <Text style={{fontWeight: 'bold'}}>{t('date')}:</Text>
+            <Text>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Text>
+          </View>
+        </View>
+        <View style={styles.billTitle}>
+          {type === 'BUY' && (<Text>{t('receiptBillId')}{orderId}</Text>)}
+          {type === 'SALE' && (<Text>{t('saleBillId')}{orderId}</Text>)}
+          {type === 'ORDER' && (<Text>{t('orderId')}{orderId}</Text>)}
         </View>
       </View>
       <View style={styles.table}>
@@ -45,7 +44,7 @@ const ReceiptBillPdf = ({ data }) => {
             <Text style={styles.tableCell}>#</Text>
           </View>
           <View style={{ ...styles.tableCol, width: '15%' }}>
-            <Text style={styles.tableCell}>Ref</Text>
+            <Text style={styles.tableCell}>{t('reference')}</Text>
           </View>
           <View style={{ ...styles.tableCol, width: '35%' }}>
             <Text style={styles.tableCell}>Désignation</Text>
@@ -81,13 +80,13 @@ const ReceiptBillPdf = ({ data }) => {
                 <Text style={styles.tableCell}>{`${quantity} × ${stack}`}</Text>
               </View>
               <View style={{ ...styles.tableCol, width: '10%' }}>
-                <Text style={styles.tableCell}>{price(`${buyPrice}`)}</Text>
+                <Text style={{...styles.tableCell, fontWeight: 'bold'}}>{price(`${buyPrice}`)}</Text>
               </View>
               <View style={{ ...styles.tableCol, width: '12.5%' }}>
-                <Text style={styles.tableCell}>{price(`${productTotal}`)}</Text>
+                <Text style={{...styles.tableCell, fontWeight: 'bold'}}>{price(`${productTotal}`)}</Text>
               </View>
               <View style={{ ...styles.tableCol, width: '12.5%' }}>
-                <Text style={styles.tableCell}>{price(`${productTotal + productTva}`)}</Text>
+                <Text style={{...styles.tableCell, fontWeight: 'bold'}}>{price(`${productTotal + productTva}`)}</Text>
               </View>
             </View>
           )
@@ -99,11 +98,26 @@ const ReceiptBillPdf = ({ data }) => {
         </View>
 
         <View style={styles.orderPaymentInfo}>
-          <Text>Totale (HT):  {price(orderTotalHT)} DA</Text>
-          <Text>Totale (TTC):  {price(orderTotalTTC)} DA</Text>
-          <Text>Montant payé:  {price(orderPaid)} DA</Text>
-          <Text>Dettes:  {price(orderDebts)} DA</Text>
-          <Text>Méthode de paiement:  {paymentMethod}</Text>
+          <View style={styles.Elements}>
+            <Text style={styles.ElementKey}>Totale (HT):</Text>
+            <Text style={styles.ElementValue}>{price(orderTotalHT)} DA</Text>
+          </View>
+          <View style={styles.Elements}>
+            <Text style={styles.ElementKey}>Totale (TTC):</Text>
+            <Text style={styles.ElementValue}>{price(orderTotalTTC)} DA</Text>
+          </View>
+          <View style={styles.Elements}>
+            <Text style={styles.ElementKey}>Versement:</Text>
+            <Text style={styles.ElementValue}>{price(orderPaid)} DA</Text>
+          </View>
+          <View style={styles.Elements}>
+            <Text style={styles.ElementKey}>Dettes:</Text>
+            <Text style={styles.ElementValue}>{price(orderDebts)} DA</Text>
+          </View>
+          <View style={styles.Elements}>
+            <Text style={styles.ElementKey}>Méthode de paiement:</Text>
+            <Text style={styles.ElementValue}>{paymentMethod}</Text>
+          </View>
         </View>
       </View>
     </View>

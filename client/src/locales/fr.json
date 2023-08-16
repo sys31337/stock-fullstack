@@ -19,6 +19,7 @@
   "barCode": "Code a barre",
   "designation": "Désignation",
   "quantity": "Quantité",
+  "qty": "Qté",
   "units": "Unités",
   "buyPrice": "P. achat",
   "sellPrice_1": "P. vente 1",
@@ -45,5 +46,7 @@
   "orderId": "Bon de commande N°",
   "close": "Fermer",
   "print": "Imprimer",
-  "edit": "Modifier"
+  "edit": "Modifier",
+  "customer": "Customer",
+  "reference": "Réf"
 }

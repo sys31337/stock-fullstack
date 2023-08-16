@@ -54,7 +54,7 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
               <Th textAlign={'left'} w={'10px'}><BiTrash size={16} /></Th>
               <Th textAlign={'center'} w={'18ch'}>{t('barCode')}</Th>
               <Th textAlign={'center'}>{t('designation')}</Th>
-              <Th textAlign={'center'} w={'10ch'}>{t('quantity')}</Th>
+              <Th textAlign={'center'} w={'10ch'}>{t('qty')}</Th>
               <Th textAlign={'center'} w={'10ch'}>{t('units')}</Th>
               <Th textAlign={'center'} w={'16ch'}>{t('buyPrice')}</Th>
               <Th textAlign={'center'} w={'16ch'} color={'red.500'}>{t('sellPrice_1')}</Th>

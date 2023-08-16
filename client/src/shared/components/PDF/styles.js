@@ -12,7 +12,8 @@ const styles = StyleSheet.create({
   tableHead: {
     margin: "auto",
     flexDirection: "row",
-    backgroundColor: "#ccc"
+    backgroundColor: "#ddd",
+    fontWeight: 'bold'
   },
   tableRow: {
     margin: "auto",
@@ -42,6 +43,35 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: "left",
     alignItems: "flex-end"
+  },
+  billHeader: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 12
+  },
+  billInfo: {},
+  billTitle: {
+    backgroundColor: '#ddd',
+    padding: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 5,
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+  Elements: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 2,
+  },
+  ElementKey: {
+    fontWeight: 'bold',
+  },
+  ElementValue: {
+    textAlign: 'right',
+    width: '70px'
   }
 });
 

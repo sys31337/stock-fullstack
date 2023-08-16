@@ -60,7 +60,7 @@ const getAllBills = async (req: IUserIdRequest, res: Response, next: NextFunctio
 const getSingleBill = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const bill = await Bill.findById(id);
+    const bill = await Bill.findById(id).populate('customer');
     return res.status(200).send(bill);
   } catch (error) {
     return next(error);
