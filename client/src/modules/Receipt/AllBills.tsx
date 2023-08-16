@@ -25,7 +25,6 @@ import { AiFillDelete, AiFillEdit, AiFillFilePdf, AiFillRightCircle } from 'reac
 import { LiaFileInvoiceDollarSolid } from 'react-icons/lia';
 import { useGetAllBills } from '@shared/hooks/useBill';
 import dayjs from 'dayjs';
-import { sortByOrderId } from '@shared/functions/array';
 import Pagination from '@shared/components/Pagination';
 import { price } from '@shared/functions/words';
 
@@ -169,7 +168,7 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
                       </Td>
                     </Tr>
                   ) :
-                    isFetched && filteredBills.sort(sortByOrderId).slice(startIndex, endIndex).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
+                    isFetched && filteredBills.slice(startIndex, endIndex).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
                       <Tr key={k}>
                         <Td>{orderId}</Td>
                         <Td>{customer?.fullname || t('counter')}</Td>
