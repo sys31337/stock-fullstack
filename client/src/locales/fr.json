@@ -22,9 +22,7 @@
   "qty": "Qté",
   "units": "Unités",
   "buyPrice": "P. achat",
-  "sellPrice_1": "P. vente 1",
-  "sellPrice_2": "P. vente 2",
-  "sellPrice_3": "P. vente 3",
+  "sellPrice": "P. vente",
   "total": "Totale",
   "addProduct": "Ajouter un produit",
   "fully_paid": "Payé",
@@ -58,5 +56,7 @@
   "productsCounter": "Nombre d'articles",
   "search": "Rechercher",
   "searchBills": "Rechercher un bon par ( Nom de client, Catégorie, Totale TTC, Totale HT ou bien par numero de bon )",
-  "noRecordsFound": "Aucun enregistrement trouvé"
+  "noRecordsFound": "Aucun enregistrement trouvé",
+  "billCreated": "Bon crée",
+  "billCreatedSuccessfully": "Bon crée avec succées"
 }
