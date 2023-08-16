@@ -57,9 +57,9 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
               <Th textAlign={'center'} w={'10ch'}>{t('qty')}</Th>
               <Th textAlign={'center'} w={'10ch'}>{t('units')}</Th>
               <Th textAlign={'center'} w={'16ch'}>{t('buyPrice')}</Th>
-              <Th textAlign={'center'} w={'16ch'} color={'red.500'}>{t('sellPrice_1')}</Th>
-              <Th textAlign={'center'} w={'16ch'} color={'blue.500'}>{t('sellPrice_2')}</Th>
-              <Th textAlign={'center'} w={'16ch'} color={'green.500'}>{t('sellPrice_3')}</Th>
+              <Th textAlign={'center'} w={'16ch'} color={'red.500'}>{t('sellPrice')} 1</Th>
+              <Th textAlign={'center'} w={'16ch'} color={'blue.500'}>{t('sellPrice')} 2</Th>
+              <Th textAlign={'center'} w={'16ch'} color={'green.500'}>{t('sellPrice')} 3</Th>
               <Th textAlign={'center'} w={'5ch'}>{t('tva')}</Th>
               <Th textAlign={'center'} w={'20ch'}>{t('totalHT')}</Th>
               <Th textAlign={'center'} w={'20ch'}>{t('totalTTC')}</Th>
