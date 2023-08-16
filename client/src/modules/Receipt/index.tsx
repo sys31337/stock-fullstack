@@ -235,7 +235,8 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
       <CustomModal
         modalProps={{ size: 'full' }}
         overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
-        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '90vh', w: '95vw', mt: '5vh', }}
+        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '95vh', maxH: '95vh', w: '97.5vw', mt: '2.5vh', }}
+        bodyProps={{ overflow: 'scroll' }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('newReceiptBill')}
