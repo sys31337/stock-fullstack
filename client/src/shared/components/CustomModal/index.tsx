@@ -16,20 +16,21 @@ interface CustomModalProps {
   modalProps?: props;
   overlayProps?: props;
   contentProps?: props;
+  bodyProps?: props;
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   children?: JSX.Element | JSX.Element[];
 }
 
-const CustomModal = ({ modalProps, overlayProps, contentProps, isOpen, onClose, title, children }: CustomModalProps) => {
+const CustomModal = ({ modalProps, overlayProps, contentProps, bodyProps, isOpen, onClose, title, children }: CustomModalProps) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} {...modalProps}>
       <ModalOverlay {...overlayProps} />
       <ModalContent {...contentProps}>
         <ModalHeader>{title}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody {...bodyProps}>
           {children}
         </ModalBody>
       </ModalContent>
