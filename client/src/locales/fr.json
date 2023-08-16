@@ -55,5 +55,8 @@
   "stock": "Stock",
   "counter": "Comptoir",
   "undefined": "Undefiné",
-  "productsCounter": "Nombre d'articles"
+  "productsCounter": "Nombre d'articles",
+  "search": "Rechercher",
+  "searchBills": "Rechercher un bon par ( Nom de client, Catégorie, Totale TTC, Totale HT ou bien par numero de bon )",
+  "noRecordsFound": "Aucun enregistrement trouvé"
 }
