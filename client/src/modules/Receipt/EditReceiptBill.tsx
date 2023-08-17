@@ -4,20 +4,15 @@ import {
   Button,
   Container,
   Flex,
-  Heading,
   Text,
   useDisclosure,
   useToast,
-  Stack,
-  Icon,
-  useColorModeValue
 } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
 import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
-import { LiaArchiveSolid } from 'react-icons/lia';
-import { AiFillRightCircle, AiFillFilePdf } from 'react-icons/ai';
+import { AiFillEdit, AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
 import ProductsTable from '@shared/components/CustomForm/ProductsTable';
@@ -25,27 +20,28 @@ import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
 import { useGetAllCustomers } from '@shared/hooks/useCustomers';
 import { useGetAllCategories } from '@shared/hooks/useCategories';
-import { useCreateBill, useGetLatestBillNumber } from '@shared/hooks/useBill';
+import { useUpdateBill, useGetBillInfo } from '@shared/hooks/useBill';
 import CustomerModal from '@shared/components/Customer';
 import showToast from '@shared/functions/showToast';
 import { AxiosError } from 'axios';
 import CategoryModal from '@shared/components/Category';
 import CustomModal from '@shared/components/CustomModal';
 import Alert from '@shared/components/Alert';
-import EditReceiptBill from './EditReceiptBill';
+import dayjs from 'dayjs';
 
-interface ReceiptProps {
-  isTopBar?: boolean;
+interface EditReceiptBillProps {
+  justCreated?: boolean;
+  billId: string;
 }
 
-const Receipt = ({ isTopBar }: ReceiptProps) => {
+const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const toast = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
-  const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('BUY');
-  const { mutateAsync: createBill } = useCreateBill();
+  const { data: billInfo, isFetched } = useGetBillInfo(billId);
+  const { mutateAsync: updateBill } = useUpdateBill();
   const [orderTotalHT, setOrderTotalHT] = useState('0.00');
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
@@ -103,10 +99,26 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
   }, [productsValues, orderPaid, orderDebts])
 
   useEffect(() => {
-    if (isFetched) {
-      setInitialValues((prev) => ({ ...prev, orderId: latestBillNumber + 1 }))
+    if (isFetched && isOpen) {
+      const { orderId, category, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
+      setInitialValues({
+        orderId,
+        category,
+        description,
+        customer,
+        orderTotalHT,
+        orderTotalTTC,
+        orderPaid,
+        orderDebts,
+        billDate: dayjs(billDate).toDate() as unknown as string,
+      });
+      setOrderTotalHT(price(`${orderTotalHT}`));
+      setOrderTotalTTC(price(`${orderTotalTTC}`));
+      setOrderPaid(price(`${orderPaid}`));
+      setOrderDebts(price(`${orderTotalTTC - Number(orderPaid)}`));
+      setProductsValues(products);
     }
-  }, [isFetched, latestBillNumber]);
+  }, [isFetched, billInfo, isOpen]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
 
   const onSubmit = async (values) => {
@@ -129,7 +141,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
           stack: parseInt(stack as unknown as string, 10),
         }))
       }
-      const { data: newBill } = await createBill(payload);
+      const { data: newBill } = await updateBill(payload);
       setReceiptBillId(newBill._id);
       onAlertOpen();
       showToast(
@@ -137,7 +149,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success', isClosable: false, },
       );
       setInitialValues({
-        orderId: latestBillNumber + 2, category: '', description: '', customer: '', orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate: new Date() as unknown as string,
+        orderId: 0, category: '', description: '', customer: '', orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate: new Date() as unknown as string,
       });
       setProductsValues([{
         id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
@@ -156,82 +168,11 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
   }
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
-  const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
     <Box>
-      {isTopBar ? (
-        <Box
-          cursor={'pointer'}
-          onClick={onOpen}
-          role={'group'}
-          display={'block'}
-          p={2}
-          px={3}
-          rounded={'lg'}
-          _hover={{ bg: hoverBackground }}>
-          <Stack direction={'row'} align={'center'}>
-            <Box>
-              <Text
-                transition={'all .3s ease'}
-                _groupHover={{ color: 'blue.500' }}
-                fontWeight={500}>
-                {t('newReceiptBill')}
-              </Text>
-              <Text fontSize={'sm'}>{t('newReceiptBillLabel')}</Text>
-            </Box>
-            <Flex
-              transition={'all .3s ease'}
-              transform={'translateX(-10px)'}
-              opacity={0}
-              _groupHover={{ opacity: '100%', transform: 'translateX(0)' }}
-              justify={'flex-end'}
-              align={'center'}
-              flex={1}>
-              <Icon color={'blue.400'} w={5} h={5} as={AiFillRightCircle} />
-            </Flex>
-          </Stack>
-        </Box>
-      ) : (
-        <Box
-          onClick={onOpen}
-          cursor={'pointer'}
-          w={'100%'}
-          borderWidth="1px"
-          borderRadius="3xl"
-          pos={'relative'}
-          bg={'blue.400'}
-          mx={5}
-          p={5}>
-          <Flex
-            align={'center'}
-            justify={'center'}
-            fontSize={'sm'}
-            pos={'absolute'}
-            bg={'gray.800'}
-            top={-2}
-            right={-2}
-            p={5}
-            borderRadius={'2xl'}
-            h={8}
-            w={8}
-          >
-            F1
-          </Flex>
-          <Flex align={'center'} gap={4}>
-            <Flex
-              minW={20}
-              minH={20}
-              align={'center'}
-              justify={'center'}
-              color={'white'}
-              borderRadius={'2xl'}
-              bg={'gray.100'}>
-              <LiaArchiveSolid color={'black'} size={'36'} />
-            </Flex>
-            <Heading size="md">{t('newReceiptBill')}</Heading>
-          </Flex>
-        </Box>
-      )}
+      <Button colorScheme='green' {...!justCreated && { p: 0, size: 'sm' }} fontWeight={400} borderRadius={'2xl'} onClick={onOpen}>
+        <AiFillEdit /> {justCreated && t('edit')}
+      </Button>
       <CustomModal
         modalProps={{ size: 'full' }}
         overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
@@ -239,7 +180,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
         bodyProps={{ overflow: 'scroll' }}
         isOpen={isOpen}
         onClose={onClose}
-        title={t('newReceiptBill')}
+        title={t('editReceiptBill')}
       >
         <Box p={4}>
           <Container maxW={'full'}>
@@ -397,8 +338,8 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
       <Alert
         isOpen={isAlertOpen}
         onClose={onAlertClose}
-        header={t('billCreated')}
-        body={t('billCreatedSuccessfully')}
+        header={t('billUpdated')}
+        body={t('billUpdatedSuccessfully')}
         footer={
           <Flex gap={2}>
             <Button colorScheme='red' fontWeight={400} borderRadius={'2xl'} onClick={onAlertClose}>
@@ -407,7 +348,9 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
             <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${receiptBillId}`}>
               <AiFillFilePdf /> {t('print')}
             </Button>
-            <EditReceiptBill billId={receiptBillId} justCreated/>
+            <Button colorScheme='green' fontWeight={400} borderRadius={'2xl'}>
+              <AiFillFilePdf /> {t('edit')}
+            </Button>
           </Flex>
         }
       />
@@ -415,4 +358,4 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
   )
 }
 
-export default Receipt
+export default EditReceiptBill

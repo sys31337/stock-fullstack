@@ -21,12 +21,13 @@ import {
 } from '@chakra-ui/react';
 import CustomModal from '@shared/components/CustomModal';
 import { t } from 'i18next';
-import { AiFillDelete, AiFillEdit, AiFillFilePdf, AiFillRightCircle } from 'react-icons/ai';
+import { AiFillDelete, AiFillFilePdf, AiFillRightCircle } from 'react-icons/ai';
 import { LiaFileInvoiceDollarSolid } from 'react-icons/lia';
-import { useGetAllBills } from '@shared/hooks/useBill';
+import { useGetAllBillsOfType } from '@shared/hooks/useBill';
 import dayjs from 'dayjs';
 import Pagination from '@shared/components/Pagination';
 import { price } from '@shared/functions/words';
+import EditReceiptBill from './EditReceiptBill';
 
 interface AllReceiptBillsProps {
   isTopBar?: boolean;
@@ -34,7 +35,7 @@ interface AllReceiptBillsProps {
 
 const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { data: getAllReceiptBills, isFetched } = useGetAllBills('BUY');
+  const { data: getAllReceiptBills, isFetched } = useGetAllBillsOfType('BUY');
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
 
@@ -181,9 +182,7 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
                             <Button colorScheme='blue' p={0} size={'sm'} fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${_id}`}>
                               <AiFillFilePdf />
                             </Button>
-                            <Button colorScheme='green' p={0} size={'sm'} fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/editbill/${_id}`}>
-                              <AiFillEdit />
-                            </Button>
+                            <EditReceiptBill billId={_id} />
                             <Button colorScheme='red' p={0} size={'sm'} fontWeight={400} borderRadius={'2xl'}>
                               <AiFillDelete />
                             </Button>

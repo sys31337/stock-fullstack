@@ -1,13 +1,17 @@
 import axiosInstance from "@shared/services/api";
+import queryClient from "@shared/services/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-const useCreateBill = () => useMutation((data) => axiosInstance.request({
-  method: 'POST',
-  url: 'bills',
-  data,
-}));
+const useGetAllBills = () => useQuery(
+  ['Get all bills of type'],
+  async () => axiosInstance
+    .request({
+      url: 'bills',
+    })
+    .then(({ data }) => data),
+);
 
-const useGetAllBills = (type: string) => useQuery(
+const useGetAllBillsOfType = (type: string) => useQuery(
   ['Get all bills of type', type],
   async () => axiosInstance
     .request({
@@ -22,7 +26,7 @@ const useGetLatestBillNumber = (type: string) => useQuery(
     .request({
       url: `bills/${type}`,
     })
-    .then(({ data }) => data.pop().orderId),
+    .then(({ data }) => data.shift().orderId),
 );
 
 const useGetBillInfo = (id: string) => useQuery(
@@ -34,4 +38,17 @@ const useGetBillInfo = (id: string) => useQuery(
     .then(({ data }) => data),
 );
 
-export { useCreateBill, useGetLatestBillNumber, useGetBillInfo, useGetAllBills };
+const useCreateBill = () => useMutation((data) => axiosInstance.request({
+  method: 'POST',
+  url: 'bills',
+  data,
+}), { onSuccess: () => queryClient.invalidateQueries(['Get all bills of type']) });
+
+const useUpdateBill = (id?: string) => useMutation((data) => axiosInstance.request({
+  method: 'PUT',
+  url: `bills/${id}`,
+  data,
+}), { onSuccess: () => queryClient.invalidateQueries(['Get all bills of type']) });
+
+
+export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, };

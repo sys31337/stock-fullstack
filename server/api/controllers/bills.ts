@@ -32,8 +32,9 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       updatedBy: userId,
     }
-    const updateBill = await Bill.create(payload);
-    return res.status(200).send(updateBill);
+    console.log(payload);
+    // const updateBill = await Bill.create(payload);
+    return res.status(200).send(payload);
   } catch (error) {
     return next(error);
   }
@@ -42,7 +43,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type } = req.params;
-    const bills = await Bill.find({ type }).populate('customer category');
+    const bills = await Bill.find({ type }).populate('customer category').sort('-createdAt').lean();
     return res.status(200).send(bills);
     // return res.status(200).send(await getLatestBill(type));
   } catch (error) {

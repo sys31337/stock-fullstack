@@ -14,10 +14,16 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
   const { data: allProducts, isFetched } = useGetAllProducts();
 
   useEffect(() => {
+    const total = parseInt(data.quantity || 0, 10) * parseInt(data.stack || 0, 10) * parseInt(data.buyPrice || 0, 10)
+    const productTva = total * data.tva / 100;
     setProductName(data.productName)
+    setTotalHT(total)
+    setTotalTTC(total + productTva)
   }, [data])
 
-  const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase())
+  const productsList = products.map((product) => product.productName.toLowerCase());
+
+  const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !productsList.includes(optionLabel.toLowerCase())
 
   const updateTotal = (e) => {
     handleChange(index, e)
