@@ -4,6 +4,7 @@ import styles from '@shared/components/PDF/styles';
 import { t } from 'i18next';
 import dayjs from 'dayjs';
 import { price } from '@shared/functions/words';
+import { defaultId } from '@config';
 
 const ReceiptBillPdf = ({ data }) => {
 
@@ -25,7 +26,7 @@ const ReceiptBillPdf = ({ data }) => {
         <View style={styles.billInfo}>
           <View style={styles.Elements}>
             <Text style={{ fontWeight: 'bold' }}>{t('customer')}:</Text>
-            <Text>{customer?.fullname || t('counter')}</Text>
+            <Text>{(customer && customer._id !== defaultId) ? customer?.fullname : t('counter')}</Text>
           </View>
           <View style={styles.Elements}>
             <Text style={{ fontWeight: 'bold' }}>{t('date')}:</Text>

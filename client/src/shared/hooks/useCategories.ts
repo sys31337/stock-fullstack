@@ -1,8 +1,8 @@
+import { defaultId } from "@config";
 import axiosInstance from "@shared/services/api";
 import queryClient from "@shared/services/queryClient";
 import { Payload } from "@shared/types/payload";
 import { useMutation, useQuery } from "@tanstack/react-query";
-const defaultId = '0a0aaa0a0aa00000aaaaaa0a';
 
 const useGetAllCategories = () => useQuery(
   ['Get all categories'],

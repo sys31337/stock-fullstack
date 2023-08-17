@@ -126,8 +126,8 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
     }
   }, [isFetched, billInfo, isOpen]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
-  const filterAllCustomers = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !allCustomers.includes(optionLabel.toLowerCase())
-  const filterAllCategories = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !allCategories.includes(optionLabel.toLowerCase())
+  const filterAllCustomers = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !(allCustomers as Any[]).includes(optionLabel.toLowerCase())
+  const filterAllCategories = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !(allCategories as Any[]).includes(optionLabel.toLowerCase())
 
   const onSubmit = async (values) => {
     try {
@@ -250,7 +250,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
                       onSelectOption={onCustomerSelectOption}
                       onChange={onCustomerChange}
                       selector={'fullname'}
-                      items={allCustomers}
+                      items={allCustomers as Any[]}
                     />
                     <CustomerModal />
                   </Box>
@@ -263,7 +263,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
                       onSelectOption={onCategorySelectOption}
                       onChange={onCategoryChange}
                       selector={'name'}
-                      items={allCategories}
+                      items={allCategories as Any[]}
                     />
                     <CategoryModal />
                   </Box>
