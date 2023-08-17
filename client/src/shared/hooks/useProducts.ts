@@ -1,5 +1,7 @@
 import axiosInstance from "@shared/services/api";
-import { useQuery } from "@tanstack/react-query";
+import queryClient from "@shared/services/queryClient";
+import { Payload } from "@shared/types/payload";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useGetAllProducts = () => useQuery(
   ['Get all products'],
@@ -10,6 +12,13 @@ const useGetAllProducts = () => useQuery(
     .then(({ data }) => data),
 );
 
+const useUpdateProduct = (id: string) => useMutation((payload: Payload) => axiosInstance.request({
+  method: 'PUT',
+  url: `products/${id}`,
+  data: payload,
+}), { onSuccess: () => queryClient.invalidateQueries(['Get all products']) });
+
 export {
+  useUpdateProduct,
   useGetAllProducts,
 }

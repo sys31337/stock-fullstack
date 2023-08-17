@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import expressJoiValidation from 'express-joi-validation';
-import { date, mongooseId, number, string } from './schema';
+import { boolean, date, mongooseId, number, string } from './schema';
 
 const validator = expressJoiValidation.createValidator({ passError: true });
 
@@ -32,6 +32,7 @@ const updateProductSchema = Joi.object({
   totalHT: number,
   totalTTC: number,
   tva: number,
+  notify: boolean,
 });
 
 const createProductValidator = validator.body(createProductSchema);
