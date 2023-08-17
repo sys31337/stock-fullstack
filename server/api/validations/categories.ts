@@ -6,7 +6,7 @@ const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createCategorySchema = Joi.object({
   name: string.required(),
-  description: string,
+  description: string.optional().allow(''),
 });
 
 const createCategoryValidator = validator.body(createCategorySchema);

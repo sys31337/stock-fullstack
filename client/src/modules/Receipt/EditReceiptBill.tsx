@@ -232,7 +232,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
                   </Box>
                   <Box flex={1}>
                     <CustomInput
-                      name="date"
+                      name="billDate"
                       label="Date"
                       setFieldValue={setFieldValue}
                       handleBlur={handleBlur}

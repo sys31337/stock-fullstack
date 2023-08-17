@@ -59,5 +59,7 @@
   "searchBills": "Rechercher un bon par ( Nom de client, Catégorie, Totale TTC, Totale HT ou bien par numero de bon )",
   "noRecordsFound": "Aucun enregistrement trouvé",
   "billCreated": "Bon crée",
-  "billCreatedSuccessfully": "Bon crée avec succées"
+  "billCreatedSuccessfully": "Bon crée avec succées",
+  "billUpdated": "Bon mis a jour",
+  "billUpdatedSuccessfully": "Bon mis a jour avec succées"
 }

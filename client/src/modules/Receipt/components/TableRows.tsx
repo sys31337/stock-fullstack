@@ -4,8 +4,8 @@ import { BiTrash } from 'react-icons/bi';
 import { BsPercent } from 'react-icons/bs';
 import { price } from '@shared/functions/words';
 import CustomInput from '@shared/components/CustomForm/Input';
-import { AutoComplete, AutoCompleteInput, AutoCompleteList, AutoCompleteItem } from '@choc-ui/chakra-autocomplete';
 import { useGetAllProducts } from '@shared/hooks/useProducts';
+import CustomAutoComplete from '@shared/components/CustomAutoComplete';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [totalHT, setTotalHT] = useState(0);
@@ -54,6 +54,18 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     setTotalTTC(0);
   };
 
+  const onProductSelectOption = (selectedItems) => {
+    const e = { target: { name: 'productName', value: selectedItems.item.label } };
+    handleChange(index, e);
+    setProductName(selectedItems.item.label);
+    selectProduct(selectedItems);
+  }
+
+  const onProductChange = (e) => {
+    setProductName(e.target.value as unknown as string);
+    handleChange(index, e);
+  }
+
   return (
     <>
       {isFetched && (
@@ -84,42 +96,23 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
             />
           </Td>
           <Td px={1}>
-            <AutoComplete rollNavigation freeSolo={true} filter={filterProductsList} onSelectOption={(selectedItems) => {
-              const e = { target: { name: 'productName', value: selectedItems.item.label } };
-              handleChange(index, e);
-              setProductName(selectedItems.item.label);
-              selectProduct(selectedItems);
-            }}>
-              <AutoCompleteInput
-                textAlign={'center'}
-                px={2}
-                bg={'white'}
-                isDisabled={!!data._id}
-                borderColor={'gray.200'}
-                borderRadius={'xl'}
-                color={'theme.900'}
-                type={'text'}
-                name={'productName'}
-                autoComplete={'off'}
-                value={productName}
-                onChange={(e) => {
-                  setProductName(e.target.value as unknown as string);
-                  handleChange(index, e);
-                }}
-              />
-              <AutoCompleteList>
-                {allProducts.map((product) => (
-                  <AutoCompleteItem
-                    key={`product-${product._id}`}
-                    value={product}
-                    label={product.productName}
-                    textTransform="capitalize"
-                  >
-                    {product.productName}
-                  </AutoCompleteItem>
-                ))}
-              </AutoCompleteList>
-            </AutoComplete>
+            <CustomAutoComplete
+              creatable={true}
+              emptyState={true}
+              freeSolo={true}
+              filter={filterProductsList}
+              focusInputOnSelect={false}
+              selectOnFocus={false}
+              maxSelections={0}
+              defaultValue={null}
+              name={'productName'}
+              value={productName}
+              onSelectOption={onProductSelectOption}
+              onChange={onProductChange}
+              selector={'productName'}
+              items={allProducts}
+            />
+
           </Td>
           <Td px={1}>
             <Input

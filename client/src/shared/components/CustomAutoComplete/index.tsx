@@ -1,6 +1,7 @@
-import { AutoComplete, AutoCompleteInput, AutoCompleteItem, AutoCompleteList, AutoCompleteProps } from '@choc-ui/chakra-autocomplete';
+import React from 'react';
+import { AutoComplete, AutoCompleteInput, AutoCompleteList, AutoCompleteItem, AutoCompleteProps } from '@choc-ui/chakra-autocomplete';
 import Any from '@shared/types/any';
-import React from 'react'
+import { Box } from '@chakra-ui/react';
 
 interface CustomAutoCompleteProps extends Omit<AutoCompleteProps, 'children'> {
   filter: (query: string, optionValue: string, optionLabel: string) => boolean;
@@ -15,7 +16,7 @@ interface CustomAutoCompleteProps extends Omit<AutoCompleteProps, 'children'> {
 const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
   const { filter, name, value, onSelectOption, onChange, items, selector, ...rest } = props;
   return (
-    <AutoComplete openOnFocus rollNavigation {...rest} freeSolo={true} filter={filter} onSelectOption={onSelectOption}>
+    <AutoComplete rollNavigation={false} openOnFocus {...rest} freeSolo={true} filter={filter} onSelectOption={onSelectOption} emphasize={true}>
       <AutoCompleteInput
         textAlign={'center'}
         px={2}
@@ -25,20 +26,32 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
         color={'theme.900'}
         type={'text'}
         name={name}
+        autoFocus={false}
         autoComplete={'off'}
         value={value}
         onChange={onChange}
       />
       <AutoCompleteList>
+        <AutoCompleteItem
+          disabled={true}
+          fixed={true}
+          style={{
+            display: 'none'
+          }}
+          value={'disabled'}
+        >
+          disabled
+        </AutoCompleteItem>
         {items.map((item, k) => (
-          <AutoCompleteItem
-            key={`${[name]}-${k}`}
-            value={item}
-            label={item[selector]}
-            textTransform="capitalize"
-          >
-            {item[selector]}
-          </AutoCompleteItem>
+          <Box key={k}>
+            <AutoCompleteItem
+              defaultChecked={false}
+              value={item}
+              label={item[selector]}
+            >
+              {item[selector]}
+            </AutoCompleteItem>
+          </Box>
         ))}
       </AutoCompleteList>
     </AutoComplete>

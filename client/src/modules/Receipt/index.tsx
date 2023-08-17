@@ -259,7 +259,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
                   </Box>
                   <Box flex={1}>
                     <CustomInput
-                      name="date"
+                      name="billDate"
                       label="Date"
                       setFieldValue={setFieldValue}
                       handleBlur={handleBlur}

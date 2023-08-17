@@ -3,7 +3,7 @@ import queryClient from "@shared/services/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useGetAllBills = () => useQuery(
-  ['Get all bills of type'],
+  ['Get all bills'],
   async () => axiosInstance
     .request({
       url: 'bills',
@@ -42,7 +42,12 @@ const useCreateBill = () => useMutation((data) => axiosInstance.request({
   method: 'POST',
   url: 'bills',
   data,
-}), { onSuccess: () => queryClient.invalidateQueries(['Get all bills of type']) });
+}), {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['Get all bills']);
+    queryClient.invalidateQueries(['Get all products']);
+  }
+});
 
 const useUpdateBill = (id?: string) => useMutation((data) => axiosInstance.request({
   method: 'PUT',
@@ -50,8 +55,9 @@ const useUpdateBill = (id?: string) => useMutation((data) => axiosInstance.reque
   data,
 }), {
   onSuccess: () => {
-    queryClient.invalidateQueries(['Get all bills of type']);
+    queryClient.invalidateQueries(['Get all bills']);
     queryClient.invalidateQueries(['Get bill information', id])
+    queryClient.invalidateQueries(['Get all products']);
   }
 });
 
