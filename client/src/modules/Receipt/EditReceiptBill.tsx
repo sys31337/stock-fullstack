@@ -15,7 +15,7 @@ import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
 import { AiFillEdit, AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
-import ProductsTable from '@shared/components/CustomForm/ProductsTable';
+import ProductsTable from '@modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
 import { useGetAllCustomers } from '@shared/hooks/useCustomers';
@@ -28,6 +28,7 @@ import CategoryModal from '@shared/components/Category';
 import CustomModal from '@shared/components/CustomModal';
 import Alert from '@shared/components/Alert';
 import dayjs from 'dayjs';
+import CustomAutoComplete from '@shared/components/CustomAutoComplete';
 
 interface EditReceiptBillProps {
   justCreated?: boolean;
@@ -41,11 +42,13 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
   const { data: billInfo, isFetched } = useGetBillInfo(billId);
-  const { mutateAsync: updateBill } = useUpdateBill();
+  const { mutateAsync: updateBill } = useUpdateBill(billId);
   const [orderTotalHT, setOrderTotalHT] = useState('0.00');
   const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
   const [orderPaid, setOrderPaid] = useState('0.00');
   const [orderDebts, setOrderDebts] = useState('0.00');
+  const [customerName, setCustomerName] = useState('');
+  const [categoryName, setCategoryName] = useState('');
   const [receiptBillId, setReceiptBillId] = useState('');
   const [initialValues, setInitialValues] = useState({
     orderId: 0,
@@ -103,9 +106,9 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
       const { orderId, category, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
       setInitialValues({
         orderId,
-        category,
+        category: category?._id,
         description,
-        customer,
+        customer: customer?._id,
         orderTotalHT,
         orderTotalTTC,
         orderPaid,
@@ -116,10 +119,15 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
       setOrderTotalTTC(price(`${orderTotalTTC}`));
       setOrderPaid(price(`${orderPaid}`));
       setOrderDebts(price(`${orderTotalTTC - Number(orderPaid)}`));
-      setProductsValues(products);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      setProductsValues(products.map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({ ...rest })));
+      setCustomerName(customer?.fullname)
+      setCategoryName(category?.name)
     }
   }, [isFetched, billInfo, isOpen]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
+  const filterAllCustomers = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !allCustomers.includes(optionLabel.toLowerCase())
+  const filterAllCategories = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !allCategories.includes(optionLabel.toLowerCase())
 
   const onSubmit = async (values) => {
     try {
@@ -141,8 +149,9 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
           stack: parseInt(stack as unknown as string, 10),
         }))
       }
-      const { data: newBill } = await updateBill(payload);
-      setReceiptBillId(newBill._id);
+      console.log(payload);
+      const { data: update } = await updateBill(payload);
+      setReceiptBillId(update._id);
       onAlertOpen();
       showToast(
         toast,
@@ -168,6 +177,29 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
   }
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
+
+  const onCustomerSelectOption = (selectedItems) => {
+    setCustomerName(selectedItems.item.label)
+    setFieldValue('customer', selectedItems.item.value);
+  }
+
+  const onCustomerChange = (e) => {
+    handleChange(e);
+    setCustomerName(e.target.value);
+    setFieldValue('customer', e.target.value as unknown as string);
+  }
+
+  const onCategorySelectOption = (selectedItems) => {
+    setCategoryName(selectedItems.item.label)
+    setFieldValue('category', selectedItems.item.value);
+  }
+
+  const onCategoryChange = (e) => {
+    handleChange(e);
+    setCategoryName(e.target.value);
+    setFieldValue('category', e.target.value as unknown as string);
+  }
+
   return (
     <Box>
       <Button colorScheme='green' {...!justCreated && { p: 0, size: 'sm' }} fontWeight={400} borderRadius={'2xl'} onClick={onOpen}>
@@ -210,33 +242,28 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
                     />
                   </Box>
                   <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
-                    <CustomInput
-                      name="customer"
-                      label="Customer"
-                      setFieldValue={setFieldValue}
+                    <CustomAutoComplete
                       onFocus={() => refetch()}
-                      handleBlur={handleBlur}
-                      errorMessage={errors.customer && touched.customer && errors.customer}
-                      selectOptions={
-                        allCustomers && [...allCustomers, { fullname: 'Unspecified', _id: 0 }].map((customer) => ({ label: customer.fullname, value: customer._id }))
-                      }
-                      isSelect={true}
+                      filter={filterAllCustomers}
+                      name={'customer'}
+                      value={customerName}
+                      onSelectOption={onCustomerSelectOption}
+                      onChange={onCustomerChange}
+                      selector={'fullname'}
+                      items={allCustomers}
                     />
                     <CustomerModal />
                   </Box>
                   <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
-                    <CustomInput
-                      name="category"
-                      label="Category"
-                      setFieldValue={setFieldValue}
+                    <CustomAutoComplete
                       onFocus={() => refetchCategories()}
-                      handleBlur={handleBlur}
-                      defaultValue={values.category}
-                      errorMessage={errors.category && touched.category && errors.category}
-                      selectOptions={
-                        allCategories && [...allCategories, { name: 'Unspecified', _id: 0 }].map((category) => ({ label: category.name, value: category._id }))
-                      }
-                      isSelect={true}
+                      filter={filterAllCategories}
+                      name={'category'}
+                      value={categoryName}
+                      onSelectOption={onCategorySelectOption}
+                      onChange={onCategoryChange}
+                      selector={'name'}
+                      items={allCategories}
                     />
                     <CategoryModal />
                   </Box>
@@ -348,9 +375,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
             <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${receiptBillId}`}>
               <AiFillFilePdf /> {t('print')}
             </Button>
-            <Button colorScheme='green' fontWeight={400} borderRadius={'2xl'}>
-              <AiFillFilePdf /> {t('edit')}
-            </Button>
+            <EditReceiptBill billId={receiptBillId} justCreated />
           </Flex>
         }
       />

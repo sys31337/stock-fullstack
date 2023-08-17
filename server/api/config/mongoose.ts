@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { log, logError } from '../utils';
+import Customer from '../models/customers';
+import Category from '../models/categories';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 const connectDB = async (): Promise<boolean> => {
@@ -11,7 +13,16 @@ const connectDB = async (): Promise<boolean> => {
 
   const db: mongoose.Connection = mongoose.connection;
 
-  db.once('open', () => {
+  db.once('open', async () => {
+    const defaultInfo = { _id: '0a0aaa0a0aa00000aaaaaa0a', createdAt: new Date('1970'), updatedAt: new Date('1970') };
+    const defaultCustomer = await Customer.findById(defaultInfo._id);
+    if (!defaultCustomer) {
+      await new Customer({ fullname: 'Unspecified', ...defaultInfo }).save();
+    }
+    const defaultCategory = await Category.findById('0a0aaa0a0aa00000aaaaaa0a');
+    if (!defaultCategory) {
+      await new Category({ name: 'Uncategorized', description: 'Default Category', ...defaultInfo }).save();
+    }
     log('Database Connected');
   });
 

@@ -46,9 +46,14 @@ const useCreateBill = () => useMutation((data) => axiosInstance.request({
 
 const useUpdateBill = (id?: string) => useMutation((data) => axiosInstance.request({
   method: 'PUT',
-  url: `bills/${id}`,
+  url: `bills/info/${id}`,
   data,
-}), { onSuccess: () => queryClient.invalidateQueries(['Get all bills of type']) });
+}), {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['Get all bills of type']);
+    queryClient.invalidateQueries(['Get bill information', id])
+  }
+});
 
 
 export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, };

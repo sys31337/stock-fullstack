@@ -20,7 +20,7 @@ import { LiaArchiveSolid } from 'react-icons/lia';
 import { AiFillRightCircle, AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@shared/components/CustomForm'
 import CustomInput from '@shared/components/CustomForm/Input'
-import ProductsTable from '@shared/components/CustomForm/ProductsTable';
+import ProductsTable from '@modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@shared/functions/words';
 import Any from '@shared/types/any';
 import { useGetAllCustomers } from '@shared/hooks/useCustomers';

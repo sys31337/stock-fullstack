@@ -3,7 +3,7 @@ import { Tr, Td, Input, Button, InputGroup, InputLeftElement } from '@chakra-ui/
 import { BiTrash } from 'react-icons/bi';
 import { BsPercent } from 'react-icons/bs';
 import { price } from '@shared/functions/words';
-import CustomInput from './Input';
+import CustomInput from '@shared/components/CustomForm/Input';
 import { AutoComplete, AutoCompleteInput, AutoCompleteList, AutoCompleteItem } from '@choc-ui/chakra-autocomplete';
 import { useGetAllProducts } from '@shared/hooks/useProducts';
 
@@ -16,6 +16,8 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
   useEffect(() => {
     const total = parseInt(data.quantity || 0, 10) * parseInt(data.stack || 0, 10) * parseInt(data.buyPrice || 0, 10)
     const productTva = total * data.tva / 100;
+    data.totalHT = total;
+    data.totalTTC = total + productTva;
     setProductName(data.productName)
     setTotalHT(total)
     setTotalTTC(total + productTva)
@@ -76,6 +78,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
               color={'theme.900'}
               type={'text'}
               name="barCode"
+              isDisabled={!!data._id}
               defaultValue={barCode}
               onChange={(e) => (handleChange(index, e))}
             />
@@ -91,6 +94,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
                 textAlign={'center'}
                 px={2}
                 bg={'white'}
+                isDisabled={!!data._id}
                 borderColor={'gray.200'}
                 borderRadius={'xl'}
                 color={'theme.900'}
