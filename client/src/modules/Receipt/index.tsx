@@ -277,7 +277,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
                       handleBlur={handleBlur}
                       errorMessage={errors.customer && touched.customer && errors.customer}
                       selectOptions={
-                        allCustomers && [...allCustomers, { fullname: 'Unspecified', _id: 0 }].map((customer) => ({ label: customer.fullname, value: customer._id }))
+                        allCustomers && allCustomers.map((customer) => ({ label: customer.fullname, value: customer._id }))
                       }
                       isSelect={true}
                     />
@@ -293,7 +293,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
                       defaultValue={values.category}
                       errorMessage={errors.category && touched.category && errors.category}
                       selectOptions={
-                        allCategories && [...allCategories, { name: 'Unspecified', _id: 0 }].map((category) => ({ label: category.name, value: category._id }))
+                        allCategories && allCategories.map((category) => ({ label: category.name, value: category._id }))
                       }
                       isSelect={true}
                     />
