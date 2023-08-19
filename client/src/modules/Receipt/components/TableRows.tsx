@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Tr, Td, Input, Button, InputGroup, InputLeftElement } from '@chakra-ui/react';
+import { Tr, Td, Input, Button, InputGroup, InputRightElement, Flex, InputLeftElement, Icon } from '@chakra-ui/react';
 import { BiTrash } from 'react-icons/bi';
 import { BsPercent } from 'react-icons/bs';
 import { price } from '@shared/functions/words';
 import CustomInput from '@shared/components/CustomForm/Input';
 import { useGetAllProducts } from '@shared/hooks/useProducts';
 import CustomAutoComplete from '@shared/components/CustomAutoComplete';
+import { AiOutlineBarcode } from 'react-icons/ai';
+import { randomNumber } from '@shared/utils/word';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [totalHT, setTotalHT] = useState(0);
   const [totalTTC, setTotalTTC] = useState(0);
   const [productName, setProductName] = useState('');
+  const [barCode, setBarCode] = useState('');
   const { data: allProducts, isFetched } = useGetAllProducts();
 
   useEffect(() => {
@@ -21,6 +24,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     setProductName(data.productName)
     setTotalHT(total)
     setTotalTTC(total + productTva)
+    setBarCode(data.barCode);
   }, [data])
 
   const productsList = products.map((product) => product.productName.toLowerCase());
@@ -37,7 +41,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     setTotalHT(total);
     setTotalTTC(total + productTva);
   }
-  const { id, barCode, tva, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
+  const { id, tva, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
 
   const selectProduct = (selectedItems) => {
     const { id, barCode, productName, tva, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = selectedItems.item.originalValue;
@@ -52,6 +56,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     data.sellPrice_3 = sellPrice_3;
     setTotalHT(0);
     setTotalTTC(0);
+    setBarCode(barCode)
   };
 
   const onProductSelectOption = (selectedItems) => {
@@ -64,6 +69,12 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
   const onProductChange = (e) => {
     setProductName(e.target.value as unknown as string);
     handleChange(index, e);
+  }
+
+  const generateBarCode = () => {
+    const newBarCode = `${productName[0] || 'P'}000${randomNumber(5)}`;
+    setBarCode(newBarCode)
+    data.barCode = newBarCode;
   }
 
   return (
@@ -81,19 +92,37 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
             )}
           </Td>
           <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={'white'}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'text'}
-              name="barCode"
-              isDisabled={!!data._id}
-              defaultValue={barCode}
-              onChange={(e) => (handleChange(index, e))}
-            />
+            <Flex>
+              <InputGroup>
+                <InputRightElement
+                  as={Button}
+                  m={'auto'}
+                  p={0}
+                  variant={'link'}
+                  borderRadius={'2xl'}
+                  display={barCode.length > 0 ? 'none' : 'block'}
+                >
+                  <Icon as={AiOutlineBarcode} onClick={generateBarCode} m={'5px'} />
+                </InputRightElement>
+                <Input
+                  textAlign={'center'}
+                  px={2}
+                  p={barCode.length > 0 ? 0 : 2}
+                  bg={'white'}
+                  borderColor={'gray.200'}
+                  borderRadius={'xl'}
+                  color={'theme.900'}
+                  type={'text'}
+                  name="barCode"
+                  isDisabled={!!data._id}
+                  defaultValue={barCode}
+                  onChange={(e) => {
+                    handleChange(index, e)
+                    setBarCode(e.target.value)
+                  }}
+                />
+              </InputGroup>
+            </Flex>
           </Td>
           <Td px={1}>
             <CustomAutoComplete
