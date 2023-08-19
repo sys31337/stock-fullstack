@@ -32,7 +32,9 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       updatedBy: userId,
     }
-    const updateBill = await Bill.findByIdAndUpdate(id, payload);
+    const updateBill = await Bill.findById(id);
+    console.log(updateBill);
+    // const updateBill = await Bill.findByIdAndUpdate(id, payload);
     return res.status(200).send(updateBill);
   } catch (error) {
     return next(error);
