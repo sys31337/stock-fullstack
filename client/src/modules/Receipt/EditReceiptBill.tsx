@@ -121,8 +121,8 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
       setOrderDebts(price(`${orderTotalTTC - Number(orderPaid)}`));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       setProductsValues(products.map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({ ...rest })));
-      setCustomerName(customer?.fullname)
-      setCategoryName(category?.name)
+      setCustomerName(customer ? customer?.fullname : 'Unspecified')
+      setCategoryName(category ? category?.name : 'Uncategorized')
     }
   }, [isFetched, billInfo, isOpen]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
