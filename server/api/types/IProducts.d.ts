@@ -3,10 +3,12 @@ import { ICustomer } from "./ICustomer";
 import { ICategory } from "./ICategory";
 
 export interface IProduct {
+  _id?: String | ObjectId;
   id: String;
   barCode: String;
   productName: String;
   quantity: Number;
+  quantityDifference?: Number;
   stack: Number;
   buyPrice: Number;
   sellPrice_1: Number;

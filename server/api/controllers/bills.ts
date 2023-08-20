@@ -8,8 +8,7 @@ import { IProduct } from '../types/IProducts';
 const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { body, userId } = req;
-    const { type, products } = body;
-    const { category, customer } = body;
+    const { type, products, category, customer } = body;
     const payload = {
       ...body,
       orderId: parseInt(await getLatestBill(type), 10) + 1,
@@ -32,10 +31,13 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       updatedBy: userId,
     }
-    const updateBill = await Bill.findById(id);
-    console.log(updateBill);
-    // const updateBill = await Bill.findByIdAndUpdate(id, payload);
-    return res.status(200).send(updateBill);
+    const oldBill = await Bill.findById(id);
+    const { products: oldProducts } = oldBill;
+    const { products: newProducts, category, customer } = body;
+    console.log(JSON.stringify(oldProducts.map((product: IProduct) => ({ ...product, category, customer }))));
+    console.log(JSON.stringify(newProducts.map((product: IProduct) => ({ ...product, category, customer }))));
+
+    return res.status(200).send(oldBill);
   } catch (error) {
     return next(error);
   }
