@@ -20,13 +20,18 @@ export const reduceProductQuantity = async (product: IProduct) => {
   await Product.findOneAndUpdate(query, update, options);
 }
 
-export const buyBillproductUpdateHandler = (oldProducts: IProduct[], newProducts: IProduct[]) => {
+export const buyBillproductUpdateHandler = async (oldProducts: IProduct[], newProducts: IProduct[]) => {
   const { added, deleted, intersection } = compareProductsArrays(oldProducts, newProducts);
   intersection.forEach(async ({ id, barCode, productName, tva, buyPrice, quantityDifference: quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, category, customer }) => {
     const product = { id, barCode, productName, tva, buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, category, customer };
+    console.log('1', product);
     await updateProduct(product);
   });
 
-  deleted.forEach(async (product) => await reduceProductQuantity(product));
+  deleted.forEach(async (product) => {
+    console.log('2', product);
+    await reduceProductQuantity(product)
+  });
+  console.log('3added', added);
   buyBillProductHandler(added);
 }
