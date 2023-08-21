@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Bill from '../models/bills';
 import { IUserIdRequest } from '../types/common';
-import { buyBillProductHandler } from '../functions/products';
+import { buyBillProductHandler, buyBillproductUpdateHandler } from '../functions/products';
 import { getLatestBill } from '../functions/bills';
 import { IProduct } from '../types/IProducts';
 
@@ -31,13 +31,14 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       updatedBy: userId,
     }
-    const oldBill = await Bill.findById(id);
+    const oldBill = await Bill.findById(id).lean();
     const { products: oldProducts } = oldBill;
     const { products: newProducts, category, customer } = body;
-    console.log(JSON.stringify(oldProducts.map((product: IProduct) => ({ ...product, category, customer }))));
-    console.log(JSON.stringify(newProducts.map((product: IProduct) => ({ ...product, category, customer }))));
-
-    return res.status(200).send(oldBill);
+    const oldProductsArr = oldProducts.map((product: IProduct) => ({ ...product, category, customer }));
+    const newProductsArr = newProducts.map((product: IProduct) => ({ ...product, category, customer }));
+    await buyBillproductUpdateHandler(oldProductsArr, newProductsArr);
+    const updateBill = await Bill.findByIdAndUpdate(id, payload);
+    return res.status(200).send(updateBill);
   } catch (error) {
     return next(error);
   }
