@@ -85,11 +85,9 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
             {index + 1}
           </Td>
           <Td p={0} w={'5px'} textAlign={'center'}>
-            {(index !== 0 || products.length > 1) && (
-              <Button px={0} variant={'ghost'} onClick={() => (deleteTableRows(id))}>
-                <BiTrash color={'red'} />
-              </Button>
-            )}
+            <Button px={0} variant={'ghost'} onClick={() => (deleteTableRows(id))}>
+              <BiTrash color={'red'} />
+            </Button>
           </Td>
           <Td px={1}>
             <Flex>
@@ -114,7 +112,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
                   color={'theme.900'}
                   type={'text'}
                   name="barCode"
-                  isDisabled={!!data._id}
+                  isDisabled={!!data.id && !!data.barCode && !!data.productName}
                   defaultValue={barCode}
                   onChange={(e) => {
                     handleChange(index, e)
@@ -136,6 +134,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
               defaultValue={null}
               name={'productName'}
               value={productName}
+              inputProps={{ isDisabled: !!data.id && !!data.barCode && !!data.productName }}
               onSelectOption={onProductSelectOption}
               onChange={onProductChange}
               selector={'productName'}
@@ -167,6 +166,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
               color={'theme.900'}
               type={'number'}
               name="stack"
+              isDisabled={!!data.id && !!data.barCode && !!data.productName}
               defaultValue={stack}
               onChange={(e) => (updateTotal(e))}
             />
