@@ -11,10 +11,11 @@ interface CustomAutoCompleteProps extends Omit<AutoCompleteProps, 'children'> {
   items: Any[];
   onFocus?: () => Any;
   selector: string;
+  inputProps?: { [key: string]: Any }
 }
 
 const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
-  const { filter, name, value, onSelectOption, onChange, items, selector, ...rest } = props;
+  const { filter, name, value, onSelectOption, onChange, items, inputProps, selector, ...rest } = props;
   return (
     <AutoComplete rollNavigation={false} openOnFocus {...rest} freeSolo={true} filter={filter} onSelectOption={onSelectOption} emphasize={true}>
       <AutoCompleteInput
@@ -27,6 +28,7 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
         type={'text'}
         name={name}
         autoFocus={false}
+        {...inputProps}
         autoComplete={'off'}
         value={value}
         onChange={onChange}
