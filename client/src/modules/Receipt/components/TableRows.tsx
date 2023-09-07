@@ -8,6 +8,7 @@ import { useGetAllProducts } from '@shared/hooks/useProducts';
 import CustomAutoComplete from '@shared/components/CustomAutoComplete';
 import { AiOutlineBarcode } from 'react-icons/ai';
 import { randomNumber } from '@shared/utils/word';
+import Any from '@shared/types/any';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [totalHT, setTotalHT] = useState(0);
@@ -134,7 +135,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
               defaultValue={null}
               name={'productName'}
               value={productName}
-              inputProps={{ isDisabled: !!data.id && !!data.barCode && !!data.productName }}
+              inputProps={{ isDisabled: !!data.id && !!data.barCode && !!data.productName && (document.activeElement as Any)?.name !== 'productName' }}
               onSelectOption={onProductSelectOption}
               onChange={onProductChange}
               selector={'productName'}
