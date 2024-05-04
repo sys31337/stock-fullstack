@@ -9,29 +9,20 @@
     "src/renderer/src/config.ts",
     "src/renderer/src/config.ts"
   ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json",
+    }
+  ],
   "compilerOptions": {
+    "emitDeclarationOnly": true,
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@renderer/*": [
+      "@web/*": [
         "src/renderer/src/*",
         "src/renderer/styles/*"
-      ],
-      "@modules/*": [
-        "src/renderer/src/modules/*"
-      ],
-      "@config": [
-        "src/renderer/src/config"
-      ],
-      "@config/*": [
-        "src/renderer/src/config/*"
-      ],
-      "@shared/*": [
-        "src/renderer/src/shared/*"
-      ],
-      "@theme/*": [
-        "src/renderer/src/theme/*"
       ]
     }
   }

@@ -5,6 +5,14 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        '@api/config': resolve('src/main/api/config'),
+        '@api/constants': resolve('src/main/api/constants'),
+        '@api/controllers': resolve('src/main/api/controllers'),
+        '@api/functions': resolve('src/main/api/functions'),
+      },
+    },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
@@ -12,26 +20,11 @@ export default defineConfig({
   renderer: {
     resolve: {
       alias: {
-        '@renderer': resolve('src/renderer/src'),
-        '@config': resolve('src/renderer/src/config'),
-        '@shared': resolve('src/renderer/src/shared'),
-        '@theme': resolve('src/renderer/src/theme'),
-        '@modules': resolve('src/renderer/src/modules'),
-        // "@modules/*": [
-        //   "src/renderer/src/modules/*"
-        // ],
-        // "@config": [
-        //   "src/renderer/src/config"
-        // ],
-        // "@config/*": [
-        //   "src/renderer/src/config/*"
-        // ],
-        // "@shared/*": [
-        //   "src/renderer/src/shared/*"
-        // ],
-        // "@theme/*": [
-        //   "src/renderer/src/theme/*"
-        // ]
+        '@web/renderer': resolve('src/renderer/src'),
+        '@web/config': resolve('src/renderer/src/config'),
+        '@web/shared': resolve('src/renderer/src/shared'),
+        '@web/theme': resolve('src/renderer/src/theme'),
+        '@web/modules': resolve('src/renderer/src/modules'),
       },
     },
     plugins: [react()],

@@ -17,12 +17,12 @@ import {
   Image,
   Button,
 } from '@chakra-ui/react'
-import languages from '@config/languages'
-import Products from '@modules/Products'
-import Receipt from '@modules/Receipt'
-import AllReceiptBills from '@modules/Receipt/AllBills'
-import { useLogout } from '@shared/hooks/useAuthentication'
-import authService from '@shared/services/auth'
+import languages from '@web/config/languages'
+import Products from '@web/modules/Products'
+import Receipt from '@web/modules/Receipt'
+import AllReceiptBills from '@web/modules/Receipt/AllBills'
+import { useLogout } from '@web/shared/hooks/useAuthentication'
+import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
 import { Fragment } from 'react'
 import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFillRightCircle } from 'react-icons/ai'
@@ -168,8 +168,8 @@ const DesktopNav = () => {
 
   return (
     <Stack direction={'row'} spacing={4}>
-      {NAV_ITEMS.map((navItem) => (
-        <Box key={navItem.label}>
+      {NAV_ITEMS.map((navItem, k) => (
+        <Box key={k}>
           <Popover trigger={'hover'} placement={'bottom-start'}>
             <PopoverTrigger>
               <Box
@@ -197,8 +197,8 @@ const DesktopNav = () => {
                 rounded={'xl'}
                 minW={'sm'}>
                 <Stack>
-                  {navItem.children.map((child) => (
-                    child.component ? (<Fragment key={child.label}>{child.component}</Fragment>) : <DesktopSubNav key={child.label} {...child} />
+                  {navItem.children.map((child, k) => (
+                    child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
                   ))}
                 </Stack>
               </PopoverContent>
@@ -249,8 +249,8 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
 const MobileNav = () => {
   return (
     <Stack bg={useColorModeValue('white', 'gray.800')} p={4} display={{ md: 'none' }}>
-      {NAV_ITEMS.map((navItem) => (
-        <MobileNavItem key={navItem.label} {...navItem} />
+      {NAV_ITEMS.map((navItem, k) => (
+        <MobileNavItem key={k} {...navItem} />
       ))}
     </Stack>
   )
@@ -293,8 +293,8 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
           borderColor={useColorModeValue('gray.200', 'gray.700')}
           align={'start'}>
           {children &&
-            children.map((child) => (
-              <Box as="a" key={child.label} py={2} href={child.href}>
+            children.map((child, k) => (
+              <Box as="a" key={k} py={2} href={child.href}>
                 {child.label}
               </Box>
             ))}

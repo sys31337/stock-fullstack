@@ -1,10 +1,10 @@
 import { initReactI18next } from 'react-i18next';
 
-import { config } from '@config';
+import { config } from '@web/config';
 import i18n from 'i18next';
 import HttpBackend from 'i18next-http-backend';
 
-import cacheService from '@shared/services/cache';
+import cacheService from '@web/shared/services/cache';
 
 const userLang = cacheService.get<string>('USER_LANG_KEY');
 

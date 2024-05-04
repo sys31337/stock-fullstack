@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
-import { config as cfg } from '@config';
+import { config as cfg } from '@web/config';
 import i18n from 'i18next';
 import axios from 'axios';
-import authService from '@shared/services/auth';
-import parseJwt from '@shared/utils/parseJWT';
-import Any from '@shared/types/any';
-import { logoutUser } from '@shared/hooks/useAuthentication';
+import authService from '@web/shared/services/auth';
+import parseJwt from '@web/shared/utils/parseJWT';
+import Any from '@web/shared/types/any';
+import { logoutUser } from '@web/shared/hooks/useAuthentication';
 
 const noTokenUrls = ['challenge-progress', 'users/login', 'embeds/fetch', 'challenges/fetch'];
 

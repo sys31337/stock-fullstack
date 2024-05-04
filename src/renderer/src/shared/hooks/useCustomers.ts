@@ -1,8 +1,8 @@
-import { defaultId } from "@config";
-import axiosInstance from "@shared/services/api";
-import queryClient from "@shared/services/queryClient";
-import { Payload } from "@shared/types/payload";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { defaultId } from '@web/config';
+import axiosInstance from '@web/shared/services/api';
+import queryClient from '@web/shared/services/queryClient';
+import { Payload } from '@web/shared/types/payload';
 
 const useGetAllCustomers = () => useQuery(
   ['Get all customers'],

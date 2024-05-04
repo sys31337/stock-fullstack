@@ -5,7 +5,9 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import server from './api/main';
 import { log } from './api/utils';
+import config from './api/config';
 
+const { ELECTRON_RENDERER_URL } = config
 const dg = dialog;
 
 function createWindow(): void {
@@ -39,8 +41,8 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
-  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
+  if (is.dev && ELECTRON_RENDERER_URL) {
+    mainWindow.loadURL(ELECTRON_RENDERER_URL);
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }

@@ -1,4 +1,4 @@
-import Any from '@shared/types/any';
+import Any from '@web/shared/types/any';
 
 const configOverride = (window as Any).configOverride ?? {};
 

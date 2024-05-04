@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text } from '@react-pdf/renderer';
-import styles from '@shared/components/PDF/styles';
+import styles from '@web/shared/components/PDF/styles';
 import { t } from 'i18next';
 import dayjs from 'dayjs';
-import { price } from '@shared/functions/words';
-import { defaultId } from '@config';
+import { price } from '@web/shared/functions/words';
+import { defaultId } from '@web/config';
 
-const ReceiptBillPdf = ({ data }) => {
+const ReceiptBillPdf: React.FC<{ data: any }> = ({ data }) => {
 
   const { billDate,
     orderId,
