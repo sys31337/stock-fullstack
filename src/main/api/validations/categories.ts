@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import expressJoiValidation from 'express-joi-validation';
-import { string } from '../validations/schema';
+import { string } from './schema';
 
 const validator = expressJoiValidation.createValidator({ passError: true });
 

@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { requiredNumber, requiredString } from './helpers/common';
+import { requiredString } from './helpers/common';
 
 const transactionsSchema = new Schema({
   orderDate: requiredString,

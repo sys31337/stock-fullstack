@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import Category from '../models/categories';
+import Category from '@api/models/categories';
 
-const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
+const getAllCategories = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const categories = await Category.find();
     return res.status(200).send(categories);

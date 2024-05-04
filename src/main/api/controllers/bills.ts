@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import Bill from '../models/bills';
-import { IUserIdRequest } from '../types/common';
-import { buyBillProductHandler, buyBillproductUpdateHandler } from '../functions/products';
-import { getLatestBill } from '../functions/bills';
-import { IProduct } from '../types/IProducts';
+import { Response, NextFunction } from 'express';
+import Bill from '@api/models/bills';
+import { IUserIdRequest } from '@api/types/common';
+import { buyBillProductHandler, buyBillproductUpdateHandler } from '@api/functions/products';
+import { getLatestBill } from '@api/functions/bills';
+import { IProduct } from '@api/types/IProducts';
 
 const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
@@ -32,7 +32,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       updatedBy: userId,
     }
     const oldBill = await Bill.findById(id).lean();
-    const { products: oldProducts } = oldBill;
+    const { products: oldProducts } = oldBill || { products: [] };
     const { products: newProducts, category, customer } = body;
     const oldProductsArr = oldProducts.map((product: IProduct) => ({ ...product, category, customer }));
     const newProductsArr = newProducts.map((product: IProduct) => ({ ...product, category, customer }));
@@ -54,7 +54,7 @@ const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunc
   }
 }
 
-const getAllBills = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+const getAllBills = async (_req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const bills = await Bill.find();
     return res.status(200).send(bills);

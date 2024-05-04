@@ -1,11 +1,11 @@
 import express from 'express';
 import {
   refreshUserToken, createAccount, login, logout, getCurrentUser, updateUser,
-} from '../../../controllers/users';
-import { auth } from '../../../middlewares/auth';
+} from '@api/controllers/users';
+import { auth } from '@api/middlewares/auth';
 import {
   loginValidator, createAccountValidator, updateUserValidator,
-} from '../../../validations/users';
+} from '@api/validations/users';
 
 const router = express.Router();
 

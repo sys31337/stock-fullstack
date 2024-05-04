@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import expressJoiValidation from 'express-joi-validation';
-import { array, date, mongooseId, number, object, string } from '../validations/schema';
+import { array, date, mongooseId, number, object, string } from './schema';
 
 const validator = expressJoiValidation.createValidator({ passError: true });
 

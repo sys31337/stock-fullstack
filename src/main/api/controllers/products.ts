@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import Product from '../models/products';
+import Product from '@api/models/products';
 
 const createOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -21,7 +21,7 @@ const updateOne = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
-const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
+const getAllProducts = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const updatedProduct = await Product.find();
     return res.status(200).send(updatedProduct);

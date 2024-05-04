@@ -1,14 +1,12 @@
 /* eslint-disable camelcase */
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
-import jwt, { JsonWebTokenError } from 'jsonwebtoken';
-
-import User from '../models/user';
-import { parseJwt } from '../utils';
-
-import { IUserIdRequest } from '../types/common';
-import { USERLOGGEDOUT, USERNOTALLOWED } from '../constants/users';
-import config from '../config';
+import jwt from 'jsonwebtoken';
+import User from '@api/models/user';
+import { parseJwt } from '@api/utils';
+import { IUserIdRequest } from '@api/types/common';
+import { USERLOGGEDOUT, USERNOTALLOWED } from '@api/constants/users';
+import config from '@api/config';
 
 const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET } = config;
 
@@ -21,7 +19,7 @@ const refreshUserToken = async (req: Request, res: Response, next: NextFunction)
     const user = await User.findOne({ refreshToken });
     if (!user) return res.status(403).send(USERNOTALLOWED);
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-    return jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, async (err: JsonWebTokenError, _decoded: unknown) => {
+    return jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, async (err: jwt.VerifyErrors | null, _decoded: string | jwt.JwtPayload | undefined) => {
       if (err) {
         return res.sendStatus(403);
       }

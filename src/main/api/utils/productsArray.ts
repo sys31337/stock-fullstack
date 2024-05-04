@@ -1,4 +1,4 @@
-import { IProduct } from '../types/IProducts';
+import { IProduct } from '@api/types/IProducts';
 
 interface IDiffResult {
   intersection: IProduct[];

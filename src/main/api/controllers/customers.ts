@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import Product from '../models/products';
-import Customer from '../models/customers';
-import { IUserIdRequest } from '../types/common';
+import Customer from '@api/models/customers';
 
-const getAllCustomers = async (req: Request, res: Response, next: NextFunction) => {
+const getAllCustomers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const customers = await Customer.find();
     return res.status(200).send(customers);
@@ -11,7 +9,7 @@ const getAllCustomers = async (req: Request, res: Response, next: NextFunction) 
     return next(error);
   }
 }
-const getAllClients = async (req: Request, res: Response, next: NextFunction) => {
+const getAllClients = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const customers = await Customer.find({ type: 'Client' });
     return res.status(200).send(customers);
@@ -19,7 +17,7 @@ const getAllClients = async (req: Request, res: Response, next: NextFunction) =>
     return next(error);
   }
 }
-const getAllSuppliers = async (req: Request, res: Response, next: NextFunction) => {
+const getAllSuppliers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const customers = await Customer.find({ type: 'Supplier' });
     return res.status(200).send(customers);

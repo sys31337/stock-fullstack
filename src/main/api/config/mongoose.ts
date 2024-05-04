@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import { log, logError } from '../utils';
-import config from './';
-import Customer from '../models/customers';
-import Category from '../models/categories';
+import { log, logError } from '@api/utils';
+import config from '@api/config';
+import Customer from '@api/models/customers';
+import Category from '@api/models/categories';
 
 const connectDB = async (): Promise<boolean> => {
   const { DATABASEURI } = config;

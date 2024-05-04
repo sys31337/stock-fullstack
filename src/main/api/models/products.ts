@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
+import { IProduct } from '@api/types/IProducts';
 import { requiredNumber, requiredString } from './helpers/common';
-import { IProduct } from '../types/IProducts';
 
 export const productsSchema = new Schema<IProduct>({
   id: requiredString,

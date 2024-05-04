@@ -7,7 +7,7 @@
     "src/main/api/main.ts",
     "src/main/api/*",
     "src/main/api/types/*",
-    "src/main/api/config/mongoose.ts"
+    "src/main/api/**/*"
   ],
   "compilerOptions": {
     "composite": true,
@@ -15,5 +15,11 @@
       "electron-vite/node",
       "node"
     ],
+    "baseUrl": ".",
+    "paths": {
+      "@api/*": [
+        "src/main/api/*"
+      ]
+    }
   }
 }

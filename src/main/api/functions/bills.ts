@@ -1,4 +1,4 @@
-import Bill from '../models/bills';
+import Bill from '@api/models/bills';
 
 export const getLatestBill = async (type: string) => {
     const latestBillOfType = await Bill.findOne({ type }, {}, { sort: { 'createdAt': -1 } });

@@ -1,5 +1,4 @@
 import { model, Schema } from 'mongoose';
-import { requiredNumber, requiredString } from './helpers/common';
 
 const paymentsSchema = new Schema({
   paymentDate: {

@@ -1,8 +1,8 @@
 import { NextFunction, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/user';
-import type { IUserIdRequest } from '../types/common';
-import config from '../config';
+import User from '@api/models/user';
+import type { IUserIdRequest } from '@api/types/common';
+import config from '@api/config';
 
 const { ACCESS_TOKEN_SECRET } = config;
 

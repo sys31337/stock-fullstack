@@ -1,9 +1,9 @@
 import express from 'express';
 import {
   getAllCustomers, getAllClients, getAllSuppliers, createNewCustomer,
-} from '../../../controllers/customers';
-import { auth } from '../../../middlewares/auth';
-import { createCustomerValidator } from '../../../validations/customers';
+} from '@api/controllers/customers';
+import { auth } from '@api/middlewares/auth';
+import { createCustomerValidator } from '@api/validations/customers';
 
 const router = express.Router();
 

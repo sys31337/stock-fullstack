@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars, no-unused-expressions, @typescript-eslint/no-unused-vars */
 import { Request, Response, NextFunction } from 'express';
-import type { IError } from '../types/utils';
+import type { IError } from '@api/types/utils';
 
 const notFound = (req: Request, res: Response, next: NextFunction): void => {
   const error = new Error(`NOT FOUND - ${req.originalUrl}`);

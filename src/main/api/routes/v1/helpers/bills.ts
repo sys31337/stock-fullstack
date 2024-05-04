@@ -1,11 +1,11 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { auth } from '../../../middlewares/auth';
-import { getAllBills, createOne, updateOne, getBillsOfType, getSingleBill, } from '../../../controllers/bills';
-import { createBillValidator } from '../../../validations/bills';
+import { auth } from '@api/middlewares/auth';
+import { getAllBills, createOne, updateOne, getBillsOfType, getSingleBill, } from '@api/controllers/bills';
+import { createBillValidator } from '@api/validations/bills';
 
 const router = express.Router();
 
-const billBeautifier = (req: Request, res: Response, next: NextFunction) => {
+const billBeautifier = (req: Request, _res: Response, next: NextFunction) => {
   const { category, customer, ...rest } = req.body;
   req.body = {
     ...rest,

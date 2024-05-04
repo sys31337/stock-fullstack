@@ -3,9 +3,9 @@ import {
   createOne,
   updateOne,
   getAllProducts,
-} from '../../../controllers/products';
-import { auth } from '../../../middlewares/auth';
-import { updateProductValidator } from '../../../validations/products';
+} from '@api/controllers/products';
+import { auth } from '@api/middlewares/auth';
+import { updateProductValidator } from '@api/validations/products';
 
 const router = express.Router();
 

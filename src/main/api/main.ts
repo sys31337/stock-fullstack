@@ -5,11 +5,11 @@ import helmet from 'helmet';
 import logger from 'morgan';
 import path from 'path';
 import cors from 'cors';
-import { connectDB } from './config/mongoose';
-import { errorHandler, notFound } from './middlewares/error';
-import api from './routes';
-import socketHelper from './web-socket';
-import { log } from './utils';
+import { connectDB } from '@api/config/mongoose';
+import { errorHandler, notFound } from '@api/middlewares/error';
+import api from '@api/routes';
+import socketHelper from '@api/socket';
+import { log } from '@api/utils';
 
 const whitelist = ['http://localhost:5173', 'http://localhost:4172', 'http://localhost:4030', 'http://localhost:5030'];
 const app = express();

@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
-import { requiredNumber, requiredString } from '../models/helpers/common';
-import { productsSchema } from '../models/products';
+import { requiredNumber, requiredString } from '@api/models/helpers/common';
+import { productsSchema } from '@api/models/products';
 
 const billsSchema = new Schema({
   billDate: requiredString,
