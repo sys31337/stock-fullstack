@@ -38,7 +38,7 @@ interface ReceiptProps {
   isTopBar?: boolean;
 }
 
-const Receipt = ({ isTopBar }: ReceiptProps) => {
+const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const toast = useToast();
@@ -407,7 +407,7 @@ const Receipt = ({ isTopBar }: ReceiptProps) => {
             <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${receiptBillId}`}>
               <AiFillFilePdf /> {t('print')}
             </Button>
-            <EditReceiptBill billId={receiptBillId} justCreated/>
+            <EditReceiptBill billId={receiptBillId} justCreated />
           </Flex>
         }
       />
