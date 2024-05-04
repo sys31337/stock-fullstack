@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { PrivateRoute } from '@web/shared/components/Authentication';
 import AppSection from '@web/shared/components/AppSection';
@@ -15,12 +15,7 @@ const Invoice = React.lazy(() => import('@web/modules/Invoice'));
 const BillPdf = React.lazy(() => import('@web/modules/BillPdf'));
 /* Modules */
 
-const App = () => {
-  useEffect(() => {
-    const tt = 'qsd';
-    console.log(localStorage.getItem('i18nextLng'));
-  }, []);
-  return (
+const App = () => (
   <Routes>
     <Route path="connexion/*" element={<Authentication />} />
     <Route path="billpdf/*" element={<BillPdf />} />
@@ -40,6 +35,6 @@ const App = () => {
       />
     </Route>
   </Routes>
-)};
+);
 
 export default App;
