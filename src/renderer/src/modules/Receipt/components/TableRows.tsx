@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Tr, Td, Input, Button, InputGroup, InputRightElement, Flex, InputLeftElement, Icon } from '@chakra-ui/react';
 import { BiTrash } from 'react-icons/bi';
 import { BsPercent } from 'react-icons/bs';
-import { price } from '@shared/functions/words';
-import CustomInput from '@shared/components/CustomForm/Input';
-import { useGetAllProducts } from '@shared/hooks/useProducts';
-import CustomAutoComplete from '@shared/components/CustomAutoComplete';
+import { price } from '@web/shared/functions/words';
+import CustomInput from '@web/shared/components/CustomForm/Input';
+import { useGetAllProducts } from '@web/shared/hooks/useProducts';
+import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
 import { AiOutlineBarcode } from 'react-icons/ai';
-import { randomNumber } from '@shared/utils/word';
-import Any from '@shared/types/any';
+import { randomNumber } from '@web/shared/utils/word';
+import Any from '@web/shared/types/any';
 
 const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [totalHT, setTotalHT] = useState(0);

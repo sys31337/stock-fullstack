@@ -1,15 +1,15 @@
 import React from 'react';
 import { Box, Button, useDisclosure, useToast } from '@chakra-ui/react'
 import { BiSolidCategory } from 'react-icons/bi';
-import CustomInput from '@shared/components/CustomForm/Input';
-import CustomForm from '@shared/components/CustomForm';
+import CustomInput from '@web/shared/components/CustomForm/Input';
+import CustomForm from '@web/shared/components/CustomForm';
 import { useFormik } from 'formik';
 import { t } from 'i18next';
-import { useCreateCategory } from '@shared/hooks/useCategories';
+import { useCreateCategory } from '@web/shared/hooks/useCategories';
 import { AxiosError } from 'axios';
-import showToast from '@shared/functions/showToast';
-import { Payload } from '@shared/types/payload';
-import CustomModal from '@shared/components/CustomModal';
+import showToast from '@web/shared/functions/showToast';
+import { Payload } from '@web/shared/types/payload';
+import CustomModal from '@web/shared/components/CustomModal';
 
 const CategoryModal = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();

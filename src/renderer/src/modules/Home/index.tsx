@@ -5,12 +5,12 @@ import {
   SimpleGrid,
   Stack,
 } from '@chakra-ui/react'
-import Card from '@modules/Home/components/Card';
-import { modules } from '@modules/Home/helpers/modules';
-import cacheService from '@shared/services/cache';
+import Card from '@web/modules/Home/components/Card';
+import { modules } from '@web/modules/Home/helpers/modules';
+import cacheService from '@web/shared/services/cache';
 import { t } from 'i18next';
-import Receipt from '@modules/Receipt';
-import AllReceiptBills from '@modules/Receipt/AllBills';
+import Receipt from '@web/modules/Receipt';
+import AllReceiptBills from '@web/modules/Receipt/AllBills';
 
 const Home = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };

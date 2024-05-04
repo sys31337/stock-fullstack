@@ -1,7 +1,7 @@
 import React from 'react';
 import { Page, Document, PDFViewer, Font } from '@react-pdf/renderer';
 
-import styles from '@shared/components/PDF/styles';
+import styles from '@web/shared/components/PDF/styles';
 
 import RobotoCondensed from './fonts/RobotoCondensed-Regular.ttf'
 import RobotoCondensedBold from './fonts/RobotoCondensed-Bold.ttf'

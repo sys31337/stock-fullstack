@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-const ReceiptBill = React.lazy(() => import('@modules/BillPdf/routes/ReceiptBill'));
+const ReceiptBill = React.lazy(() => import('@web/modules/BillPdf/routes/ReceiptBill'));
 
 const BillPdf = () => (
   <Routes>

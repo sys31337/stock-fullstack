@@ -1,6 +1,6 @@
-import axiosInstance from '@shared/services/api';
-import authService from '@shared/services/auth';
-import Any from '@shared/types/any';
+import axiosInstance from '@web/shared/services/api';
+import authService from '@web/shared/services/auth';
+import Any from '@web/shared/types/any';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 export function useAuthenticated(): boolean {

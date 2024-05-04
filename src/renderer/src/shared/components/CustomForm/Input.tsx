@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import {
   Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As, InputProps, InputRightElement, Tag,
 } from '@chakra-ui/react';
-import Any from '@shared/types/any';
+import Any from '@web/shared/types/any';
 import { Select } from 'chakra-react-select';
 import { SingleDatepicker } from 'chakra-dayzed-datepicker';
 import "./styles.css"

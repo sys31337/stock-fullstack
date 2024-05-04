@@ -1,5 +1,5 @@
-import cacheService from '@shared/services/cache';
-import Any from '@shared/types/any';
+import cacheService from '@web/shared/services/cache';
+import Any from '@web/shared/types/any';
 
 type LoggedUserInfo = Any;
 

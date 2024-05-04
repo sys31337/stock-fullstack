@@ -18,21 +18,21 @@ import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
 import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
 import { LiaArchiveSolid } from 'react-icons/lia';
 import { AiFillRightCircle, AiFillFilePdf } from 'react-icons/ai';
-import CustomForm from '@shared/components/CustomForm'
-import CustomInput from '@shared/components/CustomForm/Input'
-import ProductsTable from '@modules/Receipt/components/ProductsTable';
-import { price, randomId } from '@shared/functions/words';
-import Any from '@shared/types/any';
-import { useGetAllCustomers } from '@shared/hooks/useCustomers';
-import { useGetAllCategories } from '@shared/hooks/useCategories';
-import { useCreateBill, useGetLatestBillNumber } from '@shared/hooks/useBill';
-import CustomerModal from '@shared/components/Customer';
-import showToast from '@shared/functions/showToast';
+import CustomForm from '@web/shared/components/CustomForm'
+import CustomInput from '@web/shared/components/CustomForm/Input'
+import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
+import { price, randomId } from '@web/shared/functions/words';
+import Any from '@web/shared/types/any';
+import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
+import { useGetAllCategories } from '@web/shared/hooks/useCategories';
+import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
+import CustomerModal from '@web/shared/components/Customer';
+import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
-import CategoryModal from '@shared/components/Category';
-import CustomModal from '@shared/components/CustomModal';
-import Alert from '@shared/components/Alert';
-import EditReceiptBill from '@modules/Receipt/EditReceiptBill';
+import CategoryModal from '@web/shared/components/Category';
+import CustomModal from '@web/shared/components/CustomModal';
+import Alert from '@web/shared/components/Alert';
+import EditReceiptBill from '@web/modules/Receipt/EditReceiptBill';
 
 interface ReceiptProps {
   isTopBar?: boolean;

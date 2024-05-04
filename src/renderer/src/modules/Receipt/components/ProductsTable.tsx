@@ -1,9 +1,9 @@
 import React from "react"
-import TableRows from "@modules/Receipt/components/TableRows";
+import TableRows from "@web/modules/Receipt/components/TableRows";
 import { Button, Table, TableCaption, TableContainer, Tbody, Th, Thead, Tr } from "@chakra-ui/react";
 import { t } from "i18next";
 import { BiTrash } from "react-icons/bi";
-import { price, randomId } from "@shared/functions/words";
+import { price, randomId } from "@web/shared/functions/words";
 
 const decimalInputs = ['sellPrice_1', 'sellPrice_2', 'sellPrice_3', 'buyPrice', 'totalHT', 'totalTTC']
 

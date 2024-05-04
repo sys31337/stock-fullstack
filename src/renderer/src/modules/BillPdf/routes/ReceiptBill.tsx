@@ -1,10 +1,10 @@
 import React from 'react'
 import { Box } from '@chakra-ui/react'
-import PageLayout from '@shared/components/PDF/Layout'
-import ReceiptBillPdf from '@modules/BillPdf/helpers/ReceiptBillPdf'
+import PageLayout from '@web/shared/components/PDF/Layout'
+import ReceiptBillPdf from '@web/modules/BillPdf/helpers/ReceiptBillPdf'
 import { useParams } from 'react-router-dom'
-import { useGetBillInfo } from '@shared/hooks/useBill'
-import Loading from '@shared/components/Loading'
+import { useGetBillInfo } from '@web/shared/hooks/useBill'
+import Loading from '@web/shared/components/Loading'
 
 const ReceiptBill = () => {
   const { id } = useParams();

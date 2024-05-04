@@ -1,8 +1,8 @@
 import { Button, Flex, Td, Tr, useToast } from '@chakra-ui/react'
-import CustomSwitch from '@shared/components/CustomSwitch';
-import showToast from '@shared/functions/showToast';
-import { price } from '@shared/functions/words';
-import { useUpdateProduct } from '@shared/hooks/useProducts';
+import CustomSwitch from '@web/shared/components/CustomSwitch';
+import showToast from '@web/shared/functions/showToast';
+import { price } from '@web/shared/functions/words';
+import { useUpdateProduct } from '@web/shared/hooks/useProducts';
 import { AxiosError } from 'axios';
 import { t } from 'i18next';
 import React from 'react'

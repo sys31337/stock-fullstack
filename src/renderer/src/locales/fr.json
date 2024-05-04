@@ -38,7 +38,7 @@
   "nif": "Numéro Fiscale",
   "nar": "Numéro d'article",
   "addCustomer": "Ajouter un client/fournisseur",
-  "actionPerformed" : "Action effectuée",
+  "actionPerformed": "Action effectuée",
   "actionPerformedSuccessfully": "Action effectuée avec succés",
   "categoryName": "Nom du catégorie",
   "addCategory": "Ajouter une catégorie",
@@ -61,5 +61,10 @@
   "billCreated": "Bon crée",
   "billCreatedSuccessfully": "Bon crée avec succées",
   "billUpdated": "Bon mis a jour",
-  "billUpdatedSuccessfully": "Bon mis a jour avec succées"
+  "billUpdatedSuccessfully": "Bon mis a jour avec succées",
+  "productName": "productName",
+  "qté": "QTÉ",
+  "tva": "TVA",
+  "actions": "Actions",
+  "category": "Catégorie"
 }

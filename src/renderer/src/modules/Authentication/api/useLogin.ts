@@ -1,5 +1,5 @@
-import axiosInstance from '@shared/services/api';
-import { Payload } from '@shared/types/payload';
+import axiosInstance from '@web/shared/services/api';
+import { Payload } from '@web/shared/types/payload';
 import { useMutation } from '@tanstack/react-query';
 
 export const useLogin = () => useMutation((payload: Payload) => axiosInstance.request({

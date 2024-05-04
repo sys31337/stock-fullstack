@@ -318,7 +318,7 @@ const NAV_ITEMS: Array<NavItem> = [
     href: '/',
   },
   {
-    label: t('stock'),
+    label: 'Stock',
     children: [
       {
         label: t('productsList'),

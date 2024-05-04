@@ -10,7 +10,6 @@ const detectionOptions = {
   order: ['localStorage', 'querystring', 'navigator'],
   lookupQuerystring: 'lng', // if the url contains "?lng=", use that language
   lookupLocalStorage: 'i18nextLng', // if localStorage has a `i18nextLng` entry, use that language
-
   caches: ['localStorage'],
   excludeCacheFor: ['cimode'],
 };
@@ -30,9 +29,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    useSuspense: true,
-    fallbackLng: localStorage.getItem('i18nextLng') || ['fr','en'],
-    lng: localStorage.getItem('i18nextLng') || ['fr', 'en'],
+    fallbackLng: 'fr',
+    lng: localStorage.getItem('i18nextLng') || 'fr',
     debug: false,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
@@ -44,7 +42,7 @@ i18n
       transEmptyNodeValue: '',
       transSupportBasicHtmlNodes: true,
       transKeepBasicHtmlNodesFor: ['br', 'strong', 'i'],
-      useSuspense: true,
+      useSuspense: false,
     },
   });
 

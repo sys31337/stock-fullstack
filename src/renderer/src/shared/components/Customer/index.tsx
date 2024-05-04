@@ -1,16 +1,16 @@
 import React from 'react';
 import { Button, SimpleGrid, useDisclosure, useToast } from '@chakra-ui/react'
 import { FaUserPlus } from 'react-icons/fa';
-import CustomInput from '@shared/components/CustomForm/Input';
-import CustomForm from '@shared/components/CustomForm';
+import CustomInput from '@web/shared/components/CustomForm/Input';
+import CustomForm from '@web/shared/components/CustomForm';
 import { useFormik } from 'formik';
 import { t } from 'i18next';
-import { useCreateCustomer } from '@shared/hooks/useCustomers';
+import { useCreateCustomer } from '@web/shared/hooks/useCustomers';
 import { AxiosError } from 'axios';
-import showToast from '@shared/functions/showToast';
-import { Payload } from '@shared/types/payload';
-import Any from '@shared/types/any';
-import CustomModal from '@shared/components/CustomModal';
+import showToast from '@web/shared/functions/showToast';
+import { Payload } from '@web/shared/types/payload';
+import Any from '@web/shared/types/any';
+import CustomModal from '@web/shared/components/CustomModal';
 
 const CustomerModal = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();

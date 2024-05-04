@@ -19,15 +19,15 @@ import {
   Button,
   Input,
 } from '@chakra-ui/react';
-import CustomModal from '@shared/components/CustomModal';
+import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillDelete, AiFillFilePdf, AiFillRightCircle } from 'react-icons/ai';
 import { LiaFileInvoiceDollarSolid } from 'react-icons/lia';
-import { useGetAllBillsOfType } from '@shared/hooks/useBill';
+import { useGetAllBillsOfType } from '@web/shared/hooks/useBill';
 import dayjs from 'dayjs';
-import Pagination from '@shared/components/Pagination';
-import { price } from '@shared/functions/words';
-import EditReceiptBill from '@modules/Receipt/EditReceiptBill';
+import Pagination from '@web/shared/components/Pagination';
+import { price } from '@web/shared/functions/words';
+import EditReceiptBill from '@web/modules/Receipt/EditReceiptBill';
 
 interface AllReceiptBillsProps {
   isTopBar?: boolean;

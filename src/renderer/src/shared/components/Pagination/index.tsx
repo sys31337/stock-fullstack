@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Flex, Icon } from '@chakra-ui/react';
-import { usePagination, DOTS } from '@shared/components/Pagination/usePagination';
+import { usePagination, DOTS } from '@web/shared/components/Pagination/usePagination';
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineSmallDash } from 'react-icons/ai';
 
 const Pagination = (props) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@chakra-ui/react';
-// import { withRouter } from '@shared/hooks/withRouter';
+// import { withRouter } from '@web/shared/hooks/withRouter';
 import { BsBack } from 'react-icons/bs';
 
 const SubNav = () => (

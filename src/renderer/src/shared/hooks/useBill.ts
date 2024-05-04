@@ -1,5 +1,5 @@
-import axiosInstance from "@shared/services/api";
-import queryClient from "@shared/services/queryClient";
+import axiosInstance from "@web/shared/services/api";
+import queryClient from "@web/shared/services/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useGetAllBills = () => useQuery(
@@ -26,7 +26,7 @@ const useGetLatestBillNumber = (type: string) => useQuery(
     .request({
       url: `bills/${type}`,
     })
-    .then(({ data }) => data.shift().orderId),
+    .then(({ data }) => data.shift()?.orderId || 0),
 );
 
 const useGetBillInfo = (id: string) => useQuery(

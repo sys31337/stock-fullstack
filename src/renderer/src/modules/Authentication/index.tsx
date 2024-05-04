@@ -13,13 +13,13 @@ import {
 } from '@chakra-ui/react'
 import { useFormik } from 'formik';
 import { t } from 'i18next';
-import { useLogin } from '@modules/Authentication/api/useLogin';
+import { useLogin } from '@web/modules/Authentication/api/useLogin';
 import { useNavigate } from 'react-router-dom';
-import showToast from '@shared/functions/showToast';
+import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
-import parseJwt from '@shared/utils/parseJWT';
-import cacheService from '@shared/services/cache';
-import authService from '@shared/services/auth';
+import parseJwt from '@web/shared/utils/parseJWT';
+import cacheService from '@web/shared/services/cache';
+import authService from '@web/shared/services/auth';
 
 const Authentication = () => {
   const { mutateAsync: login } = useLogin();

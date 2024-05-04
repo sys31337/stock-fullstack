@@ -18,14 +18,14 @@ import {
   TableContainer,
   Input,
 } from '@chakra-ui/react';
-import CustomModal from '@shared/components/CustomModal';
+import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillBell, AiFillRightCircle } from 'react-icons/ai';
 import { LiaFileInvoiceDollarSolid } from 'react-icons/lia';
-import Pagination from '@shared/components/Pagination';
-import { price } from '@shared/functions/words';
-import { useGetAllProducts } from '@shared/hooks/useProducts';
-import ProductRow from '@modules/Products/ProductRow';
+import Pagination from '@web/shared/components/Pagination';
+import { price } from '@web/shared/functions/words';
+import { useGetAllProducts } from '@web/shared/hooks/useProducts';
+import ProductRow from '@web/modules/Products/ProductRow';
 
 interface ProductsProps {
   isTopBar?: boolean;

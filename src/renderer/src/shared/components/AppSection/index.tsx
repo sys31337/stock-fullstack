@@ -3,8 +3,8 @@ import {
   Box, Flex,
 } from '@chakra-ui/react';
 import { Outlet } from 'react-router-dom';
-import Loading from '@shared/components/Loading';
-import AppTopBar from '@shared/components/AppTopBar';
+import Loading from '@web/shared/components/Loading';
+import AppTopBar from '@web/shared/components/AppTopBar';
 
 const AppSection = () => {
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('Home');

@@ -8,7 +8,7 @@ import {
   AlertDialogOverlay,
   AlertDialogCloseButton,
 } from '@chakra-ui/react'
-import Any from '@shared/types/any';
+import Any from '@web/shared/types/any';
 
 interface AlertProps {
   isOpen: boolean;

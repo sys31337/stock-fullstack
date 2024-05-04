@@ -1,6 +1,6 @@
-import axiosInstance from "@shared/services/api";
-import queryClient from "@shared/services/queryClient";
-import { Payload } from "@shared/types/payload";
+import axiosInstance from "@web/shared/services/api";
+import queryClient from "@web/shared/services/queryClient";
+import { Payload } from "@web/shared/types/payload";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useGetAllProducts = () => useQuery(

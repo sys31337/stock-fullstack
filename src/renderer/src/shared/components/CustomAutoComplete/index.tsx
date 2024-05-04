@@ -1,6 +1,6 @@
 import React from 'react';
 import { AutoComplete, AutoCompleteInput, AutoCompleteList, AutoCompleteItem, AutoCompleteProps } from '@choc-ui/chakra-autocomplete';
-import Any from '@shared/types/any';
+import Any from '@web/shared/types/any';
 import { Box } from '@chakra-ui/react';
 
 interface CustomAutoCompleteProps extends Omit<AutoCompleteProps, 'children'> {

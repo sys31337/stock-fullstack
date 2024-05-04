@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -13,7 +13,7 @@ import App from './App';
 import './i18n';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
+  <>
     <ChakraProvider theme={theme}>
       <Suspense fallback={<Loading />}>
         <QueryClientProvider client={queryClient}>
@@ -26,5 +26,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     </ChakraProvider>
 
     <meta name="solustock-ui" content={''} />
-  </React.StrictMode>,
+  </>,
 );
