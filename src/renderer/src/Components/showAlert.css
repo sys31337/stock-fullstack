@@ -1,0 +1,90 @@
+.swal2-popup {
+  border-radius: 25px;
+  padding: 2.25rem;
+  zoom: 0.9;
+}
+
+div:where(.swal2-icon) {
+  zoom: 0.75;
+}
+
+div:where(.swal2-container) .swal2-html-container {
+  margin: 10px auto;
+  font-size: 0.875rem;
+}
+
+
+div:where(.swal2-icon) {
+  border: unset;
+}
+
+div:where(.swal2-icon).swal2-success .swal2-success-ring {
+  border: .25em solid rgba(165, 220, 134, 0);
+  background: rgba(165, 220, 134, .3);
+}
+
+div:where(.swal2-icon).swal2-error {
+  background: rgba(220, 134, 134, 0.3);
+}
+
+div:where(.swal2-icon).swal2-warning {
+  background: rgba(250, 206, 168, .3);
+}
+
+div:where(.swal2-icon).swal2-info {
+  background: rgba(63, 195, 238, .3);
+}
+
+div:where(.swal2-icon).swal2-question {
+  background: rgba(135, 173, 189, .3);
+}
+
+.swal2-actions,
+.swal2-success,
+.swal2-question,
+.swal2-info,
+.swal2-warning,
+.swal2-error {
+  margin: 10px auto;
+}
+
+.swal2-actions {
+  gap: 10px;
+}
+
+.swal2-confirm,
+.swal2-cancel {
+  font-size: 0.875rem;
+  background-color: #2b6cb0;
+  color: #fff;
+  border-radius: 1rem;
+  border: 0;
+  padding: 0.75rem 2.25rem;
+}
+
+.green-button {
+  border-color: #38A169;
+  background-color: #38A169;
+  transition: 0.3s;
+}
+
+.green-button:hover {
+  border-color: #48BB78;
+  background-color: #48BB78;
+}
+
+.red-button {
+  border-color: #E53E3E;
+  background-color: #E53E3E;
+  transition: 0.3s;
+}
+
+.red-button:hover {
+  border-color: #F56565;
+  background-color: #F56565;
+}
+
+.red-button:focus-visible,
+.green-button:focus-visible {
+  outline: unset;
+}

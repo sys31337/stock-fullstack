@@ -1,0 +1,99 @@
+:root {
+  --color-100: #bfdddc;
+  --color-200: #a0bab9;
+  --color-300: #8ea5a4;
+  --color-400: #798c8b;
+  --color-500: #617070;
+  --color-600: #485454;
+  --color-700: #353d3d;
+  --color-800: #2c3333;
+  --color-900: #1c2121;
+  --white: #fff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--white);
+  font-family: 'Poppins', sans-serif;
+}
+
+.swal-check {
+  margin: -2px;
+  padding: 0 !important;
+  border-radius: 15px !important;
+}
+
+.swal-custom-container {
+  background: transparent !important;
+  width: 600px !important;
+}
+
+.swal-custom-html-container {
+  margin: 0 !important;
+}
+
+.close-button {
+  position: absolute !important;
+  top: 1px;
+  margin: .3em !important;
+  height: 32px;
+  width: 32px;
+  padding: 16px;
+  color: #fff;
+  border-radius: 100%;
+  font-size: 12pt !important;
+  background-color: #ff0081;
+}
+
+.close-button:hover {
+  color: #fff;
+  background-color: rgba(255, 0, 128, 0.9)
+}
+
+.close-button:focus {
+  box-shadow: unset;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.flex img {
+  width: 128px;
+  height: 128px;
+  flex: 1;
+  object-fit: cover;
+  border-bottom-left-radius: 15px;
+  border-top-left-radius: 15px;
+  overflow: hidden;
+}
+
+.flex .user-info {
+  flex: 2;
+}
+
+.flex .user-info h4 {
+  font-size: 12pt;
+  font-weight: 600;
+  color: var(--color-500);
+}
+
+.flex .user-info p {
+  font-size: 10pt;
+}
+
+.flex .user-info .information {
+  font-weight: 600;
+}
+
+.flex .user-info .information span {
+  font-weight: 400;
+}
