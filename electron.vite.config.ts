@@ -13,6 +13,25 @@ export default defineConfig({
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src'),
+        '@config': resolve('src/renderer/src/config'),
+        '@shared': resolve('src/renderer/src/shared'),
+        '@theme': resolve('src/renderer/src/theme'),
+        '@modules': resolve('src/renderer/src/modules'),
+        // "@modules/*": [
+        //   "src/renderer/src/modules/*"
+        // ],
+        // "@config": [
+        //   "src/renderer/src/config"
+        // ],
+        // "@config/*": [
+        //   "src/renderer/src/config/*"
+        // ],
+        // "@shared/*": [
+        //   "src/renderer/src/shared/*"
+        // ],
+        // "@theme/*": [
+        //   "src/renderer/src/theme/*"
+        // ]
       },
     },
     plugins: [react()],
