@@ -29,13 +29,16 @@ import CustomModal from '@web/shared/components/CustomModal';
 import Alert from '@web/shared/components/Alert';
 import dayjs from 'dayjs';
 import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
+import { IProduct } from '@web/shared/types/product';
+import { IBill } from '@web/shared/types/bills';
+import { Item } from '@choc-ui/chakra-autocomplete';
 
 interface EditReceiptBillProps {
   justCreated?: boolean;
   billId: string;
 }
 
-const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
+const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
   const toast = useToast();
@@ -50,7 +53,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
   const [customerName, setCustomerName] = useState('');
   const [categoryName, setCategoryName] = useState('');
   const [receiptBillId, setReceiptBillId] = useState('');
-  const [initialValues, setInitialValues] = useState({
+  const [initialValues, setInitialValues] = useState<Partial<IBill>>({
     orderId: 0,
     category: '',
     description: '',
@@ -120,7 +123,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
       setOrderPaid(price(`${orderPaid}`));
       setOrderDebts(price(`${orderTotalTTC - Number(orderPaid)}`));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      setProductsValues(products.map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({ ...rest })));
+      setProductsValues((products as IProduct[]).map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({ ...rest })));
       setCustomerName(customer ? customer?.fullname : 'Unspecified')
       setCategoryName(category ? category?.name : 'Uncategorized')
     }
@@ -129,7 +132,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
   const filterAllCustomers = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !(allCustomers as Any[]).includes(optionLabel.toLowerCase())
   const filterAllCategories = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !(allCategories as Any[]).includes(optionLabel.toLowerCase())
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: IBill) => {
     try {
       const payload = {
         ...values,
@@ -149,8 +152,7 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
           stack: parseInt(stack as unknown as string, 10),
         }))
       }
-      console.log(payload);
-      const { data: update } = await updateBill(payload);
+      const { data: update } = await updateBill(payload as any);
       setReceiptBillId(update._id);
       onAlertOpen();
       showToast(
@@ -176,25 +178,25 @@ const EditReceiptBill = ({ justCreated, billId }: EditReceiptBillProps) => {
     }
   }
 
-  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
+  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues: initialValues as IBill, onSubmit, enableReinitialize: true });
 
-  const onCustomerSelectOption = (selectedItems) => {
+  const onCustomerSelectOption = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct, value: string } }) => {
     setCustomerName(selectedItems.item.label)
     setFieldValue('customer', selectedItems.item.value);
   }
 
-  const onCustomerChange = (e) => {
+  const onCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e);
     setCustomerName(e.target.value);
     setFieldValue('customer', e.target.value as unknown as string);
   }
 
-  const onCategorySelectOption = (selectedItems) => {
+  const onCategorySelectOption = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct, value: string } }) => {
     setCategoryName(selectedItems.item.label)
     setFieldValue('category', selectedItems.item.value);
   }
 
-  const onCategoryChange = (e) => {
+  const onCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e);
     setCategoryName(e.target.value);
     setFieldValue('category', e.target.value as unknown as string);

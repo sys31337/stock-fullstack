@@ -28,12 +28,15 @@ import dayjs from 'dayjs';
 import Pagination from '@web/shared/components/Pagination';
 import { price } from '@web/shared/functions/words';
 import EditReceiptBill from '@web/modules/Receipt/EditReceiptBill';
+import { IBill } from '@web/shared/types/bills';
+import { ICategory } from '@web/shared/types/category';
+import { ICustomer } from '@web/shared/types/customer';
 
 interface AllReceiptBillsProps {
   isTopBar?: boolean;
 }
 
-const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
+const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: getAllReceiptBills, isFetched } = useGetAllBillsOfType('BUY');
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,15 +47,15 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
   const endIndex = (+currentPage - 1) * itemsPerPage + itemsPerPage;
 
   const filteredBills = filter
-    ? getAllReceiptBills.filter(({ customer, category, orderTotalTTC, orderTotalHT, orderId, description }) => (
-      category?.name.toLowerCase().includes(filter.toLowerCase())
-      || customer?.fullname.toLowerCase().includes(filter.toLowerCase())
+    ? (getAllReceiptBills as IBill[]).filter(({ customer, category, orderTotalTTC, orderTotalHT, orderId, description }) => (
+      (category as ICategory)?.name.toLowerCase().includes(filter.toLowerCase())
+      || (customer as ICustomer)?.fullname.toLowerCase().includes(filter.toLowerCase())
       || price(orderTotalTTC) === price(filter)
       || price(orderTotalHT) === price(filter)
       || orderId === Number(filter)
       || description.toLowerCase().includes(filter.toLowerCase())
     ))
-    : getAllReceiptBills;
+    : getAllReceiptBills as IBill[];
 
   const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
@@ -172,10 +175,10 @@ const AllReceiptBills = ({ isTopBar }: AllReceiptBillsProps) => {
                     isFetched && filteredBills.slice(startIndex, endIndex).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
                       <Tr key={k}>
                         <Td>{orderId}</Td>
-                        <Td>{customer?.fullname || t('counter')}</Td>
+                        <Td>{(customer as ICustomer)?.fullname || t('counter')}</Td>
                         <Td>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Td>
                         <Td>{products.length}</Td>
-                        <Td>{category?.name || t('undefined')}</Td>
+                        <Td>{(category as ICategory)?.name || t('undefined')}</Td>
                         <Td>{price(orderTotalTTC)} DA</Td>
                         <Td>
                           <Flex gap={1} justifyContent={'flex-end'}>

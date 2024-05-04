@@ -5,8 +5,26 @@ import { t } from 'i18next';
 import dayjs from 'dayjs';
 import { price } from '@web/shared/functions/words';
 import { defaultId } from '@web/config';
+import { IProduct } from '@web/shared/types/product';
+import { ICustomer } from '@web/shared/types/customer';
 
-const ReceiptBillPdf: React.FC<{ data: any }> = ({ data }) => {
+interface ReceiptBillPdfProps {
+  data: {
+    billDate: Date;
+    orderId: string;
+    type: 'BUY' | 'SALE' | 'ORDER';
+    products: IProduct[];
+    orderTotalHT: number;
+    orderTotalTTC: number;
+    orderPaid: number;
+    orderDebts: number;
+    paymentMethod: 'Cash';
+    description: string;
+    customer: ICustomer;
+  }
+}
+
+const ReceiptBillPdf: React.FC<ReceiptBillPdfProps> = ({ data }) => {
 
   const { billDate,
     orderId,

@@ -33,29 +33,31 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
         value={value}
         onChange={onChange}
       />
-      <AutoCompleteList>
-        <AutoCompleteItem
-          disabled={true}
-          fixed={true}
-          style={{
-            display: 'none'
-          }}
-          value={'disabled'}
-        >
-          disabled
-        </AutoCompleteItem>
-        {items.map((item, k) => (
-          <Box key={k}>
-            <AutoCompleteItem
-              defaultChecked={false}
-              value={item}
-              label={item[selector]}
-            >
-              {item[selector]}
-            </AutoCompleteItem>
-          </Box>
-        ))}
-      </AutoCompleteList>
+      {items.length > 0 && (
+        <AutoCompleteList>
+          <AutoCompleteItem
+            disabled={true}
+            fixed={true}
+            style={{
+              display: 'none'
+            }}
+            value={'disabled'}
+          >
+            disabled
+          </AutoCompleteItem>
+          {items.map((item, k) => (
+            <Box key={k}>
+              <AutoCompleteItem
+                defaultChecked={false}
+                value={item}
+                label={item[selector]}
+              >
+                {item[selector]}
+              </AutoCompleteItem>
+            </Box>
+          ))}
+        </AutoCompleteList>
+      )}
     </AutoComplete>
   )
 }

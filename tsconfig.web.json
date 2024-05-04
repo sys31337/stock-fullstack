@@ -17,6 +17,7 @@
   ],
   "compilerOptions": {
     "emitDeclarationOnly": true,
+    "noImplicitAny": true,
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",

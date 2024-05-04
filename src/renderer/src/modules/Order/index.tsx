@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Order = () => {
+const Order: React.FC = () => {
   return (
     <div>Order</div>
   )

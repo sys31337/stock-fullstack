@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Invoice = () => {
+const Invoice: React.FC = () => {
   return (
     <div>Invoice</div>
   )

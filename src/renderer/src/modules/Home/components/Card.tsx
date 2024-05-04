@@ -15,9 +15,9 @@ interface CardProps {
   bg: string;
 }
 
-const Card = ({
+const Card: React.FC<CardProps> = ({
   label, keyBind, icon, href, bg,
-}: CardProps) => (
+}) => (
   <Box
     as={'a'}
     href={href}

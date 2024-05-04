@@ -26,12 +26,13 @@ import Pagination from '@web/shared/components/Pagination';
 import { price } from '@web/shared/functions/words';
 import { useGetAllProducts } from '@web/shared/hooks/useProducts';
 import ProductRow from '@web/modules/Products/ProductRow';
+import { IProduct } from '@web/shared/types/product';
 
 interface ProductsProps {
   isTopBar?: boolean;
 }
 
-const Products = ({ isTopBar }: ProductsProps) => {
+const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data: getProducts, isFetched } = useGetAllProducts();
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,7 +43,7 @@ const Products = ({ isTopBar }: ProductsProps) => {
   const endIndex = (+currentPage - 1) * itemsPerPage + itemsPerPage;
 
   const filteredBills = filter
-    ? getProducts.filter(({ barCode, productName, buyPrice, quantity, tva, sellPrice_1, sellPrice_2, sellPrice_3 }) => (
+    ? (getProducts as IProduct[]).filter(({ barCode, productName, buyPrice, quantity, tva, sellPrice_1, sellPrice_2, sellPrice_3 }) => (
       barCode.toLowerCase().includes(filter.toLowerCase())
       || productName.toLowerCase().includes(filter.toLowerCase())
       || price(buyPrice) === price(filter)
@@ -172,7 +173,7 @@ const Products = ({ isTopBar }: ProductsProps) => {
                       </Td>
                     </Tr>
                   ) :
-                    isFetched && filteredBills.slice(startIndex, endIndex).map((product, k) => (
+                    isFetched && filteredBills.slice(startIndex, endIndex).map((product: IProduct, k: number) => (
                       <ProductRow key={k} product={product} />
                     ))
                   }

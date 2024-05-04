@@ -1,19 +1,24 @@
+import React from 'react'
 import { Button, Flex, Td, Tr, useToast } from '@chakra-ui/react'
 import CustomSwitch from '@web/shared/components/CustomSwitch';
 import showToast from '@web/shared/functions/showToast';
 import { price } from '@web/shared/functions/words';
 import { useUpdateProduct } from '@web/shared/hooks/useProducts';
+import { IProduct } from '@web/shared/types/product';
 import { AxiosError } from 'axios';
 import { t } from 'i18next';
-import React from 'react'
 import { AiFillDelete, AiFillEdit } from 'react-icons/ai';
 
-const ProductRow = ({ product }) => {
+interface ProductRowProps {
+  product: IProduct;
+}
+
+const ProductRow: React.FC<ProductRowProps> = ({ product }) => {
   const { _id, barCode, productName, buyPrice, quantity, stack, tva, sellPrice_1, sellPrice_2, sellPrice_3, notify } = product;
   const { mutateAsync: setNotification } = useUpdateProduct(_id);
   const toast = useToast();
 
-  const onNotifyChange = async (e) => {
+  const onNotifyChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value: notify } = e.target
     try {
       const payload = {

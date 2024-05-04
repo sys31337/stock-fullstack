@@ -2,11 +2,11 @@ import React, { ChangeEvent, useState } from 'react'
 import { Switch, SwitchProps } from '@chakra-ui/react'
 
 interface CustomSwitchProps extends Omit<SwitchProps, 'defaultValue'> {
-  defaultValue: boolean;
+  defaultValue?: boolean;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-const CustomSwitch = (props: CustomSwitchProps) => {
+const CustomSwitch: React.FC<CustomSwitchProps> = (props) => {
   const { defaultValue, onChange, ...rest } = props;
   const [value, setValue] = useState(defaultValue);
   return (

@@ -7,21 +7,31 @@ import CustomInput from '@web/shared/components/CustomForm/Input';
 import { useGetAllProducts } from '@web/shared/hooks/useProducts';
 import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
 import { AiOutlineBarcode } from 'react-icons/ai';
-import { randomNumber } from '@web/shared/utils/word';
 import Any from '@web/shared/types/any';
+import { randomNumber } from '@web/shared/utils/word';
+import { IProduct } from '@web/shared/types/product';
+import { Item } from '@choc-ui/chakra-autocomplete';
 
-const TableRows = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
+interface TableRowsProps {
+  index: number;
+  data: IProduct;
+  products: IProduct[];
+  deleteTableRows: (id: string) => void;
+  handleChange: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleBlur: (e: React.FocusEvent<HTMLInputElement, Element>) => void;
+}
+
+const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
   const [totalHT, setTotalHT] = useState(0);
   const [totalTTC, setTotalTTC] = useState(0);
+  const [hasSelected, setHasSelected] = useState(false);
   const [productName, setProductName] = useState('');
   const [barCode, setBarCode] = useState('');
   const { data: allProducts, isFetched } = useGetAllProducts();
 
   useEffect(() => {
-    const total = parseInt(data.quantity || 0, 10) * parseInt(data.stack || 0, 10) * parseInt(data.buyPrice || 0, 10)
+    const total = Number(data.quantity || 0) * Number(data.stack || 0) * Number(data.buyPrice || 0)
     const productTva = total * data.tva / 100;
-    data.totalHT = total;
-    data.totalTTC = total + productTva;
     setProductName(data.productName)
     setTotalHT(total)
     setTotalTTC(total + productTva)
@@ -32,19 +42,17 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
 
   const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !productsList.includes(optionLabel.toLowerCase())
 
-  const updateTotal = (e) => {
+  const updateTotal = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(index, e)
     const { quantity, stack, buyPrice, tva } = data;
-    const total = parseInt(quantity || 0, 10) * parseInt(stack || 0, 10) * parseInt(buyPrice || 0, 10)
+    const total = Number(quantity || 0) * Number(stack || 0) * Number(buyPrice || 0);
     const productTva = total * tva / 100;
-    data.totalHT = total;
-    data.totalTTC = total + productTva;
     setTotalHT(total);
     setTotalTTC(total + productTva);
   }
   const { id, tva, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
 
-  const selectProduct = (selectedItems) => {
+  const selectProduct = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct } }) => {
     const { id, barCode, productName, tva, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = selectedItems.item.originalValue;
     data.id = id;
     data.barCode = barCode;
@@ -60,14 +68,15 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
     setBarCode(barCode)
   };
 
-  const onProductSelectOption = (selectedItems) => {
-    const e = { target: { name: 'productName', value: selectedItems.item.label } };
+  const onProductSelectOption = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct } }) => {
+    const e = { target: { name: 'productName', value: selectedItems.item.label } } as unknown as React.ChangeEvent<HTMLInputElement>;
     handleChange(index, e);
     setProductName(selectedItems.item.label);
     selectProduct(selectedItems);
+    setHasSelected(true);
   }
 
-  const onProductChange = (e) => {
+  const onProductChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProductName(e.target.value as unknown as string);
     handleChange(index, e);
   }
@@ -113,7 +122,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
                   color={'theme.900'}
                   type={'text'}
                   name="barCode"
-                  isDisabled={!!data.id && !!data.barCode && !!data.productName}
+                  isDisabled={hasSelected}
                   defaultValue={barCode}
                   onChange={(e) => {
                     handleChange(index, e)
@@ -135,7 +144,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
               defaultValue={null}
               name={'productName'}
               value={productName}
-              inputProps={{ isDisabled: !!data.id && !!data.barCode && !!data.productName && (document.activeElement as Any)?.name !== 'productName' }}
+              inputProps={{ isDisabled: hasSelected && (document.activeElement as Any)?.name !== 'productName' }}
               onSelectOption={onProductSelectOption}
               onChange={onProductChange}
               selector={'productName'}
@@ -167,7 +176,7 @@ const TableRows = ({ index, data, products, deleteTableRows, handleChange, handl
               color={'theme.900'}
               type={'number'}
               name="stack"
-              isDisabled={!!data.id && !!data.barCode && !!data.productName}
+              isDisabled={hasSelected}
               defaultValue={stack}
               onChange={(e) => (updateTotal(e))}
             />

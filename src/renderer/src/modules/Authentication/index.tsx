@@ -21,6 +21,11 @@ import parseJwt from '@web/shared/utils/parseJWT';
 import cacheService from '@web/shared/services/cache';
 import authService from '@web/shared/services/auth';
 
+interface initialValues {
+  username: string;
+  password: string;
+}
+
 const Authentication = () => {
   const { mutateAsync: login } = useLogin();
   const toast = useToast();
@@ -30,7 +35,7 @@ const Authentication = () => {
     username: 'admin',
     password: '123123',
   };
-  const onSubmit = async (values, { setSubmitting }: { setSubmitting: (v: boolean) => void }) => {
+  const onSubmit = async (values: initialValues, { setSubmitting }: { setSubmitting: (v: boolean) => void }) => {
     const { username, password } = values;
     try {
       const payload = { username, password };

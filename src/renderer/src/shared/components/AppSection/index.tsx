@@ -6,7 +6,7 @@ import { Outlet } from 'react-router-dom';
 import Loading from '@web/shared/components/Loading';
 import AppTopBar from '@web/shared/components/AppTopBar';
 
-const AppSection = () => {
+const AppSection: React.FC = () => {
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('Home');
   const [currentProfilePicture, setCurrentProfilePicture] = useState<string>('default.png');
 

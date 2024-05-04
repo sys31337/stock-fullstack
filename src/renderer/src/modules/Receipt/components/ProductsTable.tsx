@@ -4,10 +4,16 @@ import { Button, Table, TableCaption, TableContainer, Tbody, Th, Thead, Tr } fro
 import { t } from "i18next";
 import { BiTrash } from "react-icons/bi";
 import { price, randomId } from "@web/shared/functions/words";
+import { IProduct } from "@web/shared/types/product";
 
 const decimalInputs = ['sellPrice_1', 'sellPrice_2', 'sellPrice_3', 'buyPrice', 'totalHT', 'totalTTC']
 
-const ProductsTable = ({ productsValues, setProductsValues }) => {
+interface ProductsTableProps {
+  productsValues: IProduct[];
+  setProductsValues: (v: IProduct[]) => void;
+}
+
+const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProductsValues }) => {
 
   const addTableRows = () => {
     const rowsInput = {
@@ -26,19 +32,19 @@ const ProductsTable = ({ productsValues, setProductsValues }) => {
     }
     setProductsValues([...productsValues, rowsInput])
   }
-  const deleteTableRows = (id) => {
+  const deleteTableRows = (id: string) => {
     const index = productsValues.findIndex((item) => item.id === id)
     setProductsValues(productsValues.filter((_p, k) => k !== index));
   }
 
-  const handleChange = (index, e) => {
+  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const rowsInput = [...productsValues];
-    rowsInput[index][name] = decimalInputs.includes(name) ? price(value) : value;
+    (rowsInput[index] as any)[name] = decimalInputs.includes(name) ? price(value) : value;
     setProductsValues(rowsInput);
   }
 
-  const handleBlur = (e) => {
+  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     e.target.value = decimalInputs.includes(name) ? price(value) : value;
   }

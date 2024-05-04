@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom'
 import { useGetBillInfo } from '@web/shared/hooks/useBill'
 import Loading from '@web/shared/components/Loading'
 
-const ReceiptBill = () => {
+const ReceiptBill: React.FC = () => {
   const { id } = useParams();
   const { data, isFetching } = useGetBillInfo(id as string);
   if (isFetching) return <Loading />

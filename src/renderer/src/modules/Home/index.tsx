@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Box,
   Container,
@@ -12,7 +13,7 @@ import { t } from 'i18next';
 import Receipt from '@web/modules/Receipt';
 import AllReceiptBills from '@web/modules/Receipt/AllBills';
 
-const Home = () => {
+const Home: React.FC = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
   const { fullname } = userInfo;
 
