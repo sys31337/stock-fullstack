@@ -9,16 +9,12 @@ const Authentication = React.lazy(() => import('@web/modules/Authentication'));
 const Home = React.lazy(() => import('@web/modules/Home'));
 
 /* Modules */
-const Sale = React.lazy(() => import('@web/modules/Sale'));
-const Order = React.lazy(() => import('@web/modules/Order'));
-const Invoice = React.lazy(() => import('@web/modules/Invoice'));
 const BillPdf = React.lazy(() => import('@web/modules/BillPdf'));
 /* Modules */
 
 const App = () => (
   <Routes>
     <Route path="connexion/*" element={<Authentication />} />
-    <Route path="billpdf/*" element={<BillPdf />} />
     <Route element={<AppSection />}>
       <Route
         path="/*"
@@ -26,9 +22,7 @@ const App = () => (
           <PrivateRoute>
             <Routes>
               <Route path="*" element={<Home />} />
-              <Route path="sale" element={<Sale />} />
-              <Route path="order" element={<Order />} />
-              <Route path="invoice" element={<Invoice />} />
+              <Route path="billpdf/*" element={<BillPdf />} />
             </Routes>
           </PrivateRoute>
         }

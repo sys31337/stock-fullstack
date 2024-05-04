@@ -1,10 +1,10 @@
 import React from 'react'
 import { Box } from '@chakra-ui/react'
-import PageLayout from '@web/shared/components/PDF/Layout'
 import ReceiptBillPdf from '@web/modules/BillPdf/helpers/ReceiptBillPdf'
 import { useParams } from 'react-router-dom'
 import { useGetBillInfo } from '@web/shared/hooks/useBill'
 import Loading from '@web/shared/components/Loading'
+import { PDFViewer } from '@react-pdf/renderer'
 
 const ReceiptBill: React.FC = () => {
   const { id } = useParams();
@@ -12,9 +12,9 @@ const ReceiptBill: React.FC = () => {
   if (isFetching) return <Loading />
   return (
     <Box h={'100vh'}>
-      <PageLayout>
+      <PDFViewer style={{width: '100vw', height: '100%'}}>
         <ReceiptBillPdf data={data} />
-      </PageLayout>
+      </PDFViewer>
     </Box>
   )
 }
