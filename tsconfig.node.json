@@ -1,5 +1,10 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
+  },
   "include": [
     "electron.vite.config.*",
     "src/main/*",
@@ -10,6 +15,7 @@
     "src/main/api/**/*"
   ],
   "compilerOptions": {
+    "module": "commonjs",
     "composite": true,
     "types": [
       "electron-vite/node",

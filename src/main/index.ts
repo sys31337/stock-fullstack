@@ -3,8 +3,8 @@ import {
 } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import server from './api/main';
-import { log } from './api/utils';
+// import server from './api/main';
+// import { log } from './api/utils';
 import config from './api/config';
 
 const { ELECTRON_RENDERER_URL } = config
@@ -56,11 +56,11 @@ function createWindow(): void {
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron');
 
-  server.listen(4031, () => {
+  // server.listen(4031, () => {
     createWindow();
-  });
+  // });
 
-  server.on('error', (e) => log(e));
+  // server.on('error', (e) => log(e));
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
