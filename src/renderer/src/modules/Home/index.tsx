@@ -11,7 +11,7 @@ import { modules } from '@web/modules/Home/helpers/modules';
 import cacheService from '@web/shared/services/cache';
 import { t } from 'i18next';
 import Receipt from '@web/modules/Receipt';
-import AllReceiptBills from '@web/modules/Receipt/AllBills';
+import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills';
 
 const Home: React.FC = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };

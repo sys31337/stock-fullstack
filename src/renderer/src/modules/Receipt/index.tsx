@@ -46,22 +46,31 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('BUY');
   const { mutateAsync: createBill } = useCreateBill();
-  const [orderTotalHT, setOrderTotalHT] = useState('0.00');
-  const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
-  const [orderPaid, setOrderPaid] = useState('0.00');
-  const [orderDebts, setOrderDebts] = useState('0.00');
-  const [receiptBillId, setReceiptBillId] = useState('');
+  const [state, setState] = useState({
+    orderTotalHT: '0.00',
+    orderTotalTTC: '0.00',
+    orderPaid: '0.00',
+    orderDebts: '0.00',
+    receiptBillId: '',
+  });
   const [initialValues, setInitialValues] = useState({
     orderId: 0,
     category: '',
     description: '',
     customer: '',
-    orderTotalHT,
-    orderTotalTTC,
-    orderPaid,
-    orderDebts,
+    orderTotalHT: state.orderTotalHT,
+    orderTotalTTC: state.orderTotalTTC,
+    orderPaid: state.orderPaid,
+    orderDebts: state.orderDebts,
     billDate: new Date() as unknown as string,
   });
+
+  const updateState = (newValues: { [key: string]: string }) => {
+    setState((prevState) => ({
+      ...prevState,
+      ...newValues,
+    }));
+  };
 
   const [productsValues, setProductsValues] = useState([{
     id: randomId(),
@@ -97,17 +106,19 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
       },
       0
     );
-    setOrderTotalHT(price(`${totalHT}`))
-    setOrderTotalTTC(price(`${totalTTC}`))
-    setOrderDebts(price(`${totalTTC - Number(orderPaid)}`))
-  }, [productsValues, orderPaid, orderDebts])
+    updateState({
+      orderTotalHT: price(`${totalHT}`),
+      orderTotalTTC: price(`${totalTTC}`),
+      orderDebts: price(`${totalTTC - Number(state.orderPaid)}`),
+    });
+  }, [productsValues, state.orderPaid, state.orderDebts])
 
   useEffect(() => {
     if (isFetched) {
       setInitialValues((prev) => ({ ...prev, orderId: latestBillNumber + 1 }))
     }
   }, [isFetched, latestBillNumber]);
-  const setFullyPaid = () => setOrderPaid(orderTotalTTC);
+  const setFullyPaid = () => updateState({ orderPaid: state.orderTotalTTC });
 
   const onSubmit = async (values: Payload) => {
     try {
@@ -115,10 +126,10 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
         ...values,
         paymentMethod: 'CASH',
         type: 'BUY',
-        orderTotalHT: orderTotalHT,
-        orderTotalTTC: orderTotalTTC,
-        orderPaid: orderPaid,
-        orderDebts: orderDebts,
+        orderTotalHT: state.orderTotalHT,
+        orderTotalTTC: state.orderTotalTTC,
+        orderPaid: state.orderPaid,
+        orderDebts: state.orderDebts,
         products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => ({
           ...rest,
           buyPrice: parseInt(buyPrice as unknown as string, 10),
@@ -130,20 +141,30 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
         }))
       }
       const { data: newBill } = await createBill(payload);
-      setReceiptBillId(newBill._id);
+      updateState({ receiptBillId: newBill._id })
       onAlertOpen();
       showToast(
         toast,
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success', isClosable: false, },
       );
       setInitialValues({
-        orderId: latestBillNumber + 2, category: '', description: '', customer: '', orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate: new Date() as unknown as string,
+        orderId: latestBillNumber + 2,
+        category: '',
+        description: '',
+        customer: '',
+        orderTotalHT: state.orderTotalHT,
+        orderTotalTTC: state.orderTotalTTC,
+        orderPaid: state.orderPaid,
+        orderDebts: state.orderDebts,
+        billDate: new Date() as unknown as string,
       });
       setProductsValues([{
         id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
       }]);
-      setOrderTotalHT('0.00');
-      setOrderTotalTTC('0.00');
+      updateState({
+        orderTotalHT: ('0.00'),
+        orderTotalTTC: ('0.00'),
+      })
       setFullyPaid();
       onClose();
     } catch (err) {
@@ -326,7 +347,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
                       borderColor: 'gray.300'
                     }}
                     isReadOnly={true}
-                    value={orderTotalHT as Any}
+                    value={state.orderTotalHT as Any}
                     errorMessage={errors.orderTotalHT && touched.orderTotalHT && errors.orderTotalHT}
                     currency='DZD'
                   />
@@ -344,7 +365,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
                       borderColor: 'gray.300'
                     }}
                     isReadOnly={true}
-                    value={orderTotalTTC as Any}
+                    value={state.orderTotalTTC as Any}
                     errorMessage={errors.orderTotalTTC && touched.orderTotalTTC && errors.orderTotalTTC}
                     currency='DZD'
                   />
@@ -365,7 +386,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
                     }}
                     handleChange={handleChange}
                     handleBlur={handleBlur}
-                    value={orderDebts}
+                    value={state.orderDebts}
                     errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
                     currency='DZD'
                   />
@@ -376,9 +397,9 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
                     label="Paid Amount"
                     type={'number'}
                     icon={FcPaid}
-                    handleChange={(e) => setOrderPaid(e.target.value)}
-                    handleBlur={(e) => setOrderPaid(price(e.target.value))}
-                    value={orderPaid}
+                    handleChange={(e) => updateState({ orderPaid: e.target.value })}
+                    handleBlur={(e) => updateState({ orderPaid: e.target.value })}
+                    value={state.orderPaid}
                     errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
                     currency='DZD'
                   />
@@ -404,10 +425,10 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
             <Button colorScheme='red' fontWeight={400} borderRadius={'2xl'} onClick={onAlertClose}>
               {t('close')}
             </Button>
-            <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${receiptBillId}`}>
+            <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${state.receiptBillId}`}>
               <AiFillFilePdf /> {t('print')}
             </Button>
-            <EditReceiptBill billId={receiptBillId} justCreated />
+            <EditReceiptBill billId={state.receiptBillId} justCreated />
           </Flex>
         }
       />

@@ -21,7 +21,7 @@ import {
 import languages from '@web/config/languages'
 import Products from '@web/modules/Products'
 import Receipt from '@web/modules/Receipt'
-import AllReceiptBills from '@web/modules/Receipt/AllBills'
+import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
