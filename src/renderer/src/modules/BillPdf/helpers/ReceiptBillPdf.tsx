@@ -39,8 +39,8 @@ const ReceiptBillPdf: React.FC<ReceiptBillPdfProps> = ({ data }) => {
     customer,
   } = data;
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
+    <Document title={`${t('receiptBillId')} ${orderId}`}>
+      <Page size="A4">
         <View style={{ padding: 20 }}>
           <View style={styles.billHeader}>
             <View style={styles.billInfo}>

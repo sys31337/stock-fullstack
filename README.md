@@ -1,4 +1,4 @@
-# ola-gym-desktop
+# solustock-20-desktop
 
 An Electron application with React and TypeScript
 

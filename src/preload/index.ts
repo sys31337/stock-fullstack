@@ -1,5 +1,6 @@
 import { contextBridge } from 'electron';
 import { ElectronAPI, electronAPI } from '@electron-toolkit/preload';
+import electronReloader from 'electron-reloader';
 import { logError } from '../main/api/utils';
 
 interface ElectronWindow extends Window {
@@ -20,3 +21,7 @@ if (process.contextIsolated) {
   (window as ElectronWindow).electron = electronAPI;
   (window as ElectronWindow).api = api;
 }
+
+electronReloader(module, { 
+  watchRenderer: false // Disable reloader for renderer process, as Vite handles it
+});

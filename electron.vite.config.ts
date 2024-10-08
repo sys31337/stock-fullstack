@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
+    server: {
+      hmr: true,
+    },
     resolve: {
       alias: {
         '@api/config': resolve('src/main/api/config'),

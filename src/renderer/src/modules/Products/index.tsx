@@ -168,7 +168,7 @@ const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
                 <Tbody>
                   {isFetched && filteredBills?.length === 0 ? (
                     <Tr>
-                      <Td colSpan={9}>
+                      <Td colSpan={10}>
                         <Text textAlign={'center'}> {t('noRecordsFound')} </Text>
                       </Td>
                     </Tr>

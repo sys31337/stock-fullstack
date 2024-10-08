@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: ola-gym-desktop
+productName: solustock-20-desktop
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: ola-gym-desktop
+  executableName: solustock-20-desktop
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

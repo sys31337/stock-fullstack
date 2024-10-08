@@ -19,8 +19,8 @@ Trace:
 
 npm manifest: 
   {
-    "name": "ola-gym-desktop",
-    "productName": "Ola Spa & Gym",
+    "name": "solustock-20-desktop",
+    "productName": "SoluStock 2.0",
     "version": "1.0.0",
     "description": "An Electron application with React and TypeScript",
     "main": "./out/main/index.js",

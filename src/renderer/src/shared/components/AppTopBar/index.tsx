@@ -16,6 +16,7 @@ import {
   useDisclosure,
   Image,
   Button,
+  BoxProps,
 } from '@chakra-ui/react'
 import languages from '@web/config/languages'
 import Products from '@web/modules/Products'
@@ -29,7 +30,7 @@ import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFill
 import { useNavigate } from 'react-router-dom'
 
 
-const Languages = (props) => (
+const Languages = (props: BoxProps) => (
   <Box {...props}>
     <Popover trigger={'hover'} placement={'bottom'}>
       <PopoverTrigger>
@@ -92,7 +93,11 @@ const Languages = (props) => (
   </Box>
 )
 
-const AppTopBar = ({ children }) => {
+interface AppTopBarProps {
+  children: JSX.Element | JSX.Element[];
+}
+
+const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const { isOpen, onToggle } = useDisclosure()
   const { mutateAsync: logout } = useLogout();
   const navigate = useNavigate();
@@ -339,25 +344,6 @@ const NAV_ITEMS: Array<NavItem> = [
         component: <AllReceiptBills isTopBar />
       },
     ],
-  },
-  {
-    label: 'Find Work',
-    children: [
-      {
-        label: 'Job Board',
-        subLabel: 'Find your dream design job',
-        href: '#',
-      },
-      {
-        label: 'Freelance Projects',
-        subLabel: 'An exclusive list for contract work',
-        href: '#',
-      },
-    ],
-  },
-  {
-    label: 'Hire Designers',
-    href: '#',
   },
 ]
 

@@ -50,7 +50,7 @@ const CustomInput = (props: CustomInputProps) => {
     ...rest
   } = props;
 
-  const OnSelectChange = (payload) => {
+  const OnSelectChange = (payload: { value: string }) => {
     const { value } = payload;
     setFieldValue && setFieldValue(name, value);
   };
@@ -69,7 +69,7 @@ const CustomInput = (props: CustomInputProps) => {
         <Select
           isSearchable={true}
           name={name}
-          options={selectOptions as Any}
+          options={selectOptions}
           placeholder={label}
           size={'md'}
           closeMenuOnSelect={true}
@@ -104,7 +104,7 @@ const CustomInput = (props: CustomInputProps) => {
           }}
           classNamePrefix='chakra-react-select'
           colorScheme='purple'
-          {...rest as unknown as Any} 
+          {...rest as unknown as Any}
         />
       ) : (isDate ? (
         <SingleDatepicker

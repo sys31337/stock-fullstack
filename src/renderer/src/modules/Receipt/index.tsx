@@ -33,6 +33,7 @@ import CategoryModal from '@web/shared/components/Category';
 import CustomModal from '@web/shared/components/CustomModal';
 import Alert from '@web/shared/components/Alert';
 import EditReceiptBill from '@web/modules/Receipt/EditReceiptBill';
+import { Payload } from '@web/shared/types/payload';
 
 interface ReceiptProps {
   isTopBar?: boolean;
@@ -109,7 +110,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
   }, [isFetched, latestBillNumber]);
   const setFullyPaid = () => setOrderPaid(orderTotalTTC);
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: Payload) => {
     try {
       const payload = {
         ...values,
@@ -277,7 +278,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
                       handleBlur={handleBlur}
                       errorMessage={errors.customer && touched.customer && errors.customer}
                       selectOptions={
-                        allCustomers && allCustomers.map((customer) => ({ label: customer.fullname, value: customer._id }))
+                        allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
                       }
                       isSelect={true}
                     />
@@ -293,7 +294,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
                       defaultValue={values.category}
                       errorMessage={errors.category && touched.category && errors.category}
                       selectOptions={
-                        allCategories && allCategories.map((category) => ({ label: category.name, value: category._id }))
+                        allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
                       }
                       isSelect={true}
                     />

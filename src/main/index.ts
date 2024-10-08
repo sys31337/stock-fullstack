@@ -1,6 +1,7 @@
 import {
   app, shell, BrowserWindow, dialog, ipcMain,
 } from 'electron';
+import electronReloader from 'electron-reloader';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 // import server from './api/main';
@@ -15,7 +16,7 @@ function createWindow(): void {
     width: 900,
     height: 670,
     show: false,
-    autoHideMenuBar: true,
+    // autoHideMenuBar: true,
     icon: join(__dirname, './assets/logo.ico'),
     // kiosk: true,
     webPreferences: {
@@ -29,7 +30,7 @@ function createWindow(): void {
       webSecurity: false,
       contextIsolation: false,
     },
-    frame: false,
+    frame: true,
   });
 
   mainWindow.on('ready-to-show', () => {
@@ -77,4 +78,8 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+electronReloader(module, {
+  watchRenderer: false // Disable reloader for renderer process, as Vite handles it
 });

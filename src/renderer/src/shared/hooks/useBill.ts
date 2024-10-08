@@ -1,6 +1,7 @@
 import axiosInstance from "@web/shared/services/api";
 import queryClient from "@web/shared/services/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Payload } from "../types/payload";
 
 const useGetAllBills = () => useQuery(
   ['Get all bills'],
@@ -38,7 +39,7 @@ const useGetBillInfo = (id: string) => useQuery(
     .then(({ data }) => data),
 );
 
-const useCreateBill = () => useMutation((data) => axiosInstance.request({
+const useCreateBill = () => useMutation((data: Payload) => axiosInstance.request({
   method: 'POST',
   url: 'bills',
   data,

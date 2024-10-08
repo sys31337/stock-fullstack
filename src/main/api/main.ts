@@ -11,7 +11,7 @@ import api from '@api/routes';
 import socketHelper from '@api/socket';
 import { log } from '@api/utils';
 
-const whitelist = ['http://localhost:5173', 'http://localhost:4172', 'http://localhost:4030', 'http://localhost:5030'];
+const whitelist = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4172', 'http://localhost:4030', 'http://localhost:5030'];
 const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: [...whitelist], optionsSuccessStatus: 200, credentials: true }));

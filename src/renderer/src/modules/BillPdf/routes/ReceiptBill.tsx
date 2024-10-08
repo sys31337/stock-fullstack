@@ -11,8 +11,8 @@ const ReceiptBill: React.FC = () => {
   const { data, isFetching } = useGetBillInfo(id as string);
   if (isFetching) return <Loading />
   return (
-    <Box h={'100vh'}>
-      <PDFViewer style={{width: '100vw', height: '100%'}}>
+    <Box h="100vh" w="100vw" m={0} p={0}>
+      <PDFViewer width="100%" height="100%" style={{ margin: 0, padding: 0 }}>
         <ReceiptBillPdf data={data} />
       </PDFViewer>
     </Box>

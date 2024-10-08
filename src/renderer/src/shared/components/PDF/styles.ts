@@ -2,7 +2,7 @@ import { StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   table: {
-    display: "table",
+    display: "flex",
     width: "auto",
     borderStyle: "solid",
     borderWidth: 1,
