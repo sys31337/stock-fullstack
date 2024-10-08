@@ -38,7 +38,7 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
     setBarCode(data.barCode);
   }, [data])
 
-  const productsList = products.map((product) => product.productName.toLowerCase());
+  const productsList = products.map((product) => product?.productName?.toLowerCase());
 
   const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !productsList.includes(optionLabel.toLowerCase())
 
@@ -53,7 +53,7 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
   const { id, tva, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
 
   const selectProduct = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct } }) => {
-    const { id, barCode, productName, tva, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = selectedItems.item.originalValue;
+    const { id, barCode, productName, tva, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = selectedItems.item.originalValue || {};
     data.id = id;
     data.barCode = barCode;
     data.productName = productName;

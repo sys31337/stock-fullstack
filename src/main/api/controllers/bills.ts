@@ -31,18 +31,32 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       updatedBy: userId,
     }
+
     const oldBill = await Bill.findById(id).lean();
+
+    if (!oldBill) {
+      return res.status(404).send({ message: 'Bill not found' });
+    }
+
     const { products: oldProducts } = oldBill || { products: [] };
     const { products: newProducts, category, customer } = body;
+
+    if (!newProducts || newProducts.length === 0) {
+      return res.status(400).send({ message: 'Products array is missing or empty' });
+    }
+
     const oldProductsArr = oldProducts.map((product: IProduct) => ({ ...product, category, customer }));
     const newProductsArr = newProducts.map((product: IProduct) => ({ ...product, category, customer }));
+
     await buyBillproductUpdateHandler(oldProductsArr, newProductsArr);
-    const updateBill = await Bill.findByIdAndUpdate(id, payload);
+
+    const updateBill = await Bill.findByIdAndUpdate(id, payload, { new: true });
     return res.status(200).send(updateBill);
   } catch (error) {
     return next(error);
   }
 }
+
 
 const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
