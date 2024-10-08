@@ -16,7 +16,6 @@ import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
 import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
-import { LiaArchiveSolid } from 'react-icons/lia';
 import { AiFillRightCircle, AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
@@ -226,8 +225,8 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
               justify={'center'}
               color={'white'}
               borderRadius={'2xl'}
-              bg={'gray.100'}>
-              <LiaArchiveSolid color={'black'} size={'36'} />
+              bg={'white'}>
+              <img src="/assets/icons/buy.gif" width={64} />
             </Flex>
             <Heading size="md">{t('newReceiptBill')}</Heading>
           </Flex>

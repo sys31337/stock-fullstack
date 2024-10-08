@@ -21,7 +21,6 @@ const Card: React.FC<CardProps> = ({
   <Box
     as={'a'}
     href={href}
-    // target={'_blank'}
     w={'100%'}
     borderWidth="1px"
     borderRadius="3xl"
@@ -52,7 +51,7 @@ const Card: React.FC<CardProps> = ({
         justify={'center'}
         color={'white'}
         borderRadius={'2xl'}
-        bg={'gray.100'}>
+        bg={'white'}>
         {icon}
       </Flex>
       <Heading size="md">{label}</Heading>

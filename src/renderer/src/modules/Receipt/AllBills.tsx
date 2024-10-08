@@ -22,7 +22,6 @@ import {
 import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillDelete, AiFillFilePdf, AiFillRightCircle } from 'react-icons/ai';
-import { LiaFileInvoiceDollarSolid } from 'react-icons/lia';
 import { useGetAllBillsOfType } from '@web/shared/hooks/useBill';
 import dayjs from 'dayjs';
 import Pagination from '@web/shared/components/Pagination';
@@ -126,8 +125,8 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
               justify={'center'}
               color={'white'}
               borderRadius={'2xl'}
-              bg={'gray.100'}>
-              <LiaFileInvoiceDollarSolid color={'black'} size={'36'} />
+              bg={'white'}>
+              <img src="/assets/icons/inventory.gif" width={64} />
             </Flex>
             <Heading size="md">{t('allReceiptBill')}</Heading>
           </Flex>
