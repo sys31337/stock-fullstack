@@ -18,24 +18,23 @@ export const updateProduct = async (product: IProduct) => {
     barCode
   } = product;
 
-  const query = { id, productName, barCode },
+  const query = { barCode },
     update = {
       $inc: { quantity },
-      stack,
-      buyPrice,
-      sellPrice_1,
-      sellPrice_2,
-      sellPrice_3,
-      tva,
-      category,
-      customer
+      $set: {
+        id,
+        productName,
+        stack,
+        buyPrice,
+        sellPrice_1,
+        sellPrice_2,
+        sellPrice_3,
+        tva,
+        category,
+        customer
+      }
     },
     options = { upsert: true, new: true, setDefaultsOnInsert: true };
-
-  if (Number(quantity) < 0) {
-    console.error(`Error: Quantity for product ${productName} cannot be negative.`);
-    return;
-  }
 
   await Product.findOneAndUpdate(query, update, options);
 };
@@ -56,17 +55,21 @@ export const reduceProductQuantity = async (product: IProduct) => {
     barCode
   } = product;
 
-  const query = { id, productName, barCode },
+  const query = { barCode },
     update = {
       $inc: { quantity: -quantity },
-      stack,
-      buyPrice,
-      sellPrice_1,
-      sellPrice_2,
-      sellPrice_3,
-      tva,
-      category,
-      customer
+      $set: {
+        id,
+        productName,
+        stack,
+        buyPrice,
+        sellPrice_1,
+        sellPrice_2,
+        sellPrice_3,
+        tva,
+        category,
+        customer
+      }
     },
     options = { upsert: true, new: true, setDefaultsOnInsert: true };
 

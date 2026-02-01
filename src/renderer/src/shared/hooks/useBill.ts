@@ -30,13 +30,14 @@ const useGetLatestBillNumber = (type: string) => useQuery(
     .then(({ data }) => data.shift()?.orderId || 0),
 );
 
-const useGetBillInfo = (id: string) => useQuery(
+const useGetBillInfo = (id: string, options?: any) => useQuery(
   ['Get bill information', id],
   async () => axiosInstance
     .request({
       url: `bills/info/${id}`,
     })
     .then(({ data }) => data),
+  options
 );
 
 const useCreateBill = () => useMutation((data: Payload) => axiosInstance.request({

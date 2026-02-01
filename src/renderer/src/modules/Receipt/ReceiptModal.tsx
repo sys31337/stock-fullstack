@@ -6,7 +6,7 @@ import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
 import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
-import { AiOutlineMinus, AiOutlineClose } from 'react-icons/ai';
+import { AiFillFilePdf, AiOutlineMinus, AiOutlineClose } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
 import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
@@ -421,10 +421,20 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
       <Alert
         isOpen={isAlertOpen}
         onClose={onAlertClose}
-        header="Bill Created"
-        body="The bill has been created successfully."
+        header={t('billCreated')}
+        body={t('billCreatedSuccessfully')}
+        variant="success"
         footer={
-          <Button onClick={onAlertClose}>OK</Button>
+          <div className="flex gap-2 w-full justify-center">
+            <Button variant="outline" onClick={onAlertClose}>
+              {t('close')}
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+              <a href={`/billpdf/${state.receiptBillId}`} target="_blank" rel="noreferrer">
+                <AiFillFilePdf className="mr-2" /> {t('print')}
+              </a>
+            </Button>
+          </div>
         }
       />
     </>

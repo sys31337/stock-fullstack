@@ -22,6 +22,6 @@ if (process.contextIsolated) {
   (window as ElectronWindow).api = api;
 }
 
-electronReloader(module, { 
+electronReloader(module, {
   watchRenderer: false // Disable reloader for renderer process, as Vite handles it
 });

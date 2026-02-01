@@ -4,13 +4,11 @@ import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
-import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
-import { AiFillEdit, AiFillFilePdf } from 'react-icons/ai';
+import { AiFillEdit, AiFillFilePdf, AiOutlineClose } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
 import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
-import Any from '@web/shared/types/any';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
@@ -21,20 +19,36 @@ import CategoryModal from '@web/shared/components/Category';
 import CustomModal from '@web/shared/components/CustomModal';
 import Alert from '@web/shared/components/Alert';
 import dayjs from 'dayjs';
-import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
 import { IProduct } from '@web/shared/types/product';
 import { IBill } from '@web/shared/types/bills';
 import { cn } from '@web/shared/utils/cn';
+import { Card, CardContent, CardHeader, CardTitle } from '@web/shared/components/ui/card';
 
 interface EditReceiptBillProps {
   justCreated?: boolean;
   billId: string;
+  isOpen?: boolean;
+  onClose?: () => void;
+  hideTrigger?: boolean;
 }
 
-const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
+const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, isOpen: propIsOpen, onClose: propOnClose, hideTrigger }) => {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  const isControlled = typeof propIsOpen !== 'undefined';
+  const isOpen = isControlled ? propIsOpen : internalIsOpen;
+
+  const onOpen = () => {
+    if (!isControlled) setInternalIsOpen(true);
+  };
+
+  const onClose = () => {
+    if (isControlled) {
+      propOnClose && propOnClose();
+    } else {
+      setInternalIsOpen(false);
+    }
+  };
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const onAlertOpen = () => setIsAlertOpen(true);
@@ -43,28 +57,30 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
-  const { data: billInfo, isFetched } = useGetBillInfo(billId);
+  const { data: billInfo, isFetched } = useGetBillInfo(billId, { enabled: !!isOpen });
   const { mutateAsync: updateBill } = useUpdateBill(billId);
-  const [orderTotalHT, setOrderTotalHT] = useState('0.00');
-  const [orderTotalTTC, setOrderTotalTTC] = useState('0.00');
-  const [orderPaid, setOrderPaid] = useState('0.00');
-  const [orderDebts, setOrderDebts] = useState('0.00');
-  const [customerName, setCustomerName] = useState('');
-  const [categoryName, setCategoryName] = useState('');
-  const [receiptBillId, setReceiptBillId] = useState('');
+
+  const [state, setState] = useState({
+    orderTotalHT: '0.00',
+    orderTotalTTC: '0.00',
+    orderPaid: '0.00',
+    orderDebts: '0.00',
+    receiptBillId: '',
+  });
+
   const [initialValues, setInitialValues] = useState<Partial<IBill>>({
     orderId: 0,
     category: '',
     description: '',
     customer: '',
-    orderTotalHT,
-    orderTotalTTC,
-    orderPaid,
-    orderDebts,
+    orderTotalHT: state.orderTotalHT,
+    orderTotalTTC: state.orderTotalTTC,
+    orderPaid: state.orderPaid,
+    orderDebts: state.orderDebts,
     billDate: new Date() as unknown as string,
   });
 
-  const [productsValues, setProductsValues] = useState([{
+  const [productsValues, setProductsValues] = useState<IProduct[]>([{
     id: randomId(),
     barCode: '',
     productName: '',
@@ -78,6 +94,13 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
     totalTTC: 0,
     tva: 19,
   }]);
+
+  const updateState = (newValues: { [key: string]: string }) => {
+    setState((prevState) => ({
+      ...prevState,
+      ...newValues,
+    }));
+  };
 
   useEffect(() => {
     const totalTTC = productsValues.reduce(
@@ -98,13 +121,15 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
       },
       0
     );
-    setOrderTotalHT(price(`${totalHT}`))
-    setOrderTotalTTC(price(`${totalTTC}`))
-    setOrderDebts(price(`${totalTTC - Number(orderPaid)}`))
-  }, [productsValues, orderPaid, orderDebts])
+    updateState({
+      orderTotalHT: price(`${totalHT}`),
+      orderTotalTTC: price(`${totalTTC}`),
+      orderDebts: price(`${totalTTC - Number(state.orderPaid)}`),
+    });
+  }, [productsValues, state.orderPaid, state.orderDebts])
 
   useEffect(() => {
-    if (isFetched && isOpen) {
+    if (isFetched && isOpen && billInfo) {
       const { orderId, category, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
       setInitialValues({
         orderId,
@@ -117,19 +142,30 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
         orderDebts,
         billDate: dayjs(billDate).toDate() as unknown as string,
       });
-      setOrderTotalHT(price(`${orderTotalHT}`));
-      setOrderTotalTTC(price(`${orderTotalTTC}`));
-      setOrderPaid(price(`${orderPaid}`));
-      setOrderDebts(price(`${orderTotalTTC - Number(orderPaid)}`));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      setProductsValues((products as IProduct[]).map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({ ...rest })));
-      setCustomerName(customer ? customer?.fullname : 'Unspecified')
-      setCategoryName(category ? category?.name : 'Uncategorized')
+      updateState({
+        orderTotalHT: price(`${orderTotalHT}`),
+        orderTotalTTC: price(`${orderTotalTTC}`),
+        orderPaid: price(`${orderPaid}`),
+        orderDebts: price(`${orderTotalTTC - Number(orderPaid)}`),
+      });
+
+      if (products && Array.isArray(products)) {
+        setProductsValues((products as IProduct[]).map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({
+          ...rest,
+          // Ensure these are numbers
+          buyPrice: Number(rest.buyPrice),
+          quantity: Number(rest.quantity),
+          stack: Number(rest.stack),
+          tva: Number(rest.tva),
+          sellPrice_1: Number(rest.sellPrice_1),
+          sellPrice_2: Number(rest.sellPrice_2),
+          sellPrice_3: Number(rest.sellPrice_3),
+        })));
+      }
     }
   }, [isFetched, billInfo, isOpen]);
-  const setFullyPaid = () => setOrderPaid(orderTotalTTC);
-  const filterAllCustomers = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !(allCustomers as Any[]).includes(optionLabel.toLowerCase())
-  const filterAllCategories = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !(allCategories as Any[]).includes(optionLabel.toLowerCase())
+
+  const setFullyPaid = () => updateState({ orderPaid: state.orderTotalTTC });
 
   const onSubmit = async (values: IBill) => {
     try {
@@ -137,36 +173,35 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
         ...values,
         paymentMethod: 'CASH',
         type: 'BUY',
-        orderTotalHT: orderTotalHT,
-        orderTotalTTC: orderTotalTTC,
-        orderPaid: orderPaid,
-        orderDebts: orderDebts,
-        products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => ({
-          ...rest,
-          buyPrice: Number(buyPrice),
-          quantity: Number(quantity),
-          sellPrice_1: Number(sellPrice_1),
-          sellPrice_2: Number(sellPrice_2),
-          sellPrice_3: Number(sellPrice_3),
-          stack: Number(stack),
-        }))
+        orderTotalHT: state.orderTotalHT,
+        orderTotalTTC: state.orderTotalTTC,
+        orderPaid: state.orderPaid,
+        orderDebts: state.orderDebts,
+        products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => {
+          const { _id, __v, createdAt, updatedAt, notify, id, ...cleanProduct } = rest as any;
+          return {
+            ...cleanProduct,
+            id: _id || id,
+            buyPrice: Number(buyPrice),
+            quantity: Number(quantity),
+            sellPrice_1: Number(sellPrice_1),
+            sellPrice_2: Number(sellPrice_2),
+            sellPrice_3: Number(sellPrice_3),
+            stack: Number(stack),
+          };
+        })
       }
       const { data: update } = await updateBill(payload as any);
-      setReceiptBillId(update._id);
+      updateState({ receiptBillId: update._id });
       onAlertOpen();
       showToast(
         toast,
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
       );
-      setInitialValues({
-        orderId: 0, category: '', description: '', customer: '', orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate: new Date() as unknown as string,
-      });
-      setProductsValues([{
-        id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
-      }]);
-      setOrderTotalHT('0.00');
-      setOrderTotalTTC('0.00');
-      setFullyPaid();
+      // Don't reset form on edit success, maybe just close?
+      // But keeping legacy behavior of resetting or just closing.
+      // Usually on edit we might want to stay or close.
+      // Legacy code reset everything. I'll just close.
       onClose();
     } catch (err) {
       const error = err as AxiosError;
@@ -179,181 +214,203 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues: initialValues as IBill, onSubmit, enableReinitialize: true });
 
-  const onCustomerSelectOption = (item: Any) => {
-    setCustomerName(item.fullname)
-    setFieldValue('customer', item._id);
-  }
-
-  const onCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleChange(e);
-    setCustomerName(e.target.value);
-    setFieldValue('customer', e.target.value as unknown as string);
-  }
-
-  const onCategorySelectOption = (item: Any) => {
-    setCategoryName(item.name)
-    setFieldValue('category', item._id);
-  }
-
-  const onCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleChange(e);
-    setCategoryName(e.target.value);
-    setFieldValue('category', e.target.value as unknown as string);
-  }
-
   return (
-    <div>
-      <Button
-        className={cn("bg-green-500 hover:bg-green-600 text-white rounded-2xl font-normal", !justCreated && "p-0 h-8")}
-        size={!justCreated ? 'sm' : 'default'}
-        onClick={onOpen}
-      >
-        <AiFillEdit className="mr-2" /> {justCreated && t('edit')}
-      </Button>
+    <>
+      {!hideTrigger && (
+        <Button
+          variant={!justCreated ? "ghost" : "default"}
+          size={!justCreated ? "icon" : "default"}
+          className={cn(
+            !justCreated
+              ? "h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-50"
+              : "bg-green-500 hover:bg-green-600 text-white rounded-2xl font-normal"
+          )}
+          onClick={onOpen}
+        >
+          <AiFillEdit className={cn(!justCreated ? "w-4 h-4" : "mr-2")} />
+          {justCreated && t('edit')}
+        </Button>
+      )}
       <CustomModal
         modalProps={{ size: 'full' }}
-        contentProps={{
-            style: {
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                minHeight: '95vh',
-                maxHeight: '95vh',
-                width: '97.5vw',
-                marginTop: '2.5vh'
-            }
-        }}
-        bodyProps={{ style: { overflow: 'scroll' } }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('editReceiptBill')}
+        headerActions={
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="default"
+              size="icon"
+              className="h-8 w-8 bg-red-500 text-white hover:bg-red-600 shadow-sm"
+              onClick={onClose}
+            >
+              <AiOutlineClose className="w-4 h-4" />
+            </Button>
+          </div>
+        }
       >
-        <div className="p-4">
-          <div className="w-full">
-            <CustomForm handleSubmit={handleSubmit}>
-              <div className="max-w-[90rem] mx-auto">
-                <div className="flex gap-5">
-                  <div className="flex-1">
+        <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
+          <CustomForm handleSubmit={handleSubmit} className="h-full flex flex-col gap-4" hideSubmit={true}>
+            {/* General Info Section */}
+            <Card className="border bg-white">
+              <CardContent className="pt-4 px-4 pb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+                  <CustomInput
+                    name="orderId"
+                    label={t('number')}
+                    icon={BiLabel}
+                    handleChange={handleChange}
+                    handleBlur={handleBlur}
+                    value={values.orderId}
+                    errorMessage={errors.orderId && touched.orderId && errors.orderId}
+                  />
+                  <CustomInput
+                    name="billDate"
+                    label={t('date')}
+                    setFieldValue={setFieldValue}
+                    handleBlur={handleBlur}
+                    defaultValue={values.billDate}
+                    errorMessage={errors.billDate && touched.billDate && errors.billDate}
+                    isDate={true}
+                  />
+                  <div className="flex items-end gap-2">
                     <CustomInput
-                      name="orderId"
-                      label="Numero"
-                      icon={BiLabel}
-                      handleChange={handleChange}
-                      handleBlur={handleBlur}
-                      value={values.orderId}
-                      errorMessage={errors.orderId && touched.orderId && errors.orderId}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <CustomInput
-                      name="billDate"
-                      label="Date"
+                      name="customer"
+                      label={t('customer')}
                       setFieldValue={setFieldValue}
-                      handleBlur={handleBlur}
-                      defaultValue={values.billDate}
-                      errorMessage={errors.billDate && touched.billDate && errors.billDate}
-                      isDate={true}
-                    />
-                  </div>
-                  <div className="flex-1 flex items-end gap-2">
-                    <CustomAutoComplete
                       onFocus={() => refetch()}
-                      filter={filterAllCustomers}
-                      name={'customer'}
-                      value={customerName}
-                      onSelectOption={onCustomerSelectOption}
-                      onChange={onCustomerChange}
-                      selector={'fullname'}
-                      items={allCustomers as Any[]}
+                      handleBlur={handleBlur}
+                      value={values.customer}
+                      errorMessage={errors.customer && touched.customer && errors.customer}
+                      selectOptions={
+                        allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
+                      }
+                      isSelect={true}
+                      className="mb-0 w-full"
                     />
                     <CustomerModal />
                   </div>
-                  <div className="flex-1 flex items-end gap-2">
-                    <CustomAutoComplete
+                  <div className="flex items-end gap-2">
+                    <CustomInput
+                      name="category"
+                      label={t('category')}
+                      setFieldValue={setFieldValue}
                       onFocus={() => refetchCategories()}
-                      filter={filterAllCategories}
-                      name={'category'}
-                      value={categoryName}
-                      onSelectOption={onCategorySelectOption}
-                      onChange={onCategoryChange}
-                      selector={'name'}
-                      items={allCategories as Any[]}
+                      handleBlur={handleBlur}
+                      value={values.category}
+                      errorMessage={errors.category && touched.category && errors.category}
+                      selectOptions={
+                        allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
+                      }
+                      isSelect={true}
+                      className="mb-0 w-full"
                     />
                     <CategoryModal />
                   </div>
                 </div>
-              </div>
-              <p className="font-normal text-2xl text-center pt-5">{t('products')}</p>
-              <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
-              <CustomInput
-                name="description"
-                label="Description"
-                handleChange={handleChange}
-                handleBlur={handleBlur}
-                isTextArea={true}
-                defaultValue={values.description}
-                errorMessage={errors.description && touched.description && errors.description}
-              />
-              <div className="flex gap-5 mt-5">
-                <div className="flex-1 flex items-end gap-3">
+              </CardContent>
+            </Card>
+
+            {/* Products Section */}
+            <Card className="flex-1 border flex flex-col min-h-0 bg-white">
+              <CardHeader className="pb-2 pt-4 px-6">
+                <CardTitle className="text-lg font-medium flex justify-between items-center">
+                  {t('products')}
+                  <div className="text-sm font-normal text-muted-foreground">
+                    {productsValues.length} {t('items')}
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-auto min-h-0 px-2 md:px-6 pb-2">
+                <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
+              </CardContent>
+            </Card>
+
+            {/* Summary & Totals Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Description */}
+              <Card className="lg:col-span-1 border bg-white">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-base font-medium text-muted-foreground">{t('notes')}</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <CustomInput
-                    name="orderTotalHT"
-                    label="Order Total (HT)"
-                    icon={FcNews}
-                    className="bg-gray-200 focus:bg-gray-200 focus:border focus:border-gray-300"
-                    readOnly={true}
-                    value={orderTotalHT as Any}
-                    errorMessage={errors.orderTotalHT && touched.orderTotalHT && errors.orderTotalHT}
-                    currency='DZD'
-                  />
-                </div>
-                <div className="flex-1 flex items-end gap-5">
-                  <CustomInput
-                    name="orderTotalTTC"
-                    label="Order Total (TTC)"
-                    icon={FcNews}
-                    className="bg-gray-200 focus:bg-gray-200 focus:border focus:border-gray-300"
-                    readOnly={true}
-                    value={orderTotalTTC as Any}
-                    errorMessage={errors.orderTotalTTC && touched.orderTotalTTC && errors.orderTotalTTC}
-                    currency='DZD'
-                  />
-                </div>
-                <div className="flex-1 flex items-end">
-                  <CustomInput
-                    name="orderDebts"
-                    label="Order Debts"
-                    icon={FcDebt}
-                    className="bg-gray-200 focus:bg-gray-200 focus:border focus:border-gray-300"
-                    readOnly={true}
+                    name="description"
+                    placeholder={t('addNotes')}
                     handleChange={handleChange}
                     handleBlur={handleBlur}
-                    value={orderDebts}
-                    errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
-                    currency='DZD'
+                    isTextArea={true}
+                    defaultValue={values.description}
+                    errorMessage={errors.description && touched.description && errors.description}
+                    className="min-h-[120px] bg-white resize-none"
                   />
-                </div>
-                <div className="flex-1 flex items-end gap-2">
-                  <CustomInput
-                    name="orderPaid"
-                    label="Paid Amount"
-                    type={'number'}
-                    icon={FcPaid}
-                    handleChange={(e) => setOrderPaid(e.target.value)}
-                    handleBlur={(e) => setOrderPaid(price(e.target.value))}
-                    value={orderPaid}
-                    errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
-                    currency='DZD'
-                  />
-                  <Button className="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 h-10" onClick={setFullyPaid}>
-                    <div className="flex gap-1 items-center font-normal">
-                      <BiSolidCheckCircle className="text-white" />
-                      {t('fully_paid')}
+                </CardContent>
+              </Card>
+
+              {/* Financial Totals */}
+              <Card className="lg:col-span-2 border bg-white">
+                <CardHeader className="pb-2 pt-4">
+                  <CardTitle className="text-lg font-medium">{t('paymentDetails')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Totals Summary Vertical List */}
+                  <div className="space-y-3 pb-4 border-b border-gray-100">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">{t('totalHT')}</span>
+                      <span className="font-semibold text-gray-700">{state.orderTotalHT} <small>DZD</small></span>
                     </div>
-                  </Button>
-                </div>
-              </div>
-            </CustomForm>
-          </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">{t('debts')}</span>
+                      <span className="font-semibold text-orange-600">{state.orderDebts} <small>DZD</small></span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-lg font-bold text-gray-900">{t('totalTTC')}</span>
+                      <span className="text-2xl font-bold text-primary">{state.orderTotalTTC} <small>DZD</small></span>
+                    </div>
+                  </div>
+
+                  {/* Payment Input & Actions */}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex gap-3 items-end">
+                      <div className="flex-1">
+                        <CustomInput
+                          name="orderPaid"
+                          label={t('paidAmount')}
+                          type={'number'}
+                          handleChange={(e) => updateState({ orderPaid: e.target.value })}
+                          handleBlur={(e) => updateState({ orderPaid: e.target.value })}
+                          value={state.orderPaid}
+                          errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
+                          currency='DZD'
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-10 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={(e) => { e.preventDefault(); setFullyPaid(); }}
+                        title={t('fully_paid')}
+                      >
+                        <span className="mr-2 font-medium">{t('fully_paid')}</span>
+                        <BiSolidCheckCircle className="h-5 w-5" />
+                      </Button>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        size="lg"
+                        type="submit"
+                        className="w-full md:w-auto min-w-[200px] bg-gray-900 hover:bg-black text-white"
+                      >
+                        {t('saveChanges')}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CustomForm>
         </div>
       </CustomModal>
       <Alert
@@ -361,21 +418,21 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
         onClose={onAlertClose}
         header={t('billUpdated')}
         body={t('billUpdatedSuccessfully')}
+        variant="success"
         footer={
-          <div className="flex gap-2">
-            <Button className="bg-red-500 hover:bg-red-600 text-white rounded-2xl font-normal" onClick={onAlertClose}>
+          <div className="flex gap-2 w-full justify-center">
+            <Button variant="outline" onClick={onAlertClose}>
               {t('close')}
             </Button>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-normal" asChild>
-                <a href={`/billpdf/${receiptBillId}`}>
-                  <AiFillFilePdf className="mr-2" /> {t('print')}
-                </a>
-            </Button>
-            <EditReceiptBill billId={receiptBillId} justCreated />
+            <a href={`/billpdf/${state.receiptBillId || billId}`}>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+                <AiFillFilePdf className="mr-2" /> {t('print')}
+              </Button>
+            </a>
           </div>
         }
       />
-    </div>
+    </>
   )
 }
 

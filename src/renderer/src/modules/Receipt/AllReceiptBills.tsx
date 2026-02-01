@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MoreHorizontal } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -7,11 +8,19 @@ import {
   TableHeader,
   TableRow,
 } from "@web/shared/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@web/shared/components/ui/dropdown-menu"
 import { Button } from "@web/shared/components/ui/button"
 import { Input } from "@web/shared/components/ui/input"
 import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
-import { AiFillDelete, AiFillFilePdf, AiFillRightCircle } from 'react-icons/ai';
+import { AiFillDelete, AiFillEdit, AiFillFilePdf, AiFillRightCircle, AiOutlineSearch } from 'react-icons/ai';
 import { useGetAllBillsOfType } from '@web/shared/hooks/useBill';
 import dayjs from 'dayjs';
 import Pagination from '@web/shared/components/Pagination';
@@ -20,6 +29,51 @@ import EditReceiptBill from '@web/modules/Receipt/EditReceiptBill';
 import { IBill } from '@web/shared/types/bills';
 import { ICategory } from '@web/shared/types/category';
 import { ICustomer } from '@web/shared/types/customer';
+import { Card, CardContent, CardHeader, CardTitle } from '@web/shared/components/ui/card';
+import { cn } from '@web/shared/utils/cn';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip';
+
+
+const ReceiptBillActions = ({ billId }: { billId: string }) => {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">{t('openMenu')}</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+             <AiFillEdit className="mr-2 h-4 w-4" />
+             {t('edit')}
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+             <a href={`/billpdf/${billId}`} className="flex items-center">
+                <AiFillFilePdf className="mr-2 h-4 w-4" />
+                {t('print')}
+             </a>
+          </DropdownMenuItem>
+           <DropdownMenuItem className="text-red-600 focus:text-red-600">
+             <AiFillDelete className="mr-2 h-4 w-4" />
+             {t('delete')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditReceiptBill
+        billId={billId}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        hideTrigger={true}
+      />
+    </>
+  )
+}
 
 interface AllReceiptBillsProps {
   isTopBar?: boolean;
@@ -89,84 +143,100 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
       )}
       <CustomModal
         modalProps={{ size: 'full' }}
-        contentProps={{ minHeight: '95vh', maxHeight: '95vh', width: '97.5vw', marginTop: '2.5vh' }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('allReceiptBill')}
       >
-        <div className="p-4 w-full">
-          <div className="w-full">
-            <p className="mb-2 text-sm font-medium">{t('search')}</p>
-            <Input
-              className="my-2 rounded-2xl"
-              placeholder={t('searchBills')}
-              onChange={(e) => setFilter(e.target.value)}
-            />
-            <div className="rounded-lg border overflow-hidden mt-4">
-              <Table>
-                <TableHeader className="bg-gray-700">
-                  <TableRow className="hover:bg-gray-700">
-                    <TableHead className="text-white w-[5ch]">#</TableHead>
-                    <TableHead className="text-white">{t('customer')}</TableHead>
-                    <TableHead className="text-white">{t('date')}</TableHead>
-                    <TableHead className="text-white">{t('productsCounter')}</TableHead>
-                    <TableHead className="text-white">{t('category')}</TableHead>
-                    <TableHead className="text-white">{t('total')}</TableHead>
-                    <TableHead className="text-white text-right">{t('actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isFetched && filteredBills.length === 0 ? (
+        <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
+          <Card className="h-full flex flex-col border-none shadow-none bg-transparent">
+            <div className="flex justify-between items-center mb-4 gap-4">
+               <div className="relative w-full max-w-sm">
+                  <AiOutlineSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="search"
+                    placeholder={t('search')}
+                    className="pl-9 bg-white"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+               </div>
+               <div className="text-sm text-gray-500">
+                  {filteredBills.length} {t('records')}
+               </div>
+            </div>
+
+            <Card className="flex-1 overflow-hidden border bg-white">
+              <div className="h-full overflow-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50 sticky top-0 z-10">
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center h-24">
-                         {t('noRecordsFound')}
-                      </TableCell>
+                      <TableHead className="w-[100px] font-semibold text-gray-700">{t('id')}</TableHead>
+                      <TableHead className="font-semibold text-gray-700">{t('customer')}</TableHead>
+                      <TableHead className="font-semibold text-gray-700">{t('date')}</TableHead>
+                      <TableHead className="font-semibold text-gray-700">{t('items')}</TableHead>
+                      <TableHead className="font-semibold text-gray-700">{t('category')}</TableHead>
+                      <TableHead className="text-right font-semibold text-gray-700">{t('total')}</TableHead>
+                      <TableHead className="w-[150px] text-center font-semibold text-gray-700">{t('actions')}</TableHead>
                     </TableRow>
-                  ) :
-                    isFetched && filteredBills.slice(startIndex, endIndex).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
-                      <TableRow key={k} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <TableCell>{orderId}</TableCell>
-                        <TableCell>{(customer as ICustomer)?.fullname || t('counter')}</TableCell>
-                        <TableCell>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</TableCell>
-                        <TableCell>{products.length}</TableCell>
-                        <TableCell>{(category as ICategory)?.name || t('undefined')}</TableCell>
-                        <TableCell>{price(orderTotalTTC)} DA</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 justify-end">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0 rounded-2xl bg-blue-500 text-white hover:bg-blue-600 border-none"
-                                asChild
-                            >
-                                <a href={`/billpdf/${_id}`}>
-                                    <AiFillFilePdf />
-                                </a>
-                            </Button>
-                            <EditReceiptBill billId={_id} />
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0 rounded-2xl bg-red-500 text-white hover:bg-red-600 border-none"
-                            >
-                              <AiFillDelete />
-                            </Button>
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {!isFetched ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          {t('loading')}...
                         </TableCell>
                       </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
+                    ) : filteredBills.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center text-gray-500">
+                          {t('noRecordsFound')}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredBills.slice(startIndex, endIndex).map(({ _id, orderId, customer, billDate, products, category, orderTotalTTC }, k) => (
+                        <TableRow key={k} className="hover:bg-gray-50/80 transition-colors data-[state=selected]:bg-gray-100">
+                          <TableCell className="font-medium">#{orderId}</TableCell>
+                          <TableCell>
+                             <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                   {(customer as ICustomer)?.fullname?.[0]?.toUpperCase() || 'C'}
+                                </div>
+                                <span className="font-medium text-gray-700">{(customer as ICustomer)?.fullname || t('counter')}</span>
+                             </div>
+                          </TableCell>
+                          <TableCell className="text-gray-500">{dayjs(billDate).format('DD/MM/YYYY')}</TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {products.length} {products.length === 1 ? t('item') : t('items')}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                               {(category as ICategory)?.name || t('undefined')}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-gray-900">{price(orderTotalTTC)} <span className="text-xs font-normal text-gray-500">DZD</span></TableCell>
+                          <TableCell className="text-center">
+                             <ReceiptBillActions billId={_id} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+
+            <div className="mt-4 flex justify-end">
+              <Pagination
+                className="pagination-bar"
+                currentPage={currentPage}
+                totalCount={filteredBills.length}
+                pageSize={itemsPerPage}
+                onPageChange={(page: number) => setCurrentPage(page)}
+              />
             </div>
-            <Pagination
-              className="pagination-bar"
-              currentPage={currentPage}
-              totalCount={filteredBills.length}
-              pageSize={itemsPerPage}
-              onPageChange={(page: number) => setCurrentPage(page)}
-            />
-          </div>
+          </Card>
         </div>
       </CustomModal>
     </>

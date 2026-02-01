@@ -29,12 +29,32 @@ const Popover: React.FC<PopoverProps> = ({ children, trigger = 'click', open: co
     setUncontrolledOpen(newOpen)
   }
 
+  const closeTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {
+    if (trigger === 'hover') {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+      setOpen(true);
+    }
+  }
+
+  const handleMouseLeave = () => {
+    if (trigger === 'hover') {
+      closeTimeoutRef.current = setTimeout(() => {
+        setOpen(false);
+      }, 150); // 150ms delay
+    }
+  }
+
   return (
     <PopoverContext.Provider value={{ open, setOpen, trigger }}>
-      <div 
+      <div
         className="relative inline-block"
-        onMouseEnter={trigger === 'hover' ? () => setOpen(true) : undefined}
-        onMouseLeave={trigger === 'hover' ? () => setOpen(false) : undefined}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {children}
       </div>
@@ -47,7 +67,7 @@ const PopoverTrigger = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => {
   const { setOpen, trigger, open } = React.useContext(PopoverContext)
-  
+
   return (
     <div
       ref={ref}
@@ -66,7 +86,7 @@ const PopoverContent = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, style, ...props }, ref) => {
   const { open } = React.useContext(PopoverContext)
-  
+
   if (!open) return null
 
   return (
