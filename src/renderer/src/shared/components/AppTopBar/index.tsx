@@ -1,23 +1,11 @@
 'use client'
 
 import {
-  Box,
-  Flex,
-  Text,
-  IconButton,
-  Stack,
-  Collapse,
-  Icon,
   Popover,
-  PopoverTrigger,
   PopoverContent,
-  useColorModeValue,
-  useBreakpointValue,
-  useDisclosure,
-  Image,
-  Button,
-  BoxProps,
-} from '@chakra-ui/react'
+  PopoverTrigger,
+} from '@web/shared/components/ui/popover'
+import { Button } from '@web/shared/components/ui/button'
 import languages from '@web/config/languages'
 import Products from '@web/modules/Products'
 import Receipt from '@web/modules/Receipt'
@@ -25,289 +13,10 @@ import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFillRightCircle } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
-
-
-const Languages = (props: BoxProps) => (
-  <Box {...props}>
-    <Popover trigger={'hover'} placement={'bottom'}>
-      <PopoverTrigger>
-        <Box
-          as="a"
-          href={'#'}
-          fontSize={'sm'}
-          fontWeight={500}
-          _hover={{
-            textDecoration: 'none',
-            color: 'theme.900',
-          }}>
-          {t('language')}
-        </Box>
-      </PopoverTrigger>
-
-      <PopoverContent
-        border={0}
-        boxShadow={'xl'}
-        bg={'white'}
-        rounded={'md'}
-        maxW={'150px'}
-      >
-        <Stack as={'a'} href={'#'}>
-          {languages.map(({ id, label, code }) => <Box
-            key={id}
-            role={'group'}
-            display={'block'}
-            p={2}
-            rounded={'md'}
-            _hover={{ bg: 'gray.100' }}
-            onClick={() => {
-              i18next.changeLanguage(code);
-              // eslint-disable-next-line no-restricted-globals
-              location.reload();
-            }}
-          >
-            <Stack direction={'row'} align={'center'}>
-              <Flex>
-                <Image
-                  boxSize='2rem'
-                  borderRadius={'100'}
-                  src={`/assets/${code}.svg`}
-                  alt={label}
-                  mr='12px'
-                />
-                <Text
-                  transition={'all .3s ease'}
-                  _groupHover={{ color: 'blue.400' }}
-                  fontWeight={500}>
-                  {label}
-                </Text>
-              </Flex>
-            </Stack>
-          </Box>
-          )}
-        </Stack>
-      </PopoverContent>
-    </Popover>
-  </Box>
-)
-
-interface AppTopBarProps {
-  children: JSX.Element | JSX.Element[];
-}
-
-const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
-  const { isOpen, onToggle } = useDisclosure()
-  const { mutateAsync: logout } = useLogout();
-  const navigate = useNavigate();
-
-  const onLogout = async () => {
-    try {
-      const { token } = authService.loadUserInfo() || { undefined };
-      await logout(token as void);
-      authService.resetUserInfo();
-      navigate('/connexion');
-    } catch (e) {
-      authService.resetUserInfo();
-      navigate('/connexion');
-    }
-  };
-
-  return (
-    <Box w={'full'}>
-      <Flex
-        bg={useColorModeValue('white', 'gray.800')}
-        color={useColorModeValue('gray.600', 'white')}
-        minH={'20px'}
-        py={{ base: 2 }}
-        px={{ base: 4 }}
-        borderBottom={1}
-        borderStyle={'solid'}
-        borderColor={useColorModeValue('gray.200', 'gray.900')}
-        align={'center'}>
-        <Flex
-          flex={{ base: 1, md: 'auto' }}
-          ml={{ base: -2 }}
-          display={{ base: 'flex', md: 'none' }}>
-          <IconButton
-            onClick={onToggle}
-            icon={isOpen ? <AiOutlineClose /> : <AiOutlineMore />}
-            variant={'ghost'}
-            aria-label={'Toggle Navigation'}
-          />
-        </Flex>
-        <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'space-between' }} alignItems={'center'} px={5}>
-          <Text
-            flex={1} justifyContent={'flex-end'}
-            textAlign={useBreakpointValue({ base: 'center', md: 'left' })}
-            fontFamily={'heading'}
-            color={useColorModeValue('gray.800', 'white')}>
-            Logo
-          </Text>
-          <Flex display={{ base: 'none', md: 'flex' }} flex={1} justifyContent={'center'}>
-            <DesktopNav />
-          </Flex>
-          <Flex alignItems={'center'} flex={1} justifyContent={'flex-end'}>
-            <Languages me={2} />
-            <Button colorScheme={'red'} variant={'ghost'} size={'sm'} onClick={onLogout}>
-              <Box as={AiOutlinePoweroff} me={1} /> {t('logout')}
-            </Button>
-          </Flex>
-        </Flex>
-
-      </Flex>
-
-      <Collapse in={isOpen} animateOpacity>
-        <MobileNav />
-      </Collapse>
-      {children}
-    </Box >
-  )
-}
-
-const DesktopNav = () => {
-  const linkColor = useColorModeValue('gray.600', 'gray.200')
-  const linkHoverColor = useColorModeValue('gray.800', 'white')
-  const popoverContentBgColor = useColorModeValue('white', 'gray.800')
-
-  return (
-    <Stack direction={'row'} spacing={4}>
-      {NAV_ITEMS.map((navItem, k) => (
-        <Box key={k}>
-          <Popover trigger={'hover'} placement={'bottom-start'}>
-            <PopoverTrigger>
-              <Box
-                as="a"
-                p={2}
-                href={navItem.href ?? '#'}
-                fontSize={'sm'}
-                fontWeight={500}
-                color={linkColor}
-                _hover={{
-                  textDecoration: 'none',
-                  color: linkHoverColor,
-                }}>
-                {navItem.label}
-              </Box>
-            </PopoverTrigger>
-
-            {navItem.children && (
-              <PopoverContent
-                border={0}
-                mt={2}
-                boxShadow={'xl'}
-                bg={popoverContentBgColor}
-                p={4}
-                rounded={'xl'}
-                minW={'sm'}>
-                <Stack>
-                  {navItem.children.map((child, k) => (
-                    child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
-                  ))}
-                </Stack>
-              </PopoverContent>
-            )}
-          </Popover>
-        </Box>
-      ))}
-    </Stack>
-  )
-}
-
-const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
-  return (
-    <Box
-      as="a"
-      href={href}
-      role={'group'}
-      display={'block'}
-      p={2}
-      px={3}
-      rounded={'lg'}
-      _hover={{ bg: useColorModeValue('blue.50', 'gray.900') }}>
-      <Stack direction={'row'} align={'center'}>
-        <Box>
-          <Text
-            transition={'all .3s ease'}
-            _groupHover={{ color: 'blue.500' }}
-            fontWeight={500}>
-            {label}
-          </Text>
-          <Text fontSize={'sm'}>{subLabel}</Text>
-        </Box>
-        <Flex
-          transition={'all .3s ease'}
-          transform={'translateX(-10px)'}
-          opacity={0}
-          _groupHover={{ opacity: '100%', transform: 'translateX(0)' }}
-          justify={'flex-end'}
-          align={'center'}
-          flex={1}>
-          <Icon color={'blue.400'} w={5} h={5} as={AiFillRightCircle} />
-        </Flex>
-      </Stack>
-    </Box>
-  )
-}
-
-const MobileNav = () => {
-  return (
-    <Stack bg={useColorModeValue('white', 'gray.800')} p={4} display={{ md: 'none' }}>
-      {NAV_ITEMS.map((navItem, k) => (
-        <MobileNavItem key={k} {...navItem} />
-      ))}
-    </Stack>
-  )
-}
-
-const MobileNavItem = ({ label, children, href }: NavItem) => {
-  const { isOpen, onToggle } = useDisclosure()
-
-  return (
-    <Stack spacing={4} onClick={children && onToggle}>
-      <Box
-        py={2}
-        as="a"
-        href={href ?? '#'}
-        justifyContent="space-between"
-        alignItems="center"
-        _hover={{
-          textDecoration: 'none',
-        }}>
-        <Text fontWeight={600} color={useColorModeValue('gray.600', 'gray.200')}>
-          {label}
-        </Text>
-        {children && (
-          <Icon
-            as={AiOutlineDown}
-            transition={'all .25s ease-in-out'}
-            transform={isOpen ? 'rotate(180deg)' : ''}
-            w={6}
-            h={6}
-          />
-        )}
-      </Box>
-
-      <Collapse in={isOpen} animateOpacity style={{ marginTop: '0!important' }}>
-        <Stack
-          mt={2}
-          pl={4}
-          borderLeft={1}
-          borderStyle={'solid'}
-          borderColor={useColorModeValue('gray.200', 'gray.700')}
-          align={'start'}>
-          {children &&
-            children.map((child, k) => (
-              <Box as="a" key={k} py={2} href={child.href}>
-                {child.label}
-              </Box>
-            ))}
-        </Stack>
-      </Collapse>
-    </Stack>
-  )
-}
+import { cn } from '@web/shared/utils/cn'
 
 interface NavItem {
   label: string;
@@ -346,5 +55,221 @@ const NAV_ITEMS: Array<NavItem> = [
     ],
   },
 ]
+
+const Languages = ({ className }: { className?: string }) => (
+  <div className={className}>
+    <Popover trigger={'hover'} placement={'bottom'}>
+      <PopoverTrigger className="text-sm font-medium hover:text-gray-900 dark:hover:text-white transition-colors">
+        {t('language')}
+      </PopoverTrigger>
+
+      <PopoverContent className="w-[150px] p-0 border-0 shadow-xl bg-white dark:bg-gray-800 rounded-md">
+        <div className="flex flex-col py-1">
+          {languages.map(({ id, label, code }) => (
+            <div
+              key={id}
+              role={'group'}
+              className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-md mx-1"
+              onClick={() => {
+                i18next.changeLanguage(code);
+                // eslint-disable-next-line no-restricted-globals
+                location.reload();
+              }}
+            >
+              <div className="flex items-center">
+                <div className="flex items-center">
+                  <img
+                    className="w-8 h-8 rounded-full mr-3"
+                    src={`/assets/${code}.svg`}
+                    alt={label}
+                  />
+                  <span className="font-medium transition-colors group-hover:text-blue-400">
+                    {label}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  </div>
+)
+
+interface AppTopBarProps {
+  children: JSX.Element | JSX.Element[];
+}
+
+const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { mutateAsync: logout } = useLogout();
+  const navigate = useNavigate();
+
+  const onToggle = () => setIsOpen(!isOpen);
+
+  const onLogout = async () => {
+    try {
+      const { token } = authService.loadUserInfo() || { token: undefined };
+      await logout(token as void);
+      authService.resetUserInfo();
+      navigate('/connexion');
+    } catch (e) {
+      authService.resetUserInfo();
+      navigate('/connexion');
+    }
+  };
+
+  return (
+    <div className="w-full">
+      <div className="bg-white dark:bg-gray-800 text-gray-600 dark:text-white min-h-[60px] py-2 px-4 border-b border-gray-200 dark:border-gray-900 flex items-center">
+        <div className="flex flex-1 md:hidden ml-[-8px]">
+          <Button
+            onClick={onToggle}
+            variant="ghost"
+            size="icon"
+            aria-label={'Toggle Navigation'}
+          >
+            {isOpen ? <AiOutlineClose className="w-5 h-5" /> : <AiOutlineMore className="w-5 h-5" />}
+          </Button>
+        </div>
+        
+        <div className="flex flex-1 justify-center md:justify-between items-center px-5">
+          <div className="flex-1 flex justify-end md:justify-start text-center md:text-left font-heading text-gray-800 dark:text-white">
+            Logo
+          </div>
+
+          <div className="hidden md:flex flex-1 justify-center">
+            <DesktopNav />
+          </div>
+
+          <div className="flex items-center flex-1 justify-end gap-2">
+            <Languages className="mr-2" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onLogout}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            >
+              <AiOutlinePoweroff className="mr-1" /> {t('logout')}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Nav Collapse */}
+      <div className={cn(
+        "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
+        isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+      )}>
+        <MobileNav />
+      </div>
+      
+      {children}
+    </div>
+  )
+}
+
+const DesktopNav = () => {
+  return (
+    <div className="flex flex-row gap-4">
+      {NAV_ITEMS.map((navItem, k) => (
+        <div key={k}>
+          <Popover trigger={'hover'} placement={'bottom-start'}>
+            <PopoverTrigger className="p-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white hover:no-underline cursor-pointer">
+              {navItem.label}
+            </PopoverTrigger>
+
+            {navItem.children && (
+              <PopoverContent className="mt-2 border-0 shadow-xl bg-white dark:bg-gray-800 p-4 rounded-xl min-w-[384px]">
+                <div className="flex flex-col">
+                  {navItem.children.map((child, k) => (
+                    child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
+                  ))}
+                </div>
+              </PopoverContent>
+            )}
+          </Popover>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
+  return (
+    <a
+      href={href}
+      className="group block p-2 px-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-900 transition-colors"
+    >
+      <div className="flex items-center">
+        <div>
+          <p className="font-medium transition-colors group-hover:text-blue-500 text-gray-900 dark:text-gray-100">
+            {label}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{subLabel}</p>
+        </div>
+        <div className="flex-1 flex justify-end items-center opacity-0 transform -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+          <AiFillRightCircle className="w-5 h-5 text-blue-400" />
+        </div>
+      </div>
+    </a>
+  )
+}
+
+const MobileNav = () => {
+  return (
+    <div className="bg-white dark:bg-gray-800 p-4 block md:hidden">
+      {NAV_ITEMS.map((navItem, k) => (
+        <MobileNavItem key={k} {...navItem} />
+      ))}
+    </div>
+  )
+}
+
+const MobileNavItem = ({ label, children, href }: NavItem) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const onToggle = () => setIsOpen(!isOpen);
+
+  return (
+    <div className="flex flex-col gap-4" onClick={children && onToggle}>
+      <div className="py-2 flex justify-between items-center hover:no-underline cursor-pointer">
+        <a 
+          href={href ?? '#'} 
+          className="font-semibold text-gray-600 dark:text-gray-200"
+          onClick={(e) => {
+             if (children) {
+                 e.preventDefault();
+                 onToggle();
+             }
+          }}
+        >
+          {label}
+        </a>
+        {children && (
+          <AiOutlineDown
+            className={cn(
+              "w-6 h-6 transition-transform duration-250 ease-in-out",
+              isOpen ? "rotate-180" : ""
+            )}
+          />
+        )}
+      </div>
+
+      <div className={cn(
+        "overflow-hidden transition-all duration-300 ease-in-out pl-4 border-l border-gray-200 dark:border-gray-700 mt-0",
+        isOpen ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"
+      )}>
+        <div className="flex flex-col items-start">
+          {children &&
+            children.map((child, k) => (
+              <a key={k} className="py-2 block w-full" href={child.href}>
+                {child.label}
+              </a>
+            ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default AppTopBar;

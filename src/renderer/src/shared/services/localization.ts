@@ -17,13 +17,13 @@ i18n
     ns: ['translation'],
     defaultNS: 'translation',
     backend: {
-      loadPath: async (langs, namespaces) => {
-        const urls = await import.meta.glob('/src/assets/locales/*/*.json', {
-          as: 'url',
-          eager: true,
-        });
+      loadPath: async (langs: string[], namespaces: string[]) => {
+      const urls = await import.meta.glob('/src/assets/locales/*/*.json', {
+        as: 'url',
+        eager: true,
+      });
 
-        return urls[`/src/assets/locales/${langs[0]}/${namespaces}.json`];
-      },
+      return urls[`/src/assets/locales/${langs[0]}/${namespaces}.json`];
+    },
     },
   });

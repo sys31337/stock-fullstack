@@ -1,0 +1,78 @@
+import React, { useState } from 'react';
+import { AiOutlineFileText, AiOutlineClose } from 'react-icons/ai';
+import { useReceiptHold, HeldReceipt } from '@web/shared/contexts/ReceiptHoldContext';
+import ReceiptModal from '@web/modules/Receipt/ReceiptModal';
+import { t } from 'i18next';
+import { Button } from '@web/shared/components/ui/button';
+import { Tooltip } from '@web/shared/components/ui/tooltip';
+
+const HeldReceipts: React.FC = () => {
+  const { heldReceipts, removeHeldReceipt } = useReceiptHold();
+  const [selectedReceipt, setSelectedReceipt] = useState<HeldReceipt | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleOpenReceipt = (receipt: HeldReceipt) => {
+    setSelectedReceipt(receipt);
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setSelectedReceipt(null);
+    setIsOpen(false);
+  };
+
+  if (heldReceipts.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="fixed bottom-5 right-5 z-[1000]">
+        <div className="flex flex-col items-end gap-2">
+          {heldReceipts.map((receipt) => (
+            <div
+              key={receipt.id}
+              className="flex bg-white shadow-lg rounded-md p-2 items-center gap-2 cursor-pointer transition-all hover:scale-105"
+            >
+              <div onClick={() => handleOpenReceipt(receipt)} className="flex items-center gap-2">
+                <AiOutlineFileText className="text-orange-500" size={20} />
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-bold">
+                    {receipt.label}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(receipt.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+              <Tooltip content={t('close')}>
+                 <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeHeldReceipt(receipt.id);
+                    }}
+                  >
+                    <AiOutlineClose />
+                  </Button>
+              </Tooltip>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {selectedReceipt && (
+        <ReceiptModal
+          isOpen={isOpen}
+          onClose={handleClose}
+          initialHeldData={selectedReceipt.data}
+          heldReceiptId={selectedReceipt.id}
+        />
+      )}
+    </>
+  );
+};
+
+export default HeldReceipts;

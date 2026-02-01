@@ -1,27 +1,32 @@
 import React, { Suspense, useState } from 'react';
-import {
-  Box, Flex,
-} from '@chakra-ui/react';
 import { Outlet } from 'react-router-dom';
 import Loading from '@web/shared/components/Loading';
 import AppTopBar from '@web/shared/components/AppTopBar';
+import { ReceiptHoldProvider } from '@web/shared/contexts/ReceiptHoldContext';
+import HeldReceipts from '@web/shared/components/HeldReceipts';
+import { ToastProvider } from '@web/shared/components/ui/use-toast';
 
 const AppSection: React.FC = () => {
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('Home');
   const [currentProfilePicture, setCurrentProfilePicture] = useState<string>('default.png');
 
   return (
-    <Box w="100vw" h="100vh" bg="gray.50" overflowX="hidden">
-      <Flex color="white" h="100%">
-        <AppTopBar>
-          <Box flex="1">
-            <Suspense fallback={<Loading />}>
-              <Outlet context={[currentPageTitle, setCurrentPageTitle, currentProfilePicture, setCurrentProfilePicture]} />
-            </Suspense>
-          </Box>
-        </AppTopBar>
-      </Flex>
-    </Box>
+    <ReceiptHoldProvider>
+      <ToastProvider>
+        <div className="w-screen h-screen bg-gray-50 overflow-x-hidden">
+          <div className="text-white h-full flex">
+            <AppTopBar>
+              <div className="flex-1">
+                <Suspense fallback={<Loading />}>
+                  <Outlet context={[currentPageTitle, setCurrentPageTitle, currentProfilePicture, setCurrentProfilePicture]} />
+                </Suspense>
+              </div>
+            </AppTopBar>
+          </div>
+          <HeldReceipts />
+        </div>
+      </ToastProvider>
+    </ReceiptHoldProvider>
   );
 };
 

@@ -4,6 +4,8 @@ import axiosInstance from '@web/shared/services/api';
 import queryClient from '@web/shared/services/queryClient';
 import { Payload } from '@web/shared/types/payload';
 
+import Any from '@web/shared/types/any';
+
 const useGetAllCustomers = () => useQuery(
   ['Get all customers'],
   async () => axiosInstance
@@ -11,8 +13,8 @@ const useGetAllCustomers = () => useQuery(
       url: 'customers',
     })
     .then(({ data }) => {
-      const defaultCustomer = data.find((customer) => customer._id === defaultId);
-      const restOfCustomers = data.filter((customer) => customer._id !== defaultId);
+      const defaultCustomer = data.find((customer: Any) => customer._id === defaultId);
+      const restOfCustomers = data.filter((customer: Any) => customer._id !== defaultId);
       return [defaultCustomer, ...restOfCustomers];
     }),
 );

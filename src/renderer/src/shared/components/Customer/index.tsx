@@ -1,5 +1,6 @@
-import React from 'react';
-import { Button, SimpleGrid, useDisclosure, useToast } from '@chakra-ui/react'
+import React, { useState } from 'react';
+import { Button } from '@web/shared/components/ui/button';
+import { useToast } from '@web/shared/components/ui/use-toast';
 import { FaUserPlus } from 'react-icons/fa';
 import CustomInput from '@web/shared/components/CustomForm/Input';
 import CustomForm from '@web/shared/components/CustomForm';
@@ -13,9 +14,13 @@ import Any from '@web/shared/types/any';
 import CustomModal from '@web/shared/components/CustomModal';
 
 const CustomerModal = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
+  
   const { mutateAsync: createCustomer } = useCreateCustomer();
-  const toast = useToast();
+  const { toast } = useToast();
+  
   const initialValues = {
     fullname: '',
     address: '',
@@ -26,6 +31,7 @@ const CustomerModal = () => {
     nar: '',
     type: 'Client',
   };
+  
   const onSubmit = async (values: Payload) => {
     try {
       await createCustomer(values);
@@ -42,21 +48,28 @@ const CustomerModal = () => {
       );
     }
   };
+  
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
   const selectOptions = [{ label: 'Client', value: 'Client' }, { label: 'Supplier', value: 'Supplier' }];
+  
   return (
     <>
-      <Button onClick={onOpen} w={'fit-content'} p={0} borderRadius={'xl'} size={'sm'} m={1} colorScheme={'green'}>
-        <FaUserPlus />
+      <Button 
+        onClick={onOpen} 
+        className="w-fit p-0 rounded-xl m-1 bg-green-500 hover:bg-green-600 h-8 px-3"
+        size="sm"
+      >
+        <FaUserPlus className="text-white" />
       </Button>
       <CustomModal
-        modalProps={{ size: '2xl', isCentered: true }}
+        modalProps={{ size: '2xl' }} // Handled by CustomModal mapping, though we might want to update CustomModal to accept className
         isOpen={isOpen}
         onClose={onClose}
         title={t('addCustomer')}
+        contentProps={{ style: { maxWidth: '42rem' } }} // 2xl is approx 42rem
       >
         <CustomForm handleSubmit={handleSubmit}>
-          <SimpleGrid columns={2} spacing={1}>
+          <div className="grid grid-cols-2 gap-1">
             <CustomInput
               name="type"
               label="Type"
@@ -78,7 +91,7 @@ const CustomerModal = () => {
                 errorMessage={errors[field] && touched[field] && errors[field]}
               />
             ))}
-          </SimpleGrid>
+          </div>
         </CustomForm>
       </CustomModal>
     </>

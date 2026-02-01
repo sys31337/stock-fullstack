@@ -1,14 +1,27 @@
 import React from 'react';
 import { t } from 'i18next';
-import { Box, Button } from '@chakra-ui/react';
+import { Button } from '@web/shared/components/ui/button';
+import { cn } from '@web/shared/utils/cn';
 
-const CustomForm = (props) => {
-  const { handleSubmit, children, ...rest } = props
+interface CustomFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
+  handleSubmit: (e?: React.FormEvent<HTMLFormElement> | undefined) => void;
+  children: React.ReactNode;
+}
+
+const CustomForm = (props: CustomFormProps) => {
+  const { handleSubmit, children, className, ...rest } = props
   return (
-    <Box as={'form'} onSubmit={handleSubmit} {...rest} align={'center'}>
+    <form onSubmit={handleSubmit} className={cn("text-center", className)} {...rest}>
       {children}
-      <Button colorScheme='green' my={5} px={20} size={'lg'} borderRadius={'full'} type="submit">{t('submit')}</Button>
-    </Box>
+      <Button
+        variant="default"
+        className="my-5 px-20 rounded-full bg-green-500 hover:bg-green-600 text-white"
+        size="lg"
+        type="submit"
+      >
+        {t('submit')}
+      </Button>
+    </form>
   )
 }
 

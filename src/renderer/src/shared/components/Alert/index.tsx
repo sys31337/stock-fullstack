@@ -1,47 +1,38 @@
 import React from 'react';
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  AlertDialogCloseButton,
-} from '@chakra-ui/react'
-import Any from '@web/shared/types/any';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@web/shared/components/ui/dialog';
+import { Button } from '@web/shared/components/ui/button';
 
 interface AlertProps {
   isOpen: boolean;
   onClose: () => void;
   header: string;
-  body: string | JSX.Element;
-  footer: string | JSX.Element;
+  body: string | React.ReactNode;
+  footer: string | React.ReactNode;
 }
 
 const Alert = ({ isOpen, onClose, header, body, footer }: AlertProps) => {
-  const cancelRef = React.useRef()
   return (
-    <AlertDialog
-      motionPreset='slideInBottom'
-      leastDestructiveRef={cancelRef as Any}
-      onClose={onClose}
-      isOpen={isOpen}
-      isCentered
-    >
-      <AlertDialogOverlay />
-
-      <AlertDialogContent>
-        <AlertDialogHeader>{header}</AlertDialogHeader>
-        <AlertDialogCloseButton />
-        <AlertDialogBody>
-          {body}
-        </AlertDialogBody>
-        <AlertDialogFooter>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{header}</DialogTitle>
+          <DialogDescription className="py-4">
+            {body}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
           {footer}
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 export default Alert;

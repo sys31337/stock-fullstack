@@ -1,18 +1,22 @@
 import React, { ReactNode } from 'react';
-import {
-  Text, FormControl, FormLabel, Input, Textarea, InputGroup, InputLeftElement, Icon, As, InputProps, InputRightElement, Tag,
-} from '@chakra-ui/react';
+import { Input } from '@web/shared/components/ui/input';
+import { Textarea } from '@web/shared/components/ui/textarea';
+import { Label } from '@web/shared/components/ui/label';
+import { Combobox } from '@web/shared/components/ui/combobox';
+import { cn } from '@web/shared/utils/cn';
 import Any from '@web/shared/types/any';
-import { Select } from 'chakra-react-select';
-import { SingleDatepicker } from 'chakra-dayzed-datepicker';
-import "./styles.css"
+import { LucideIcon } from 'lucide-react';
+
+// Define a type for the Icon that can be either a LucideIcon or a Chakra Icon (As)
+// We will try to render it if it's a component.
+type IconType = React.ElementType;
 
 interface SelectOptions {
   value: string;
   label: string
 }
 
-type CustomInputProps = InputProps & {
+type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   name: string;
   label?: string;
   type?: string;
@@ -25,7 +29,7 @@ type CustomInputProps = InputProps & {
   isTextArea?: boolean;
   isDate?: boolean;
   isSelect?: boolean;
-  icon?: As;
+  icon?: IconType;
   currency?: string;
   selectOptions?: SelectOptions[]
 }
@@ -45,125 +49,129 @@ const CustomInput = (props: CustomInputProps) => {
     isDate,
     selectOptions,
     setFieldValue,
-    icon,
+    icon: IconComp,
     currency,
+    className,
     ...rest
   } = props;
 
-  const OnSelectChange = (payload: { value: string }) => {
-    const { value } = payload;
+  const onSelectChange = (value: string) => {
     setFieldValue && setFieldValue(name, value);
   };
 
+  const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const dateValue = e.target.value ? new Date(e.target.value) : "";
+      setFieldValue && setFieldValue(name, dateValue as Date);
+  };
+
+  // Format date for input value (YYYY-MM-DD)
+  const formattedDateValue = React.useMemo(() => {
+    if (!value && !defaultValue) return "";
+    const v = value || defaultValue;
+    if (v instanceof Date) {
+        return v.toISOString().split('T')[0];
+    }
+    if (typeof v === 'string') {
+        // Try to parse if it's a date string
+        const d = new Date(v);
+        if (!isNaN(d.getTime())) {
+            return d.toISOString().split('T')[0];
+        }
+        return v;
+    }
+    return "";
+  }, [value, defaultValue]);
+
   return (
-    <FormControl id={name}>
+    <div className={cn("mb-4 w-full", className)}>
       {label && (
-        <FormLabel color={errorMessage ? 'red' : 'theme.900'} my={!label ? 0 : 2}>
+        <Label
+            htmlFor={name}
+            className={cn("mb-2 block", errorMessage ? "text-red-500" : "text-primary")}
+        >
           {label}
           {errorMessage && (
-            <Text as={'span'} color={'red'} ms={1}>*</Text>
+            <span className="text-red-500 ml-1">*</span>
           )}
-        </FormLabel>
+        </Label>
       )}
+
       {isSelect ? (
-        <Select
-          isSearchable={true}
-          name={name}
-          options={selectOptions}
+        <Combobox
+          options={selectOptions || []}
+          value={value as string}
+          onChange={onSelectChange}
           placeholder={label}
-          size={'md'}
-          closeMenuOnSelect={true}
-          onChange={OnSelectChange}
-          defaultValue={defaultValue}
-          isOptionSelected={'Client'}
-          chakraStyles={{
-            control: (provided) => ({
-              ...provided,
-              borderRadius: 'xl',
-              bg: 'white'
-            }),
-            dropdownIndicator: (provided) => ({
-              ...provided,
-              color: 'theme.900',
-              w: '32px',
-              bg: 'white'
-            }),
-            menu: (provided) => ({
-              ...provided,
-              color: 'theme.900',
-            }),
-            menuList: (provided) => ({
-              ...provided,
-              p: 0,
-              borderRadius: 'xl'
-            }),
-            singleValue: (provided) => ({
-              ...provided,
-              color: 'theme.900'
-            })
-          }}
-          classNamePrefix='chakra-react-select'
-          colorScheme='purple'
-          {...rest as unknown as Any}
+          className="w-full"
         />
-      ) : (isDate ? (
-        <SingleDatepicker
-          configs={{
-            dateFormat: 'dd/MM/yyyy',
-          }}
-          propsConfigs={{
-            popoverCompProps: {
-              popoverContentProps: {
-                background: 'white',
-                color: 'blue.500',
-              },
-            },
-            inputProps: {
-              borderRadius: 'xl',
-              bg: 'white',
-              color: 'theme.900'
-            }
-          }}
-          date={defaultValue as Date}
-          onDateChange={(date) => setFieldValue && setFieldValue(name, date)}
-          {...rest}
+      ) : isDate ? (
+        <Input
+            type="date"
+            id={name}
+            name={name}
+            className="w-full rounded-xl bg-background text-foreground"
+            onChange={onDateChange}
+            onBlur={handleBlur}
+            value={formattedDateValue}
+            // defaultValue is handled by value in controlled component or we can use defaultValue if uncontrolled
+            // But here we seem to mix both. Let's stick to value if provided.
         />
       ) : (
-        <InputGroup>
-          {icon && (
-            <InputLeftElement pointerEvents='none' m={'auto'}>
-              <Icon as={icon} color={'gray'} size={24} />
-            </InputLeftElement>
+        <div className="relative">
+          {IconComp && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+               {/* Render icon if it's a valid React element/component */}
+               <IconComp size={20} />
+            </div>
           )}
-          <Input
-            as={isTextArea ? Textarea as Any : Input}
-            type={type || 'text'}
-            pl={icon ? 9 : 3}
-            name={name}
-            size={'md'}
-            bg={'white'}
-            color={'theme.900'}
-            borderRadius={'xl'}
-            borderColor={errorMessage ? 'red' : 'theme.600'}
-            _focus={{
-              bg: 'gray.50',
-              boxShadow: 'none !important',
-            }}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            value={value as string | number}
-            defaultValue={defaultValue as string | number}
-            {...rest}
-          />
+
+          {isTextArea ? (
+             <Textarea
+                id={name}
+                name={name}
+                className={cn(
+                    "w-full rounded-xl bg-background text-foreground min-h-[100px]",
+                    IconComp ? "pl-10" : "pl-3",
+                    errorMessage ? "border-red-500" : "border-input"
+                )}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                value={value as string | number | readonly string[] | undefined}
+                defaultValue={defaultValue as string | number | readonly string[] | undefined}
+                {...rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>}
+             />
+          ) : (
+             <Input
+                id={name}
+                name={name}
+                type={type || 'text'}
+                className={cn(
+                    "w-full rounded-xl bg-background text-foreground",
+                    IconComp ? "pl-10" : "pl-3",
+                    currency ? "pr-16" : "pr-3",
+                    errorMessage ? "border-red-500" : "border-input"
+                )}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                value={value as string | number | readonly string[] | undefined}
+                defaultValue={defaultValue as string | number | readonly string[] | undefined}
+                {...rest}
+             />
+          )}
+
           {currency && (
-            <InputRightElement pointerEvents='none' color={'theme.900'} me={2}>
-              <Tag variant='subtle' colorScheme='teal'>DZD</Tag>
-            </InputRightElement>
+             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <span className="inline-flex items-center rounded-md bg-teal-100 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-600/20">
+                    DZD
+                </span>
+             </div>
           )}
-        </InputGroup>
-      ))
-      }
-    </FormControl>
+        </div>
+      )}
+      {errorMessage && (
+          <p className="text-sm text-red-500 mt-1">{errorMessage}</p>
+      )}
+    </div>
   );
 };
 

@@ -21,7 +21,7 @@ const axiosInstance = axios.create({
   baseURL: `${cfg.baseAppUrl}/api/v1/`,
 });
 
-const refreshAccessToken = async (refreshToken) => {
+const refreshAccessToken = async (refreshToken: string) => {
   const response = await axios.request({
     method: 'POST',
     url: `${cfg.baseAppUrl}/api/v1/users/token`,

@@ -1,5 +1,6 @@
-import React from 'react';
-import { Box, Button, useDisclosure, useToast } from '@chakra-ui/react'
+import React, { useState } from 'react';
+import { Button } from '@web/shared/components/ui/button';
+import { useToast } from '@web/shared/components/ui/use-toast';
 import { BiSolidCategory } from 'react-icons/bi';
 import CustomInput from '@web/shared/components/CustomForm/Input';
 import CustomForm from '@web/shared/components/CustomForm';
@@ -12,13 +13,18 @@ import { Payload } from '@web/shared/types/payload';
 import CustomModal from '@web/shared/components/CustomModal';
 
 const CategoryModal = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
+
   const { mutateAsync: createCategory } = useCreateCategory();
-  const toast = useToast();
+  const { toast } = useToast();
+  
   const initialValues = {
     name: '',
     description: '',
   };
+  
   const onSubmit = async (values: Payload) => {
     try {
       await createCategory(values);
@@ -35,21 +41,27 @@ const CategoryModal = () => {
       );
     }
   };
+  
   const { handleSubmit, values, handleChange, errors, touched, handleBlur } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
+  
   return (
     <>
-      <Button onClick={onOpen} w={'fit-content'} p={0} borderRadius={'xl'} size={'sm'} m={1} colorScheme={'green'}>
-        <BiSolidCategory />
+      <Button 
+        onClick={onOpen} 
+        className="w-fit p-0 rounded-xl m-1 bg-green-500 hover:bg-green-600 h-8 px-3"
+        size="sm"
+      >
+        <BiSolidCategory className="text-white" />
       </Button>
       <CustomModal
-        modalProps={{ size: '2xl', isCentered: true }}
-        contentProps={{ borderRadius: '2xl' }}
+        modalProps={{ size: '2xl' }}
+        contentProps={{ style: { maxWidth: '42rem' } }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('addCategory')}
       >
         <CustomForm handleSubmit={handleSubmit}>
-          <Box>
+          <div>
             <CustomInput
               name={'name'}
               label={t('categoryName')}
@@ -67,7 +79,7 @@ const CategoryModal = () => {
               errorMessage={errors.description && touched.description && errors.description}
               isTextArea
             />
-          </Box>
+          </div>
         </CustomForm>
       </CustomModal>
     </>

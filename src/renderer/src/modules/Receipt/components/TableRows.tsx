@@ -1,16 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Tr, Td, Input, Button, InputGroup, InputRightElement, Flex, InputLeftElement, Icon } from '@chakra-ui/react';
+import React from 'react';
+import { TableRow, TableCell } from "@web/shared/components/ui/table"
+import { Input } from "@web/shared/components/ui/input"
+import { Button } from "@web/shared/components/ui/button"
 import { BiTrash } from 'react-icons/bi';
-import { BsPercent } from 'react-icons/bs';
-import { price } from '@web/shared/functions/words';
-import CustomInput from '@web/shared/components/CustomForm/Input';
+import { AiOutlineBarcode } from 'react-icons/ai';
 import { useGetAllProducts } from '@web/shared/hooks/useProducts';
 import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
-import { AiOutlineBarcode } from 'react-icons/ai';
-import Any from '@web/shared/types/any';
-import { randomNumber } from '@web/shared/utils/word';
 import { IProduct } from '@web/shared/types/product';
-import { Item } from '@choc-ui/chakra-autocomplete';
+import { cn } from '@web/shared/utils/cn';
 
 interface TableRowsProps {
   index: number;
@@ -18,298 +15,142 @@ interface TableRowsProps {
   products: IProduct[];
   deleteTableRows: (id: string) => void;
   handleChange: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleProductSelect: (index: number, product: IProduct) => void;
   handleBlur: (e: React.FocusEvent<HTMLInputElement, Element>) => void;
 }
 
-const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleBlur }) => {
-  const [totalHT, setTotalHT] = useState(0);
-  const [totalTTC, setTotalTTC] = useState(0);
-  const [hasSelected, setHasSelected] = useState(false);
-  const [productName, setProductName] = useState('');
-  const [barCode, setBarCode] = useState('');
+const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, handleBlur }) => {
   const { data: allProducts, isFetched } = useGetAllProducts();
 
-  useEffect(() => {
-    const total = Number(data.quantity || 0) * Number(data.stack || 0) * Number(data.buyPrice || 0)
-    const productTva = total * data.tva / 100;
-    setProductName(data.productName)
-    setTotalHT(total)
-    setTotalTTC(total + productTva)
-    setBarCode(data.barCode);
-  }, [data])
+  const totalHT = Number(data.quantity || 0) * Number(data.stack || 0) * Number(data.buyPrice || 0);
+  const productTva = totalHT * (data.tva || 0) / 100;
+  const totalTTC = totalHT + productTva;
 
   const productsList = products.map((product) => product?.productName?.toLowerCase());
 
   const filterProductsList = (query: string, _optionValue: string, optionLabel: string) => optionLabel.toLowerCase().includes(query.toLowerCase()) && !productsList.includes(optionLabel.toLowerCase())
 
-  const updateTotal = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleChange(index, e)
-    const { quantity, stack, buyPrice, tva } = data;
-    const total = Number(quantity || 0) * Number(stack || 0) * Number(buyPrice || 0);
-    const productTva = total * tva / 100;
-    setTotalHT(total);
-    setTotalTTC(total + productTva);
-  }
-  const { id, tva, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = data;
-
-  const selectProduct = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct } }) => {
-    const { id, barCode, productName, tva, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3 } = selectedItems.item.originalValue || {};
-    data.id = id;
-    data.barCode = barCode;
-    data.productName = productName;
-    data.tva = tva;
-    data.stack = stack;
-    data.buyPrice = buyPrice;
-    data.sellPrice_1 = sellPrice_1;
-    data.sellPrice_2 = sellPrice_2;
-    data.sellPrice_3 = sellPrice_3;
-    setTotalHT(0);
-    setTotalTTC(0);
-    setBarCode(barCode)
-  };
-
-  const onProductSelectOption = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct } }) => {
-    const e = { target: { name: 'productName', value: selectedItems.item.label } } as unknown as React.ChangeEvent<HTMLInputElement>;
-    handleChange(index, e);
-    setProductName(selectedItems.item.label);
-    selectProduct(selectedItems);
-    setHasSelected(true);
+  const onProductSelectOption = (item: any) => {
+    // We don't need to manually trigger handleChange for productName here because handleProductSelect will update the whole row
+    // But CustomAutoComplete might expect the input to update?
+    // Actually, CustomAutoComplete calls onSelectOption, then we update parent state.
+    handleProductSelect(index, item as IProduct);
   }
 
   const onProductChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProductName(e.target.value as unknown as string);
     handleChange(index, e);
   }
 
-  const generateBarCode = () => {
-    const newBarCode = `${productName[0] || 'P'}000${randomNumber(5)}`;
-    setBarCode(newBarCode)
-    data.barCode = newBarCode;
-  }
+  const { id, tva, quantity, stack, buyPrice, sellPrice_1, sellPrice_2, sellPrice_3, productName, barCode } = data;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number, fieldName: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (!form) return;
+
+      const inputs = Array.from(form.elements) as HTMLInputElement[];
+      const currentInputIndex = inputs.indexOf(e.currentTarget);
+
+      // Find the next input that is not disabled/readonly and is visible
+      let nextIndex = currentInputIndex + 1;
+      while (nextIndex < inputs.length) {
+        const nextInput = inputs[nextIndex];
+        if (nextInput && !nextInput.disabled && !nextInput.readOnly && nextInput.type !== 'hidden') {
+            nextInput.focus();
+            // Select text if it's a text/number input
+            if (nextInput.select) {
+                nextInput.select();
+            }
+            break;
+        }
+        nextIndex++;
+      }
+    }
+  };
+
+  const tableInputClass = "h-9 rounded-md border border-input bg-background focus:ring-1 focus:ring-ring transition-colors";
+  const numberInputClass = cn(tableInputClass, "text-right pr-3");
 
   return (
     <>
       {isFetched && (
-        <Tr key={id}>
-          <Td color={'theme.900'}>
+        <TableRow key={id} className="hover:bg-muted/30">
+          <TableCell className="w-[50px] text-center font-medium text-muted-foreground">
             {index + 1}
-          </Td>
-          <Td p={0} w={'5px'} textAlign={'center'}>
-            <Button px={0} variant={'ghost'} onClick={() => (deleteTableRows(id))}>
-              <BiTrash color={'red'} />
+          </TableCell>
+          <TableCell className="p-0 w-[40px] text-center">
+            <Button variant="outline" size="icon" className="h-8 w-8 bg-white border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600" onClick={() => (deleteTableRows(id))}>
+              <BiTrash />
             </Button>
-          </Td>
-          <Td px={1}>
-            <Flex>
-              <InputGroup>
-                <InputRightElement
-                  as={Button}
-                  m={'auto'}
-                  p={0}
-                  variant={'link'}
-                  borderRadius={'2xl'}
-                  display={barCode.length > 0 ? 'none' : 'block'}
-                >
-                  <Icon as={AiOutlineBarcode} onClick={generateBarCode} m={'5px'} />
-                </InputRightElement>
+          </TableCell>
+          <TableCell className="p-1 min-w-[140px]">
+             <div className="relative">
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                    <AiOutlineBarcode size={16} />
+                </div>
                 <Input
-                  textAlign={'center'}
-                  px={2}
-                  p={barCode.length > 0 ? 0 : 2}
-                  bg={'white'}
-                  borderColor={'gray.200'}
-                  borderRadius={'xl'}
-                  color={'theme.900'}
-                  type={'text'}
-                  name="barCode"
-                  isDisabled={hasSelected}
-                  defaultValue={barCode}
-                  onChange={(e) => {
-                    handleChange(index, e)
-                    setBarCode(e.target.value)
-                  }}
+                    name="barCode"
+                    className={cn(tableInputClass, "pl-9 text-left")}
+                    onChange={(e) => handleChange(index, e)}
+                    onBlur={handleBlur}
+                    onKeyDown={(e) => handleKeyDown(e, index, 'barCode')}
+                    value={barCode || ''}
+                    autoFocus
+                    placeholder="Scan..."
                 />
-              </InputGroup>
-            </Flex>
-          </Td>
-          <Td px={1}>
+             </div>
+          </TableCell>
+          <TableCell className="p-1 min-w-[200px]">
             <CustomAutoComplete
-              creatable={true}
-              emptyState={true}
-              freeSolo={true}
+              selector="productName"
+              placeholder="Rechercher un produit..."
+              items={allProducts || []}
               filter={filterProductsList}
-              focusInputOnSelect={false}
-              selectOnFocus={false}
-              maxSelections={0}
-              defaultValue={null}
-              name={'productName'}
-              value={productName}
-              inputProps={{ isDisabled: hasSelected && (document.activeElement as Any)?.name !== 'productName' }}
               onSelectOption={onProductSelectOption}
+              value={productName || ''}
+              name="productName"
               onChange={onProductChange}
-              selector={'productName'}
-              items={allProducts}
-            />
-
-          </Td>
-          <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={'white'}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="quantity"
-              defaultValue={quantity}
-              onChange={(e) => (updateTotal(e))}
-            />
-          </Td>
-          <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={'white'}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="stack"
-              isDisabled={hasSelected}
-              defaultValue={stack}
-              onChange={(e) => (updateTotal(e))}
-            />
-          </Td>
-          <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={'white'}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="buyPrice"
-              defaultValue={price(buyPrice)}
-              onChange={(e) => (updateTotal(e))}
-              onBlur={(e) => handleBlur(e)}
-            />
-          </Td>
-          <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={(Number(sellPrice_1) < Number(buyPrice) && Number(sellPrice_1) !== 0)
-                ? 'red.100'
-                : ((Number(sellPrice_1) === Number(buyPrice) && Number(sellPrice_1) !== 0)
-                  ? 'yellow.100'
-                  : 'white')}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="sellPrice_1"
-              defaultValue={price(sellPrice_1)}
-              onBlur={(e) => handleBlur(e)}
-              onChange={(e) => handleChange(index, e)}
-            />
-          </Td>
-          <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={(Number(sellPrice_2) < Number(buyPrice) && Number(sellPrice_2) !== 0)
-                ? 'red.100'
-                : ((Number(sellPrice_2) === Number(buyPrice) && Number(sellPrice_2) !== 0)
-                  ? 'yellow.100'
-                  : 'white')}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="sellPrice_2"
-              defaultValue={price(sellPrice_2)}
-              onBlur={(e) => handleBlur(e)}
-              onChange={(e) => handleChange(index, e)}
-            />
-          </Td>
-          <Td px={1}>
-            <Input
-              textAlign={'center'}
-              px={2}
-              bg={(Number(sellPrice_3) < Number(buyPrice) && Number(sellPrice_3) !== 0)
-                ? 'red.100'
-                : ((Number(sellPrice_3) === Number(buyPrice) && Number(sellPrice_3) !== 0)
-                  ? 'yellow.100'
-                  : 'white')}
-              borderColor={'gray.200'}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="sellPrice_3"
-              defaultValue={price(sellPrice_3)}
-              onBlur={(e) => handleBlur(e)}
-              onChange={(e) => handleChange(index, e)}
-            />
-          </Td>
-          <Td px={1}>
-            <InputGroup>
-              <InputLeftElement pointerEvents='none' ps={2} w={'2ch'}>
-                <BsPercent color='gray' />
-              </InputLeftElement>
-              <Input
-                p={'0 0 0 25px'}
-                bg={'white'}
-                borderColor={'gray.200'}
-                borderRadius={'xl'}
-                color={'theme.900'}
-                type={'number'}
-                name="tva"
-                defaultValue={tva}
-                onChange={(e) => (updateTotal(e))}
-              />
-            </InputGroup>
-          </Td>
-          <Td px={1}>
-            <CustomInput
-              textAlign={'center'}
-              px={2}
-              _focusVisible={{
-                boxShadow: 'unset',
-                border: 'unset'
+              inputProps={{
+                  onBlur: handleBlur,
+                  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e, index, 'productName'),
+                  className: cn(tableInputClass, "text-left placeholder:text-muted-foreground/50")
               }}
-              bg={'transparent'}
-              border={0}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="totalHT"
-              isReadOnly={true}
-              value={price(`${totalHT}`)}
-              currency='DZD'
             />
-          </Td>
-          <Td px={1}>
-            <CustomInput
-              textAlign={'center'}
-              px={2}
-              _focusVisible={{
-                boxShadow: 'unset',
-                border: 'unset'
-              }}
-              bg={'transparent'}
-              border={0}
-              borderRadius={'xl'}
-              color={'theme.900'}
-              type={'number'}
-              name="totalTTC"
-              isReadOnly={true}
-              value={price(`${totalTTC}`)}
-              currency='DZD'
-            />
-          </Td>
-        </Tr>
+          </TableCell>
+          <TableCell className="p-1 w-[80px]">
+            <Input name="quantity" type="number" className={cn(numberInputClass, "text-center font-medium")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'quantity')} value={quantity} />
+          </TableCell>
+          <TableCell className="p-1 w-[80px]">
+            <Input name="stack" type="number" className={cn(numberInputClass, "text-center text-muted-foreground")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'stack')} value={stack} />
+          </TableCell>
+          <TableCell className="p-1 w-[100px]">
+            <Input name="buyPrice" type="number" className={numberInputClass} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'buyPrice')} value={buyPrice} />
+          </TableCell>
+          <TableCell className="p-1 w-[100px]">
+            <Input name="sellPrice_1" type="number" className={cn(numberInputClass, "text-orange-600 font-medium")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_1')} value={sellPrice_1} />
+          </TableCell>
+          <TableCell className="p-1 w-[100px]">
+            <Input name="sellPrice_2" type="number" className={cn(numberInputClass, "text-blue-600")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_2')} value={sellPrice_2} />
+          </TableCell>
+          <TableCell className="p-1 w-[100px]">
+            <Input name="sellPrice_3" type="number" className={cn(numberInputClass, "text-green-600")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_3')} value={sellPrice_3} />
+          </TableCell>
+          <TableCell className="p-1 w-[80px]">
+             <div className="relative">
+                <Input name="tva" type="number" className={cn(numberInputClass, "pr-6 text-center")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'tva')} value={tva} />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">
+                    %
+                </div>
+             </div>
+          </TableCell>
+          <TableCell className="p-1 w-[120px]">
+            <Input name="totalHT" type="number" className={cn(tableInputClass, "text-right bg-muted/20 font-medium text-muted-foreground")} readOnly value={totalHT.toFixed(2)} />
+          </TableCell>
+          <TableCell className="p-1 w-[120px]">
+            <Input name="totalTTC" type="number" className={cn(tableInputClass, "text-right bg-muted/20 font-bold text-gray-800")} readOnly value={totalTTC.toFixed(2)} />
+          </TableCell>
+        </TableRow>
       )}
     </>
   )

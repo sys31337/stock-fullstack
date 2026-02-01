@@ -1,23 +1,13 @@
 import React, { useState } from 'react';
+import { Input } from '@web/shared/components/ui/input';
 import {
-  Box,
-  Container,
-  Flex,
-  Heading,
-  Icon,
-  Stack,
-  Text,
-  useColorModeValue,
-  useDisclosure,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Input,
-} from '@chakra-ui/react';
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@web/shared/components/ui/table';
 import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillBell, AiFillRightCircle } from 'react-icons/ai';
@@ -33,7 +23,10 @@ interface ProductsProps {
 }
 
 const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
+
   const { data: getProducts, isFetched } = useGetAllProducts();
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
@@ -42,8 +35,10 @@ const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
   const startIndex = (+currentPage - 1) * itemsPerPage;
   const endIndex = (+currentPage - 1) * itemsPerPage + itemsPerPage;
 
+  const products = (getProducts || []) as IProduct[];
+
   const filteredBills = filter
-    ? (getProducts as IProduct[]).filter(({ barCode, productName, buyPrice, quantity, tva, sellPrice_1, sellPrice_2, sellPrice_3 }) => (
+    ? products.filter(({ barCode, productName, buyPrice, quantity, tva, sellPrice_1, sellPrice_2, sellPrice_3 }) => (
       barCode.toLowerCase().includes(filter.toLowerCase())
       || productName.toLowerCase().includes(filter.toLowerCase())
       || price(buyPrice) === price(filter)
@@ -53,142 +48,106 @@ const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
       || price(quantity) === price(filter)
       || tva === Number(filter)
     ))
-    : getProducts;
+    : products;
 
-  const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
     <>
       {isTopBar ? (
-        <Box
-          cursor={'pointer'}
+        <div
           onClick={onOpen}
-          role={'group'}
-          display={'block'}
-          p={2}
-          px={3}
-          rounded={'lg'}
-          _hover={{ bg: hoverBackground }}>
-          <Stack direction={'row'} align={'center'}>
-            <Box>
-              <Text
-                transition={'all .3s ease'}
-                _groupHover={{ color: 'blue.500' }}
-                fontWeight={500}>
+          className="group block p-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-900"
+        >
+          <div className="flex flex-row items-center">
+            <div>
+              <p className="font-medium transition-all duration-300 group-hover:text-blue-500">
                 {t('productsList')}
-              </Text>
-              <Text fontSize={'sm'}>{t('productsListSublabel')}</Text>
-            </Box>
-            <Flex
-              transition={'all .3s ease'}
-              transform={'translateX(-10px)'}
-              opacity={0}
-              _groupHover={{ opacity: '100%', transform: 'translateX(0)' }}
-              justify={'flex-end'}
-              align={'center'}
-              flex={1}>
-              <Icon color={'blue.400'} w={5} h={5} as={AiFillRightCircle} />
-            </Flex>
-          </Stack>
-        </Box>
+              </p>
+              <p className="text-sm">{t('productsListSublabel')}</p>
+            </div>
+            <div
+              className="flex-1 flex justify-end items-center transition-all duration-300 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"
+            >
+              <AiFillRightCircle className="w-5 h-5 text-blue-400" />
+            </div>
+          </div>
+        </div>
       ) : (
-        <Box
+        <div
           onClick={onOpen}
-          cursor={'pointer'}
-          w={'100%'}
-          borderWidth="1px"
-          borderRadius="3xl"
-          pos={'relative'}
-          bg={'blue.400'}
-          mx={5}
-          p={5}>
-          <Flex
-            align={'center'}
-            justify={'center'}
-            fontSize={'sm'}
-            pos={'absolute'}
-            bg={'gray.800'}
-            top={-2}
-            right={-2}
-            p={5}
-            borderRadius={'2xl'}
-            h={8}
-            w={8}
+          className="cursor-pointer w-full border rounded-3xl relative bg-blue-400 mx-5 p-5"
+        >
+          <div
+            className="flex items-center justify-center text-sm absolute bg-gray-800 -top-2 -right-2 p-5 rounded-2xl h-8 w-8 text-white"
           >
             F1
-          </Flex>
-          <Flex align={'center'} gap={4}>
-            <Flex
-              minW={20}
-              minH={20}
-              align={'center'}
-              justify={'center'}
-              color={'white'}
-              borderRadius={'2xl'}
-              bg={'gray.100'}>
-              <LiaFileInvoiceDollarSolid color={'black'} size={'36'} />
-            </Flex>
-            <Heading size="md">{t('productsList')}</Heading>
-          </Flex>
-        </Box>
+          </div>
+          <div className="flex items-center gap-4">
+            <div
+              className="min-w-20 min-h-20 flex items-center justify-center text-white rounded-2xl bg-gray-100"
+            >
+              <LiaFileInvoiceDollarSolid className="text-black text-4xl" />
+            </div>
+            <h2 className="text-xl font-bold text-white">{t('productsList')}</h2>
+          </div>
+        </div>
       )}
       <CustomModal
         modalProps={{ size: 'full' }}
-        overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
-        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '95vh', maxH: '95vh', w: '97.5vw', mt: '2.5vh', }}
-        bodyProps={{ overflow: 'scroll' }}
+        contentProps={{ className: "bg-white rounded-xl min-h-[95vh] max-h-[95vh] w-[97.5vw] mt-[2.5vh] overflow-hidden" }}
+        bodyProps={{ className: "overflow-y-auto" }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('productsList')}
       >
-        <Box p={4}>
-          <Container maxW={'full'}>
-            <Text>{t('search')}</Text>
+        <div className="p-4">
+          <div className="container mx-auto max-w-full">
+            <div className="flex justify-between items-center mb-2">
+              <p>{t('search')}</p>
+            </div>
             <Input
-              my={2}
-              borderRadius={'2xl'}
+              className="my-2 rounded-2xl"
               placeholder={t('searchBills')}
               onChange={(e) => setFilter(e.target.value)}
             />
-            <TableContainer borderRadius={'10px'}>
-              <Table variant='striped'>
-                <Thead bg={'gray.700'}>
-                  <Tr>
-                    <Th color={'white'}>{t('barCode')}</Th>
-                    <Th color={'white'}>{t('productName')}</Th>
-                    <Th color={'white'}>{t('qté')}</Th>
-                    <Th color={'white'}>{t('buyPrice')}</Th>
-                    <Th color={'white'}>{t('tva')}</Th>
-                    <Th color={'white'}>{t('sellPrice')} 1</Th>
-                    <Th color={'white'}>{t('sellPrice')} 2</Th>
-                    <Th color={'white'}>{t('sellPrice')} 3</Th>
-                    <Th color={'white'} textAlign={'center'}><Icon as={AiFillBell} margin={'auto'} w={5} h={5} /></Th>
-                    <Th color={'white'} textAlign={'end'}>{t('actions')}</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+            <div className="rounded-xl overflow-hidden border">
+              <Table>
+                <TableHeader className="bg-gray-700">
+                  <TableRow className="hover:bg-gray-700">
+                    <TableHead className="text-white">{t('barCode')}</TableHead>
+                    <TableHead className="text-white">{t('productName')}</TableHead>
+                    <TableHead className="text-white">{t('qté')}</TableHead>
+                    <TableHead className="text-white">{t('buyPrice')}</TableHead>
+                    <TableHead className="text-white">{t('tva')}</TableHead>
+                    <TableHead className="text-white">{t('sellPrice')} 1</TableHead>
+                    <TableHead className="text-white">{t('sellPrice')} 2</TableHead>
+                    <TableHead className="text-white">{t('sellPrice')} 3</TableHead>
+                    <TableHead className="text-white text-center"><AiFillBell className="mx-auto w-5 h-5" /></TableHead>
+                    <TableHead className="text-white text-end">{t('actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {isFetched && filteredBills?.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={10}>
-                        <Text textAlign={'center'}> {t('noRecordsFound')} </Text>
-                      </Td>
-                    </Tr>
+                    <TableRow>
+                      <TableCell colSpan={10}>
+                        <p className="text-center"> {t('noRecordsFound')} </p>
+                      </TableCell>
+                    </TableRow>
                   ) :
                     isFetched && filteredBills.slice(startIndex, endIndex).map((product: IProduct, k: number) => (
                       <ProductRow key={k} product={product} />
                     ))
                   }
-                </Tbody>
+                </TableBody>
               </Table>
-            </TableContainer>
+            </div>
             <Pagination
-              className="pagination-bar"
               currentPage={currentPage}
               totalCount={filteredBills?.length}
               pageSize={itemsPerPage}
               onPageChange={setCurrentPage}
             />
-          </Container>
-        </Box>
+          </div>
+        </div>
       </CustomModal>
     </>
   )

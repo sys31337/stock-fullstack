@@ -1,16 +1,9 @@
 'use client'
 
-import {
-  Button,
-  Flex,
-  FormControl,
-  FormLabel,
-  Heading,
-  Input,
-  Stack,
-  useColorModeValue,
-  useToast,
-} from '@chakra-ui/react'
+import { Button } from '@web/shared/components/ui/button'
+import { Input } from '@web/shared/components/ui/input'
+import { Label } from '@web/shared/components/ui/label'
+import { useToast } from '@web/shared/components/ui/use-toast'
 import { useFormik } from 'formik';
 import { t } from 'i18next';
 import { useLogin } from '@web/modules/Authentication/api/useLogin';
@@ -28,7 +21,7 @@ interface initialValues {
 
 const Authentication = () => {
   const { mutateAsync: login } = useLogin();
-  const toast = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const initialValues = {
@@ -76,53 +69,44 @@ const Authentication = () => {
   })
 
   return (
-    <Flex
-      minH={'100vh'}
-      align={'center'}
-      justify={'center'}
-      bg={useColorModeValue('gray.50', 'gray.800')}>
-      <Stack
-        spacing={4}
-        w={'full'}
-        maxW={'md'}
-        bg={useColorModeValue('white', 'gray.700')}
-        rounded={'xl'}
-        boxShadow={'lg'}
-        p={6}
-        my={12}>
-        <Heading lineHeight={1.1} fontSize={{ base: '2xl', md: '3xl' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+      <div className="w-full max-w-md bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 my-12 space-y-4">
+        <h1 className="leading-tight text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
           {t('authentication')}
-        </Heading>
-        <form onSubmit={handleSubmit}>
-
-          <FormControl id="username" isRequired>
-            <FormLabel>{t('username')}</FormLabel>
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="username" className="text-gray-700 dark:text-gray-200">{t('username')} <span className="text-red-500">*</span></Label>
             <Input
+              id="username"
               placeholder="E.g. Admin"
               onChange={handleChange}
               value={values.username}
-              _placeholder={{ color: 'gray.500' }}
-              type="username"
+              type="text"
+              className="dark:bg-gray-800 dark:text-white"
             />
-          </FormControl>
-          <FormControl id="password" isRequired>
-            <FormLabel>{t('password')}</FormLabel>
-            <Input onChange={handleChange} value={values.password} type="password" />
-          </FormControl>
-          <Stack mt={5} spacing={6}>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-gray-700 dark:text-gray-200">{t('password')} <span className="text-red-500">*</span></Label>
+            <Input 
+              id="password" 
+              onChange={handleChange} 
+              value={values.password} 
+              type="password" 
+              className="dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+          <div className="pt-5">
             <Button
-              bg={'blue.400'}
-              type={'submit'}
-              color={'white'}
-              _hover={{
-                bg: 'blue.500',
-              }}>
+              type="submit"
+              className="w-full bg-blue-400 hover:bg-blue-500 text-white"
+            >
               {t('login')}
             </Button>
-          </Stack>
+          </div>
         </form>
-      </Stack>
-    </Flex>
+      </div>
+    </div>
   )
 }
 

@@ -1,12 +1,6 @@
 import React from 'react'
 import { ReactElement } from 'react'
 
-import {
-  Box,
-  Flex,
-  Heading,
-} from '@chakra-ui/react';
-
 interface CardProps {
   label: string;
   keyBind: string;
@@ -18,45 +12,24 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({
   label, keyBind, icon, href, bg,
 }) => (
-  <Box
-    as={'a'}
+  <a
     href={href}
-    w={'100%'}
-    borderWidth="1px"
-    borderRadius="3xl"
-    pos={'relative'}
-    bg={bg || 'gray.400'}
-    mx={5}
-    p={5}>
-    <Flex
-      align={'center'}
-      justify={'center'}
-      fontSize={'sm'}
-      pos={'absolute'}
-      bg={'gray.800'}
-      top={-2}
-      right={-2}
-      p={5}
-      borderRadius={'2xl'}
-      h={8}
-      w={8}
+    className={`block w-full border rounded-3xl relative mx-5 p-5 ${bg || 'bg-gray-400'}`}
+  >
+    <div
+      className="flex items-center justify-center text-sm absolute bg-gray-800 -top-2 -right-2 p-5 rounded-2xl h-8 w-8 text-white"
     >
       {keyBind}
-    </Flex>
-    <Flex align={'center'} gap={4}>
-      <Flex
-        minW={20}
-        minH={20}
-        align={'center'}
-        justify={'center'}
-        color={'white'}
-        borderRadius={'2xl'}
-        bg={'white'}>
+    </div>
+    <div className="flex items-center gap-4">
+      <div
+        className="min-w-20 min-h-20 flex items-center justify-center text-white rounded-2xl bg-white"
+      >
         {icon}
-      </Flex>
-      <Heading size="md">{label}</Heading>
-    </Flex>
-  </Box>
+      </div>
+      <h2 className="text-xl font-bold">{label}</h2>
+    </div>
+  </a>
 )
 
 export default Card

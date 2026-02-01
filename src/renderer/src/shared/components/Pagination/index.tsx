@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Flex, Icon } from '@chakra-ui/react';
+import { Button } from '@web/shared/components/ui/button';
 import { usePagination, DOTS } from '@web/shared/components/Pagination/usePagination';
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineSmallDash } from 'react-icons/ai';
 
@@ -34,47 +34,32 @@ const Pagination = (props) => {
   const lastPage = paginationRange && paginationRange[paginationRange.length - 1];
 
   return (
-    <Flex gap={1} justifyContent={'center'} mt={10}>
+    <div className="flex gap-1 justify-center mt-10">
       <Button
-        size={'xs'}
-        color={'white'}
-        background={currentPage === 1 ? 'black' : 'gray.700'}
-        borderRadius={25}
-        _hover={{
-          bg: currentPage === 1 ? 'black' : 'gray.700',
-        }}
-        isDisabled={currentPage === 1}
-        p={1}
+        size="icon"
+        variant="secondary"
+        className="h-6 w-6 rounded-full bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+        disabled={currentPage === 1}
         onClick={onPrevious}>
         <AiOutlineArrowLeft />
       </Button>
 
-      {paginationRange && paginationRange.map((pageNumber) => {
+      {paginationRange && paginationRange.map((pageNumber, i) => {
         if (pageNumber === DOTS) {
-          return (<Button
-            key={Math.floor(Math.random() * 1000) * -5}
-            size={'xs'}
-            p={1}
-            fontWeight={100}
-            borderRadius={25}
-            background={'transparent'}
-            _hover={{ bg: 'transparent' }}
-            color={'white'}>
-            <Icon as={AiOutlineSmallDash} color={'black'} alignSelf={'end'} />
-          </Button>);
+          return (
+            <div
+              key={`dots-${i}`}
+              className="flex items-center justify-center h-6 w-6"
+            >
+              <AiOutlineSmallDash className="text-black" />
+            </div>
+          );
         }
         return (
           <Button
             key={pageNumber}
-            size={'xs'}
-            p={1}
-            fontWeight={100}
-            borderRadius={25}
-            color={'white'}
-            background={pageNumber === currentPage ? 'gray.900' : 'gray.500'}
-            _hover={{
-              bg: pageNumber === currentPage ? 'gray.900' : 'gray.600',
-            }}
+            size="icon"
+            className={`h-6 w-6 rounded-full ${pageNumber === currentPage ? 'bg-gray-900 text-white hover:bg-gray-900' : 'bg-gray-500 text-white hover:bg-gray-600'}`}
             onClick={() => onPageChange(pageNumber)}>
             {pageNumber}
           </Button>
@@ -82,19 +67,14 @@ const Pagination = (props) => {
       })}
 
       <Button
-        size={'xs'}
-        color={'white'}
-        background={currentPage === 1 ? 'black' : 'gray.700'}
-        borderRadius={25}
-        _hover={{
-          bg: currentPage === 1 ? 'black' : 'gray.700',
-        }}
-        isDisabled={currentPage === lastPage}
-        p={1}
+        size="icon"
+        variant="secondary"
+        className="h-6 w-6 rounded-full bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+        disabled={currentPage === lastPage}
         onClick={onNext}>
         <AiOutlineArrowRight />
       </Button>
-    </Flex>
+    </div>
   );
 };
 

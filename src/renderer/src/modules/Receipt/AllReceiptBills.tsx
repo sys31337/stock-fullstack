@@ -1,24 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Container,
-  Flex,
-  Heading,
-  Icon,
-  Stack,
-  Text,
-  useColorModeValue,
-  useDisclosure,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Button,
-  Input,
-} from '@chakra-ui/react';
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@web/shared/components/ui/table"
+import { Button } from "@web/shared/components/ui/button"
+import { Input } from "@web/shared/components/ui/input"
 import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillDelete, AiFillFilePdf, AiFillRightCircle } from 'react-icons/ai';
@@ -36,7 +26,10 @@ interface AllReceiptBillsProps {
 }
 
 const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
+
   const { data: getAllReceiptBills, isFetched } = useGetAllBillsOfType('BUY');
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
@@ -45,8 +38,10 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
   const startIndex = (+currentPage - 1) * itemsPerPage;
   const endIndex = (+currentPage - 1) * itemsPerPage + itemsPerPage;
 
+  const bills = (getAllReceiptBills || []) as IBill[];
+
   const filteredBills = filter
-    ? (getAllReceiptBills as IBill[]).filter(({ customer, category, orderTotalTTC, orderTotalHT, orderId, description }) => (
+    ? bills.filter(({ customer, category, orderTotalTTC, orderTotalHT, orderId, description }) => (
       (category as ICategory)?.name.toLowerCase().includes(filter.toLowerCase())
       || (customer as ICustomer)?.fullname.toLowerCase().includes(filter.toLowerCase())
       || price(orderTotalTTC) === price(filter)
@@ -54,160 +49,128 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
       || orderId === Number(filter)
       || description.toLowerCase().includes(filter.toLowerCase())
     ))
-    : getAllReceiptBills as IBill[];
+    : bills;
 
-  const hoverBackground = useColorModeValue('blue.50', 'gray.900');
   return (
     <>
       {isTopBar ? (
-        <Box
-          cursor={'pointer'}
+        <div
+          className="cursor-pointer group block p-2 px-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-900"
           onClick={onOpen}
-          role={'group'}
-          display={'block'}
-          p={2}
-          px={3}
-          rounded={'lg'}
-          _hover={{ bg: hoverBackground }}>
-          <Stack direction={'row'} align={'center'}>
-            <Box>
-              <Text
-                transition={'all .3s ease'}
-                _groupHover={{ color: 'blue.500' }}
-                fontWeight={500}>
+          role="group"
+        >
+          <div className="flex flex-row items-center">
+            <div>
+              <p className="font-medium transition-all duration-300 group-hover:text-blue-500">
                 {t('allReceiptBill')}
-              </Text>
-              <Text fontSize={'sm'}>{t('allReceiptBillLabel')}</Text>
-            </Box>
-            <Flex
-              transition={'all .3s ease'}
-              transform={'translateX(-10px)'}
-              opacity={0}
-              _groupHover={{ opacity: '100%', transform: 'translateX(0)' }}
-              justify={'flex-end'}
-              align={'center'}
-              flex={1}>
-              <Icon color={'blue.400'} w={5} h={5} as={AiFillRightCircle} />
-            </Flex>
-          </Stack>
-        </Box>
+              </p>
+              <p className="text-sm text-gray-500">{t('allReceiptBillLabel')}</p>
+            </div>
+            <div className="flex-1 flex justify-end items-center transition-all duration-300 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
+              <AiFillRightCircle className="text-blue-400 w-5 h-5" />
+            </div>
+          </div>
+        </div>
       ) : (
-        <Box
+        <div
           onClick={onOpen}
-          cursor={'pointer'}
-          w={'100%'}
-          borderWidth="1px"
-          borderRadius="3xl"
-          pos={'relative'}
-          bg={'blue.400'}
-          mx={5}
-          p={5}>
-          <Flex
-            align={'center'}
-            justify={'center'}
-            fontSize={'sm'}
-            pos={'absolute'}
-            bg={'gray.800'}
-            top={-2}
-            right={-2}
-            p={5}
-            borderRadius={'2xl'}
-            h={8}
-            w={8}
-          >
+          className="cursor-pointer w-full border border-gray-200 rounded-3xl relative bg-blue-400 mx-5 p-5 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="absolute top-[-8px] right-[-8px] bg-gray-800 text-white p-2 rounded-2xl h-8 w-8 flex items-center justify-center text-sm font-bold">
             F1
-          </Flex>
-          <Flex align={'center'} gap={4}>
-            <Flex
-              minW={20}
-              minH={20}
-              align={'center'}
-              justify={'center'}
-              color={'white'}
-              borderRadius={'2xl'}
-              bg={'white'}>
-              <img src="/assets/icons/inventory.gif" width={64} />
-            </Flex>
-            <Heading size="md">{t('allReceiptBill')}</Heading>
-          </Flex>
-        </Box>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="min-w-[5rem] min-h-[5rem] flex items-center justify-center text-white rounded-2xl bg-white">
+              <img src="/assets/icons/inventory.gif" width={64} alt="Inventory" />
+            </div>
+            <h2 className="text-xl font-bold text-white">{t('allReceiptBill')}</h2>
+          </div>
+        </div>
       )}
       <CustomModal
         modalProps={{ size: 'full' }}
-        overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
-        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '95vh', maxH: '95vh', w: '97.5vw', mt: '2.5vh', }}
-        bodyProps={{ overflow: 'scroll' }}
+        contentProps={{ minHeight: '95vh', maxHeight: '95vh', width: '97.5vw', marginTop: '2.5vh' }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('allReceiptBill')}
       >
-        <Box p={4}>
-          <Container maxW={'full'}>
-            <Text>{t('search')}</Text>
+        <div className="p-4 w-full">
+          <div className="w-full">
+            <p className="mb-2 text-sm font-medium">{t('search')}</p>
             <Input
-              my={2}
-              borderRadius={'2xl'}
+              className="my-2 rounded-2xl"
               placeholder={t('searchBills')}
               onChange={(e) => setFilter(e.target.value)}
             />
-            <TableContainer borderRadius={'10px'}>
-              <Table variant='striped'>
-                <Thead bg={'gray.700'}>
-                  <Tr>
-                    <Th color={'white'} w={'5ch'}>#</Th>
-                    <Th color={'white'}>{t('customer')}</Th>
-                    <Th color={'white'}>{t('date')}</Th>
-                    <Th color={'white'}>{t('productsCounter')}</Th>
-                    <Th color={'white'}>{t('category')}</Th>
-                    <Th color={'white'}>{t('total')}</Th>
-                    <Th color={'white'} textAlign={'end'}>{t('actions')}</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+            <div className="rounded-lg border overflow-hidden mt-4">
+              <Table>
+                <TableHeader className="bg-gray-700">
+                  <TableRow className="hover:bg-gray-700">
+                    <TableHead className="text-white w-[5ch]">#</TableHead>
+                    <TableHead className="text-white">{t('customer')}</TableHead>
+                    <TableHead className="text-white">{t('date')}</TableHead>
+                    <TableHead className="text-white">{t('productsCounter')}</TableHead>
+                    <TableHead className="text-white">{t('category')}</TableHead>
+                    <TableHead className="text-white">{t('total')}</TableHead>
+                    <TableHead className="text-white text-right">{t('actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {isFetched && filteredBills.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={7}>
-                        <Text textAlign={'center'}> {t('noRecordsFound')} </Text>
-                      </Td>
-                    </Tr>
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center h-24">
+                         {t('noRecordsFound')}
+                      </TableCell>
+                    </TableRow>
                   ) :
                     isFetched && filteredBills.slice(startIndex, endIndex).map(({ _id, billDate, orderId, customer, category, products, orderTotalTTC }, k) => (
-                      <Tr key={k}>
-                        <Td>{orderId}</Td>
-                        <Td>{(customer as ICustomer)?.fullname || t('counter')}</Td>
-                        <Td>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</Td>
-                        <Td>{products.length}</Td>
-                        <Td>{(category as ICategory)?.name || t('undefined')}</Td>
-                        <Td>{price(orderTotalTTC)} DA</Td>
-                        <Td>
-                          <Flex gap={1} justifyContent={'flex-end'}>
-                            <Button colorScheme='blue' p={0} size={'sm'} fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${_id}`}>
-                              <AiFillFilePdf />
+                      <TableRow key={k} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <TableCell>{orderId}</TableCell>
+                        <TableCell>{(customer as ICustomer)?.fullname || t('counter')}</TableCell>
+                        <TableCell>{dayjs(billDate).format('DD/MM/YYYY HH:mm:ss')}</TableCell>
+                        <TableCell>{products.length}</TableCell>
+                        <TableCell>{(category as ICategory)?.name || t('undefined')}</TableCell>
+                        <TableCell>{price(orderTotalTTC)} DA</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-2xl bg-blue-500 text-white hover:bg-blue-600 border-none"
+                                asChild
+                            >
+                                <a href={`/billpdf/${_id}`}>
+                                    <AiFillFilePdf />
+                                </a>
                             </Button>
                             <EditReceiptBill billId={_id} />
-                            <Button colorScheme='red' p={0} size={'sm'} fontWeight={400} borderRadius={'2xl'}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-2xl bg-red-500 text-white hover:bg-red-600 border-none"
+                            >
                               <AiFillDelete />
                             </Button>
-                          </Flex>
-                        </Td>
-                      </Tr>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ))
                   }
-                </Tbody>
+                </TableBody>
               </Table>
-            </TableContainer>
+            </div>
             <Pagination
               className="pagination-bar"
               currentPage={currentPage}
-              totalCount={filteredBills?.length}
+              totalCount={filteredBills.length}
               pageSize={itemsPerPage}
-              onPageChange={setCurrentPage}
+              onPageChange={(page: number) => setCurrentPage(page)}
             />
-          </Container>
-        </Box>
+          </div>
+        </div>
       </CustomModal>
     </>
-  )
-}
+  );
+};
 
-export default AllReceiptBills
+export default AllReceiptBills;

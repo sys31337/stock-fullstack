@@ -1,28 +1,30 @@
-import { ToastPosition } from '@chakra-ui/react';
-
 interface ToastProps {
   title: string;
   description: string;
   status?: 'success' | 'info' | 'warning' | 'error' | 'loading';
-  position?: ToastPosition;
   duration?: number;
   isClosable?: boolean;
 }
 
-const showToast = (toast: (p: ToastProps) => void, {
+const showToast = (toast: any, {
   title,
   description,
   status = 'success',
-  position = 'top-right',
   duration = 1000,
-  isClosable = true,
-}: ToastProps) => toast({
-  title,
-  description,
-  status,
-  position,
-  duration,
-  isClosable,
-});
+}: ToastProps) => {
+    let variant = "default";
+    if (status === 'error') variant = "destructive";
+    
+    // Shadcn toast doesn't have explicit success/info/warning variants by default unless configured.
+    // We'll map error to destructive, others to default.
+    // We can add className for specific colors if needed.
+
+    toast({
+      title,
+      description,
+      variant,
+      duration,
+    });
+};
 
 export default showToast;

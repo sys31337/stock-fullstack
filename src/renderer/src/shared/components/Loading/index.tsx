@@ -1,12 +1,12 @@
 import React from 'react';
-import { Box, Spinner } from '@chakra-ui/react';
+import { Loader2 } from 'lucide-react';
 
 const Loading = () => (
-    <Box display={'flex'} w={'100%'} h={'90vh'}>
-      <Box margin={'auto'}>
-        <Spinner size={'xl'} color={'theme.900'} textAlign={'center'} />
-      </Box>
-    </Box>
+    <div className="flex w-full h-[90vh]">
+      <div className="m-auto">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    </div>
 );
 
 export default Loading;

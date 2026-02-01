@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  Button,
-  Container,
-  Flex,
-  Text,
-  useDisclosure,
-  useToast,
-} from '@chakra-ui/react'
+import { Button } from '@web/shared/components/ui/button'
+import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
@@ -31,7 +24,7 @@ import dayjs from 'dayjs';
 import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
 import { IProduct } from '@web/shared/types/product';
 import { IBill } from '@web/shared/types/bills';
-import { Item } from '@choc-ui/chakra-autocomplete';
+import { cn } from '@web/shared/utils/cn';
 
 interface EditReceiptBillProps {
   justCreated?: boolean;
@@ -39,9 +32,15 @@ interface EditReceiptBillProps {
 }
 
 const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen: isAlertOpen, onOpen: onAlertOpen, onClose: onAlertClose } = useDisclosure();
-  const toast = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
+
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const onAlertOpen = () => setIsAlertOpen(true);
+  const onAlertClose = () => setIsAlertOpen(false);
+
+  const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
   const { data: billInfo, isFetched } = useGetBillInfo(billId);
@@ -144,12 +143,12 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
         orderDebts: orderDebts,
         products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => ({
           ...rest,
-          buyPrice: parseInt(buyPrice as unknown as string, 10),
-          quantity: parseInt(quantity as unknown as string, 10),
-          sellPrice_1: parseInt(sellPrice_1 as unknown as string, 10),
-          sellPrice_2: parseInt(sellPrice_2 as unknown as string, 10),
-          sellPrice_3: parseInt(sellPrice_3 as unknown as string, 10),
-          stack: parseInt(stack as unknown as string, 10),
+          buyPrice: Number(buyPrice),
+          quantity: Number(quantity),
+          sellPrice_1: Number(sellPrice_1),
+          sellPrice_2: Number(sellPrice_2),
+          sellPrice_3: Number(sellPrice_3),
+          stack: Number(stack),
         }))
       }
       const { data: update } = await updateBill(payload as any);
@@ -157,7 +156,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
       onAlertOpen();
       showToast(
         toast,
-        { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success', isClosable: false, },
+        { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
       );
       setInitialValues({
         orderId: 0, category: '', description: '', customer: '', orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate: new Date() as unknown as string,
@@ -180,9 +179,9 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues: initialValues as IBill, onSubmit, enableReinitialize: true });
 
-  const onCustomerSelectOption = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct, value: string } }) => {
-    setCustomerName(selectedItems.item.label)
-    setFieldValue('customer', selectedItems.item.value);
+  const onCustomerSelectOption = (item: Any) => {
+    setCustomerName(item.fullname)
+    setFieldValue('customer', item._id);
   }
 
   const onCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,9 +190,9 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
     setFieldValue('customer', e.target.value as unknown as string);
   }
 
-  const onCategorySelectOption = (selectedItems: Item[] & { item: { label: string; originalValue: IProduct, value: string } }) => {
-    setCategoryName(selectedItems.item.label)
-    setFieldValue('category', selectedItems.item.value);
+  const onCategorySelectOption = (item: Any) => {
+    setCategoryName(item.name)
+    setFieldValue('category', item._id);
   }
 
   const onCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,25 +202,37 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
   }
 
   return (
-    <Box>
-      <Button colorScheme='green' {...!justCreated && { p: 0, size: 'sm' }} fontWeight={400} borderRadius={'2xl'} onClick={onOpen}>
-        <AiFillEdit /> {justCreated && t('edit')}
+    <div>
+      <Button
+        className={cn("bg-green-500 hover:bg-green-600 text-white rounded-2xl font-normal", !justCreated && "p-0 h-8")}
+        size={!justCreated ? 'sm' : 'default'}
+        onClick={onOpen}
+      >
+        <AiFillEdit className="mr-2" /> {justCreated && t('edit')}
       </Button>
       <CustomModal
         modalProps={{ size: 'full' }}
-        overlayProps={{ bg: 'blackAlpha.300', backdropFilter: 'blur(5px) hue-rotate(10deg)' }}
-        contentProps={{ bg: 'white', borderRadius: 'xl', overflowWrap: 'unset', minH: '95vh', maxH: '95vh', w: '97.5vw', mt: '2.5vh', }}
-        bodyProps={{ overflow: 'scroll' }}
+        contentProps={{
+            style: {
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                minHeight: '95vh',
+                maxHeight: '95vh',
+                width: '97.5vw',
+                marginTop: '2.5vh'
+            }
+        }}
+        bodyProps={{ style: { overflow: 'scroll' } }}
         isOpen={isOpen}
         onClose={onClose}
         title={t('editReceiptBill')}
       >
-        <Box p={4}>
-          <Container maxW={'full'}>
+        <div className="p-4">
+          <div className="w-full">
             <CustomForm handleSubmit={handleSubmit}>
-              <Container maxW={'8xl'}>
-                <Flex display={'flex'} gap={5}>
-                  <Box flex={1}>
+              <div className="max-w-[90rem] mx-auto">
+                <div className="flex gap-5">
+                  <div className="flex-1">
                     <CustomInput
                       name="orderId"
                       label="Numero"
@@ -231,8 +242,8 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
                       value={values.orderId}
                       errorMessage={errors.orderId && touched.orderId && errors.orderId}
                     />
-                  </Box>
-                  <Box flex={1}>
+                  </div>
+                  <div className="flex-1">
                     <CustomInput
                       name="billDate"
                       label="Date"
@@ -242,8 +253,8 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
                       errorMessage={errors.billDate && touched.billDate && errors.billDate}
                       isDate={true}
                     />
-                  </Box>
-                  <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
+                  </div>
+                  <div className="flex-1 flex items-end gap-2">
                     <CustomAutoComplete
                       onFocus={() => refetch()}
                       filter={filterAllCustomers}
@@ -255,8 +266,8 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
                       items={allCustomers as Any[]}
                     />
                     <CustomerModal />
-                  </Box>
-                  <Box flex={1} display={'flex'} alignItems={'flex-end'} gap={2}>
+                  </div>
+                  <div className="flex-1 flex items-end gap-2">
                     <CustomAutoComplete
                       onFocus={() => refetchCategories()}
                       filter={filterAllCategories}
@@ -268,10 +279,10 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
                       items={allCategories as Any[]}
                     />
                     <CategoryModal />
-                  </Box>
-                </Flex>
-              </Container>
-              <Text fontWeight={400} fontSize={24} align={'center'} pt={5}>{t('products')}</Text>
+                  </div>
+                </div>
+              </div>
+              <p className="font-normal text-2xl text-center pt-5">{t('products')}</p>
               <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
               <CustomInput
                 name="description"
@@ -282,65 +293,46 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
                 defaultValue={values.description}
                 errorMessage={errors.description && touched.description && errors.description}
               />
-              <Flex display={'flex'} gap={5} mt={5}>
-                <Flex flex={1} align={'flex-end'} gap={3}>
+              <div className="flex gap-5 mt-5">
+                <div className="flex-1 flex items-end gap-3">
                   <CustomInput
                     name="orderTotalHT"
                     label="Order Total (HT)"
                     icon={FcNews}
-                    bg={'gray.200'}
-                    outline={'transparent'}
-                    _focus={{
-                      bg: 'gray.200',
-                      border: '1px solid',
-                      borderColor: 'gray.300'
-                    }}
-                    isReadOnly={true}
+                    className="bg-gray-200 focus:bg-gray-200 focus:border focus:border-gray-300"
+                    readOnly={true}
                     value={orderTotalHT as Any}
                     errorMessage={errors.orderTotalHT && touched.orderTotalHT && errors.orderTotalHT}
                     currency='DZD'
                   />
-                </Flex>
-                <Flex flex={1} align={'flex-end'} gap={5}>
+                </div>
+                <div className="flex-1 flex items-end gap-5">
                   <CustomInput
                     name="orderTotalTTC"
                     label="Order Total (TTC)"
                     icon={FcNews}
-                    bg={'gray.200'}
-                    outline={'transparent'}
-                    _focus={{
-                      bg: 'gray.200',
-                      border: '1px solid',
-                      borderColor: 'gray.300'
-                    }}
-                    isReadOnly={true}
+                    className="bg-gray-200 focus:bg-gray-200 focus:border focus:border-gray-300"
+                    readOnly={true}
                     value={orderTotalTTC as Any}
                     errorMessage={errors.orderTotalTTC && touched.orderTotalTTC && errors.orderTotalTTC}
                     currency='DZD'
                   />
-                </Flex>
-                <Flex flex={1} align={'flex-end'}>
+                </div>
+                <div className="flex-1 flex items-end">
                   <CustomInput
-                    flex={1}
                     name="orderDebts"
                     label="Order Debts"
                     icon={FcDebt}
-                    bg={'gray.200'}
-                    isReadOnly={true}
-                    outline={'transparent'}
-                    _focus={{
-                      bg: 'gray.200',
-                      border: '1px solid',
-                      borderColor: 'gray.300'
-                    }}
+                    className="bg-gray-200 focus:bg-gray-200 focus:border focus:border-gray-300"
+                    readOnly={true}
                     handleChange={handleChange}
                     handleBlur={handleBlur}
                     value={orderDebts}
                     errorMessage={errors.orderDebts && touched.orderDebts && errors.orderDebts}
                     currency='DZD'
                   />
-                </Flex>
-                <Flex flex={1} align={'flex-end'} gap={2}>
+                </div>
+                <div className="flex-1 flex items-end gap-2">
                   <CustomInput
                     name="orderPaid"
                     label="Paid Amount"
@@ -352,17 +344,17 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
                     errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
                     currency='DZD'
                   />
-                  <Button colorScheme={'green'} size={'md'} borderRadius={'xl'} px={5} onClick={setFullyPaid}>
-                    <Flex gap={1} align={'center'} fontWeight={400}>
-                      <BiSolidCheckCircle color={'white'} />
+                  <Button className="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 h-10" onClick={setFullyPaid}>
+                    <div className="flex gap-1 items-center font-normal">
+                      <BiSolidCheckCircle className="text-white" />
                       {t('fully_paid')}
-                    </Flex>
+                    </div>
                   </Button>
-                </Flex>
-              </Flex>
+                </div>
+              </div>
             </CustomForm>
-          </Container>
-        </Box>
+          </div>
+        </div>
       </CustomModal>
       <Alert
         isOpen={isAlertOpen}
@@ -370,18 +362,20 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId }
         header={t('billUpdated')}
         body={t('billUpdatedSuccessfully')}
         footer={
-          <Flex gap={2}>
-            <Button colorScheme='red' fontWeight={400} borderRadius={'2xl'} onClick={onAlertClose}>
+          <div className="flex gap-2">
+            <Button className="bg-red-500 hover:bg-red-600 text-white rounded-2xl font-normal" onClick={onAlertClose}>
               {t('close')}
             </Button>
-            <Button colorScheme='blue' fontWeight={400} borderRadius={'2xl'} as={'a'} href={`/billpdf/${receiptBillId}`}>
-              <AiFillFilePdf /> {t('print')}
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-normal" asChild>
+                <a href={`/billpdf/${receiptBillId}`}>
+                  <AiFillFilePdf className="mr-2" /> {t('print')}
+                </a>
             </Button>
             <EditReceiptBill billId={receiptBillId} justCreated />
-          </Flex>
+          </div>
         }
       />
-    </Box>
+    </div>
   )
 }
 
