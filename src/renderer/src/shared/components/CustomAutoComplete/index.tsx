@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@web/shared/utils/cn';
 import Any from '@web/shared/types/any';
 import { Input } from '@web/shared/components/ui/input';
@@ -18,10 +19,12 @@ interface CustomAutoCompleteProps {
 }
 
 const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
-  const { filter, name, value, onSelectOption, onChange, items, inputProps, selector, onFocus, placeholder, className, ...rest } = props;
+  const { filter, name, value, onSelectOption, onChange, items, inputProps, selector, onFocus, placeholder, className } = props;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value || "");
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState({ top: 0, left: 0, width: 0 });
 
   // Update query when value changes externally
   useEffect(() => {
@@ -32,13 +35,44 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (open && containerRef.current) {
+      const updatePosition = () => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setDropdownStyle({
+            top: rect.bottom + 4,
+            left: rect.left,
+            width: rect.width,
+          });
+        }
+      };
+
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, true);
+
+      return () => {
+        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updatePosition, true);
+      };
+    }
+    return undefined;
+  }, [open]);
 
   const handleFocus = () => {
       setOpen(true);
@@ -76,8 +110,17 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
         />
       </div>
 
-      {open && filteredItems.length > 0 && (
-        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border bg-popover text-popover-foreground shadow-lg">
+      {open && filteredItems.length > 0 && createPortal(
+        <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: dropdownStyle.top,
+              left: dropdownStyle.left,
+              width: dropdownStyle.width,
+            }}
+            className="z-[9999] max-h-60 overflow-auto rounded-xl border bg-popover text-popover-foreground shadow-lg"
+        >
             {filteredItems.map((item, index) => (
                 <div
                     key={index}
@@ -93,7 +136,8 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
                     {item[selector]}
                 </div>
             ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

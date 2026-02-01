@@ -83,7 +83,7 @@ const CustomInput = (props: CustomInputProps) => {
   }, [value, defaultValue]);
 
   return (
-    <div className={cn("mb-4 w-full", className)}>
+    <div className={cn("w-full", className)}>
       {label && (
         <Label
             htmlFor={name}

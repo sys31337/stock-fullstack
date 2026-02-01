@@ -51,7 +51,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
     const rowsInput = [...productsValues];
     rowsInput[index] = {
       ...rowsInput[index],
-      [name]: decimalInputs.includes(name) ? price(value) : value
+      [name]: value
     };
     setProductsValues(rowsInput);
   }
@@ -71,9 +71,16 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
     setProductsValues(rowsInput);
   }
 
-  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBlur = (index: number, e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    e.target.value = decimalInputs.includes(name) ? price(value) : value;
+    if (decimalInputs.includes(name)) {
+      const rowsInput = [...productsValues];
+      rowsInput[index] = {
+        ...rowsInput[index],
+        [name]: price(value)
+      };
+      setProductsValues(rowsInput);
+    }
   }
 
   return (
@@ -116,8 +123,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
       </Table>
       </div>
       <Button
-        variant="default"
-        className="w-full py-6 text-base font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+        type="button"
+        variant="ghost"
+        className="w-full py-4 text-sm font-medium text-muted-foreground border-t border-dashed hover:bg-muted/50 rounded-none rounded-b-md"
         onClick={addTableRows}
       >
         + {t('addProduct')}

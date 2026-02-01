@@ -5,6 +5,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import translationFR from './locales/fr.json';
 import translationEN from './locales/en.json';
+import translationAR from './locales/ar.json';
 
 const detectionOptions = {
   order: ['localStorage', 'querystring', 'navigator'],
@@ -20,6 +21,9 @@ const resources = {
   },
   en: {
     translation: translationEN,
+  },
+  ar: {
+    translation: translationAR,
   },
 };
 

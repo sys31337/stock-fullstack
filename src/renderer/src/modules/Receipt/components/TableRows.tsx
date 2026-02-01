@@ -80,7 +80,7 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
             {index + 1}
           </TableCell>
           <TableCell className="p-0 w-[40px] text-center">
-            <Button variant="outline" size="icon" className="h-8 w-8 bg-white border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600" onClick={() => (deleteTableRows(id))}>
+            <Button type="button" variant="outline" size="icon" className="h-8 w-8 bg-white border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600" onClick={() => (deleteTableRows(id))}>
               <BiTrash />
             </Button>
           </TableCell>
@@ -93,7 +93,7 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
                     name="barCode"
                     className={cn(tableInputClass, "pl-9 text-left")}
                     onChange={(e) => handleChange(index, e)}
-                    onBlur={handleBlur}
+                    onBlur={(e) => handleBlur(index, e)}
                     onKeyDown={(e) => handleKeyDown(e, index, 'barCode')}
                     value={barCode || ''}
                     autoFocus
@@ -112,33 +112,33 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
               name="productName"
               onChange={onProductChange}
               inputProps={{
-                  onBlur: handleBlur,
+                  onBlur: (e: React.FocusEvent<HTMLInputElement>) => handleBlur(index, e),
                   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e, index, 'productName'),
                   className: cn(tableInputClass, "text-left placeholder:text-muted-foreground/50")
               }}
             />
           </TableCell>
           <TableCell className="p-1 w-[80px]">
-            <Input name="quantity" type="number" className={cn(numberInputClass, "text-center font-medium")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'quantity')} value={quantity} />
+            <Input name="quantity" type="number" className={cn(numberInputClass, "text-center font-medium")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'quantity')} value={quantity} />
           </TableCell>
           <TableCell className="p-1 w-[80px]">
-            <Input name="stack" type="number" className={cn(numberInputClass, "text-center text-muted-foreground")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'stack')} value={stack} />
+            <Input name="stack" type="number" className={cn(numberInputClass, "text-center text-muted-foreground")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'stack')} value={stack} />
           </TableCell>
           <TableCell className="p-1 w-[100px]">
-            <Input name="buyPrice" type="number" className={numberInputClass} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'buyPrice')} value={buyPrice} />
+            <Input name="buyPrice" type="number" className={numberInputClass} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'buyPrice')} value={buyPrice} />
           </TableCell>
           <TableCell className="p-1 w-[100px]">
-            <Input name="sellPrice_1" type="number" className={cn(numberInputClass, "text-orange-600 font-medium")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_1')} value={sellPrice_1} />
+            <Input name="sellPrice_1" type="number" className={cn(numberInputClass, "text-orange-600 font-medium")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_1')} value={sellPrice_1} />
           </TableCell>
           <TableCell className="p-1 w-[100px]">
-            <Input name="sellPrice_2" type="number" className={cn(numberInputClass, "text-blue-600")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_2')} value={sellPrice_2} />
+            <Input name="sellPrice_2" type="number" className={cn(numberInputClass, "text-blue-600")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_2')} value={sellPrice_2} />
           </TableCell>
           <TableCell className="p-1 w-[100px]">
-            <Input name="sellPrice_3" type="number" className={cn(numberInputClass, "text-green-600")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_3')} value={sellPrice_3} />
+            <Input name="sellPrice_3" type="number" className={cn(numberInputClass, "text-green-600")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'sellPrice_3')} value={sellPrice_3} />
           </TableCell>
           <TableCell className="p-1 w-[80px]">
              <div className="relative">
-                <Input name="tva" type="number" className={cn(numberInputClass, "pr-6 text-center")} onChange={(e) => handleChange(index, e)} onBlur={handleBlur} onKeyDown={(e) => handleKeyDown(e, index, 'tva')} value={tva} />
+                <Input name="tva" type="number" className={cn(numberInputClass, "pr-6 text-center")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e, index, 'tva')} value={tva} />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">
                     %
                 </div>

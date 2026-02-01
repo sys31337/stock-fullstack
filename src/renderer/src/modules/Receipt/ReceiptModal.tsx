@@ -142,15 +142,20 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
         orderDebts: state.orderDebts,
-        products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => ({
-          ...rest,
-          buyPrice: Number(buyPrice),
-          quantity: Number(quantity),
-          sellPrice_1: Number(sellPrice_1),
-          sellPrice_2: Number(sellPrice_2),
-          sellPrice_3: Number(sellPrice_3),
-          stack: Number(stack),
-        }))
+        products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { _id, __v, createdAt, updatedAt, notify, id, ...cleanProduct } = rest as any;
+          return {
+            ...cleanProduct,
+            id: _id || id,
+            buyPrice: Number(buyPrice),
+            quantity: Number(quantity),
+            sellPrice_1: Number(sellPrice_1),
+            sellPrice_2: Number(sellPrice_2),
+            sellPrice_3: Number(sellPrice_3),
+            stack: Number(stack),
+          };
+        })
       }
       const { data: newBill } = await createBill(payload);
       updateState({ receiptBillId: newBill._id })
@@ -225,31 +230,33 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         title={t('newReceiptBill')}
         headerActions={
           <div className="flex items-center gap-2">
-            <Tooltip content={t('minimize') || 'Mettre en attente'}>
+            <Tooltip content={t('minimize')}>
               <Button
+                type="button"
                 variant="default"
                 size="icon"
-                className="bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
+                className="h-8 w-8 bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
                 onClick={handleMinimize}
               >
-                <AiOutlineMinus className="w-5 h-5" />
+                <AiOutlineMinus className="w-4 h-4" />
               </Button>
             </Tooltip>
-            <Tooltip content={t('close') || 'Fermer'}>
+            <Tooltip content={t('close')}>
               <Button
+                type="button"
                 variant="default"
                 size="icon"
-                className="bg-red-500 text-white hover:bg-red-600 shadow-sm"
+                className="h-8 w-8 bg-red-500 text-white hover:bg-red-600 shadow-sm"
                 onClick={onClose}
               >
-                <AiOutlineClose className="w-5 h-5" />
+                <AiOutlineClose className="w-4 h-4" />
               </Button>
             </Tooltip>
           </div>
         }
       >
         <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
-          <CustomForm handleSubmit={handleSubmit} className="h-full flex flex-col gap-4">
+          <CustomForm handleSubmit={handleSubmit} className="h-full flex flex-col gap-4" hideSubmit={true}>
             {/* General Info Section */}
             <Card className="border bg-white">
               <CardContent className="pt-4 px-4 pb-4">
@@ -279,11 +286,13 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                       setFieldValue={setFieldValue}
                       onFocus={() => refetch()}
                       handleBlur={handleBlur}
+                      value={values.customer}
                       errorMessage={errors.customer && touched.customer && errors.customer}
                       selectOptions={
                         allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
                       }
                       isSelect={true}
+                      className="mb-0 w-full"
                     />
                     <CustomerModal />
                   </div>
@@ -294,12 +303,13 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                       setFieldValue={setFieldValue}
                       onFocus={() => refetchCategories()}
                       handleBlur={handleBlur}
-                      defaultValue={values.category}
+                      value={values.category}
                       errorMessage={errors.category && touched.category && errors.category}
                       selectOptions={
                         allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
                       }
                       isSelect={true}
+                      className="mb-0 w-full"
                     />
                     <CategoryModal />
                   </div>
@@ -332,7 +342,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                 <CardContent>
                   <CustomInput
                     name="description"
-                    placeholder={t('addNotes') || "Add notes here..."}
+                    placeholder={t('addNotes')}
                     handleChange={handleChange}
                     handleBlur={handleBlur}
                     isTextArea={true}
@@ -348,26 +358,26 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                 <CardHeader className="pb-2 pt-4">
                   <CardTitle className="text-lg font-medium">{t('paymentDetails')}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {/* Totals Summary */}
-                    <div className="flex-1 h-full gap-4">
-                      <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm flex flex-col justify-between">
-                        <p className="text-sm text-start text-muted-foreground">{t('totalHT')}</p>
-                        <div className="text-2xl font-semibold text-gray-700">{state.orderTotalHT} <span className="text-xs font-normal text-muted-foreground">DZD</span></div>
-                        <p className="text-sm text-start text-muted-foreground">{t('debts')}</p>
-                        <div className="text-2xl font-semibold text-orange-600">{state.orderDebts} <span className="text-xs font-normal text-muted-foreground">DZD</span></div>
+                <CardContent className="space-y-6">
+                    {/* Totals Summary Vertical List */}
+                    <div className="space-y-3 pb-4 border-b border-gray-100">
+                      <div className="flex justify-between items-center">
+                         <span className="text-muted-foreground">{t('totalHT')}</span>
+                         <span className="font-semibold text-gray-700">{state.orderTotalHT} <small>DZD</small></span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                         <span className="text-muted-foreground">{t('debts')}</span>
+                         <span className="font-semibold text-orange-600">{state.orderDebts} <small>DZD</small></span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                         <span className="text-lg font-bold text-gray-900">{t('totalTTC')}</span>
+                         <span className="text-2xl font-bold text-primary">{state.orderTotalTTC} <small>DZD</small></span>
                       </div>
                     </div>
 
-                    {/* Grand Total & Payment */}
-                    <div className="flex-1 space-y-4">
-                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex flex-col items-end justify-center text-right">
-                        <span className="text-sm font-medium text-primary uppercase tracking-wider">{t('totalTTC')}</span>
-                        <div className="text-4xl font-bold text-primary">{state.orderTotalTTC} <span className="text-lg font-normal">DZD</span></div>
-                      </div>
-
-                      <div className="flex gap-2 items-start">
+                    {/* Payment Input & Actions */}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex gap-3 items-end">
                         <div className="flex-1">
                           <CustomInput
                             name="orderPaid"
@@ -381,17 +391,27 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                           />
                         </div>
                         <Button
-                          variant="outline"
-                          className="mt-8 bg-white border-green-600 text-green-600 hover:bg-green-50 w-full md:w-auto px-6"
+                          type="button"
+                          variant="ghost"
+                          className="h-10 text-green-600 hover:text-green-700 hover:bg-green-50"
                           onClick={(e) => { e.preventDefault(); setFullyPaid(); }}
                           title={t('fully_paid')}
                         >
-                          <span className="mr-2 font-medium">{t('fully_paid') || 'Payer tout'}</span>
+                          <span className="mr-2 font-medium">{t('fully_paid')}</span>
                           <BiSolidCheckCircle className="h-5 w-5" />
                         </Button>
                       </div>
+
+                      <div className="flex justify-end pt-2">
+                        <Button
+                          size="lg"
+                          type="submit"
+                          className="w-full md:w-auto min-w-[200px] bg-gray-900 hover:bg-black text-white"
+                        >
+                           {t('submit')}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>

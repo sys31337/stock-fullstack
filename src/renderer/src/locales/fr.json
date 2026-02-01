@@ -27,6 +27,9 @@
   "units": "Unités",
   "buyPrice": "P. achat",
   "sellPrice": "P. vente",
+  "sellPrice_1": "P. vente 1",
+  "sellPrice_2": "P. vente 2",
+  "sellPrice_3": "P. vente 3",
   "total": "Totale",
   "addProduct": "Ajouter un produit",
   "fully_paid": "Payé",
@@ -69,5 +72,15 @@
   "qté": "QTÉ",
   "tva": "TVA",
   "actions": "Actions",
-  "category": "Catégorie"
+  "category": "Catégorie",
+  "minimize": "Réduire",
+  "addNotes": "Ajouter des notes...",
+  "items": "articles",
+  "notes": "Notes",
+  "paymentDetails": "Détails du paiement",
+  "totalHT": "Total HT",
+  "debts": "Dettes",
+  "totalTTC": "Total TTC",
+  "paidAmount": "Montant payé",
+  "number": "Numéro"
 }
