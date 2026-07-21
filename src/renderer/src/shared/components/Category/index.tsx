@@ -19,12 +19,12 @@ const CategoryModal = () => {
 
   const { mutateAsync: createCategory } = useCreateCategory();
   const { toast } = useToast();
-  
+
   const initialValues = {
     name: '',
     description: '',
   };
-  
+
   const onSubmit = async (values: Payload) => {
     try {
       await createCategory(values);
@@ -41,14 +41,14 @@ const CategoryModal = () => {
       );
     }
   };
-  
+
   const { handleSubmit, values, handleChange, errors, touched, handleBlur } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
-  
+
   return (
     <>
-      <Button 
-        onClick={onOpen} 
-        className="w-fit p-0 rounded-xl m-1 bg-green-500 hover:bg-green-600 h-8 px-3"
+      <Button
+        onClick={onOpen}
+        className="w-fit p-0 rounded-xl bg-green-500 hover:bg-green-600 h-8 px-3"
         size="sm"
       >
         <BiSolidCategory className="text-white" />

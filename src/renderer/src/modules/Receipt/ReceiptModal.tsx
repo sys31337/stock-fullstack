@@ -4,14 +4,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/s
 import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
-import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
-import { FcDebt, FcNews, FcPaid } from 'react-icons/fc';
+import { BiSolidCheckCircle } from 'react-icons/bi';
 import { AiFillFilePdf, AiOutlineMinus, AiOutlineClose } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
 import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
-import Any from '@web/shared/types/any';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
@@ -24,6 +22,9 @@ import Alert from '@web/shared/components/Alert';
 import { Payload } from '@web/shared/types/payload';
 import { useReceiptHold, HeldReceipt } from '@web/shared/contexts/ReceiptHoldContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@web/shared/components/ui/card';
+import { Label } from '@web/shared/components/ui/label';
+import { DatePicker } from '@web/shared/components/ui/date-picker';
+import { FileText, ShoppingCart, StickyNote } from 'lucide-react';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -79,15 +80,11 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
     tva: 19,
   }]);
 
-  // Load initial held data if available
   useEffect(() => {
     if (initialHeldData && isOpen) {
       setState(initialHeldData.state);
       setInitialValues(initialHeldData.values);
       setProductsValues(initialHeldData.productsValues);
-    } else if (isOpen && !initialHeldData) {
-      // Reset if opening new
-      // We rely on the useEffect below for latestBillNumber
     }
   }, [initialHeldData, isOpen]);
 
@@ -202,12 +199,11 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
 
   const handleMinimize = () => {
     holdReceipt({
-      values: values, // Current form values
+      values: values,
       productsValues: productsValues,
       state: state
     }, `Receipt #${values.orderId}`, heldReceiptId);
 
-    // Reset form
     setProductsValues([{
       id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
     }]);
@@ -235,9 +231,9 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="default"
+                    variant="outline"
                     size="icon"
-                    className="h-8 w-8 bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
+                    className="h-8 w-8 text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700"
                     onClick={handleMinimize}
                   >
                     <AiOutlineMinus className="w-4 h-4" />
@@ -249,9 +245,9 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="default"
+                    variant="outline"
                     size="icon"
-                    className="h-8 w-8 bg-red-500 text-white hover:bg-red-600 shadow-sm"
+                    className="h-8 w-8 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
                     onClick={onClose}
                   >
                     <AiOutlineClose className="w-4 h-4" />
@@ -263,91 +259,173 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
           </TooltipProvider>
         }
       >
-        <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
-          <CustomForm handleSubmit={handleSubmit} className="h-full flex flex-col gap-4" hideSubmit={true}>
-            {/* General Info Section */}
-            <Card className="border bg-white">
-              <CardContent className="pt-4 px-4 pb-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-                  <CustomInput
-                    name="orderId"
-                    label={t('number')}
-                    icon={BiLabel}
-                    handleChange={handleChange}
-                    handleBlur={handleBlur}
-                    value={values.orderId}
-                    errorMessage={errors.orderId && touched.orderId && errors.orderId}
-                  />
-                  <CustomInput
-                    name="billDate"
-                    label={t('date')}
-                    setFieldValue={setFieldValue}
-                    handleBlur={handleBlur}
-                    defaultValue={values.billDate}
-                    errorMessage={errors.billDate && touched.billDate && errors.billDate}
-                    isDate={true}
-                  />
-                  <div className="flex items-end gap-2">
-                    <CustomInput
-                      name="customer"
-                      label={t('customer')}
-                      setFieldValue={setFieldValue}
-                      onFocus={() => refetch()}
-                      handleBlur={handleBlur}
-                      value={values.customer}
-                      errorMessage={errors.customer && touched.customer && errors.customer}
-                      selectOptions={
-                        allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
-                      }
-                      isSelect={true}
-                      className="mb-0 w-full"
-                    />
-                    <CustomerModal />
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <CustomInput
-                      name="category"
-                      label={t('category')}
-                      setFieldValue={setFieldValue}
-                      onFocus={() => refetchCategories()}
-                      handleBlur={handleBlur}
-                      value={values.category}
-                      errorMessage={errors.category && touched.category && errors.category}
-                      selectOptions={
-                        allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
-                      }
-                      isSelect={true}
-                      className="mb-0 w-full"
-                    />
-                    <CategoryModal />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Products Section */}
-            <Card className="flex-1 border flex flex-col min-h-0 bg-white">
-              <CardHeader className="pb-2 pt-4 px-6">
-                <CardTitle className="text-lg font-medium flex justify-between items-center">
-                  {t('products')}
-                  <div className="text-sm font-normal text-muted-foreground">
-                    {productsValues.length} {t('items')}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-auto min-h-0 px-2 md:px-6 pb-2">
-                <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
-              </CardContent>
-            </Card>
-
-            {/* Summary & Totals Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Description */}
-              <Card className="lg:col-span-1 border bg-white">
-                <CardHeader className="pb-2 pt-4">
-                  <CardTitle className="text-base font-medium text-muted-foreground">{t('notes')}</CardTitle>
+        <CustomForm handleSubmit={handleSubmit} className="h-full" hideSubmit={true}>
+          <div className="flex h-[calc(100vh-100px)] gap-6 p-6 bg-gray-50/50 dark:bg-gray-900/50">
+            {/* LEFT COLUMN: Main Content */}
+            <div className="flex-1 flex flex-col gap-5 overflow-y-auto min-w-0 pr-1">
+              {/* Bill Info */}
+              <Card className="border bg-white shadow-sm">
+                <CardHeader className="pb-2 pt-3 px-5">
+                  <CardTitle className="text-xs font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
+                    <FileText className="h-3.5 w-3.5" />
+                    {t('billInfo')}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-5 pb-4">
+                  <div className="flex items-end gap-3">
+                    <div className="w-24 shrink-0">
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('number')}</Label>
+                      <CustomInput
+                        name="orderId"
+                        handleChange={handleChange}
+                        handleBlur={handleBlur}
+                        value={values.orderId}
+                        errorMessage={errors.orderId && touched.orderId && errors.orderId}
+                        className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:font-semibold [&_input]:h-8 [&_input]:text-xs"
+                      />
+                    </div>
+                    <div className="w-36 shrink-0">
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('date')}</Label>
+                      <DatePicker
+                        value={values.billDate ? new Date(values.billDate) : new Date()}
+                        onSelect={(date) => setFieldValue('billDate', date)}
+                      />
+                    </div>
+                    <div className="flex items-end gap-1.5 flex-1 min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('customer')}</Label>
+                        <CustomInput
+                          name="customer"
+                          setFieldValue={setFieldValue}
+                          onFocus={() => refetch()}
+                          handleBlur={handleBlur}
+                          value={values.customer}
+                          errorMessage={errors.customer && touched.customer && errors.customer}
+                          selectOptions={
+                            allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
+                          }
+                          isSelect={true}
+                          inputSize="sm"
+                          className="[&_>div>div]:rounded-lg"
+                        />
+                      </div>
+                      <CustomerModal />
+                    </div>
+                    <div className="flex items-end gap-1.5">
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('category')}</Label>
+                        <CustomInput
+                          name="category"
+                          setFieldValue={setFieldValue}
+                          onFocus={() => refetchCategories()}
+                          handleBlur={handleBlur}
+                          value={values.category}
+                          errorMessage={errors.category && touched.category && errors.category}
+                          selectOptions={
+                            allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
+                          }
+                          isSelect={true}
+                          inputSize="sm"
+                          className="[&_>div>div]:rounded-lg"
+                        />
+                      </div>
+                      <CategoryModal />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Products Section */}
+              <Card className="flex-1 border bg-white shadow-sm flex flex-col min-h-0">
+                <CardHeader className="pb-3 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center justify-between uppercase tracking-wide">
+                    <span className="flex items-center gap-2">
+                      <ShoppingCart className="h-4 w-4" />
+                      {t('products')}
+                    </span>
+                    <span className="text-xs font-normal normal-case tracking-normal bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
+                      {productsValues.length} {t('items')}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto min-h-0 px-5 pb-5">
+                  <ProductsTable productsValues={productsValues} setProductsValues={setProductsValues} />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* RIGHT COLUMN: Sticky Sidebar */}
+            <div className="w-80 flex-shrink-0 flex flex-col gap-4 sticky top-0 h-fit">
+              {/* Totals Card */}
+              <Card className="border bg-white shadow-sm">
+                <CardHeader className="pb-3 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    {t('summary')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-5 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">{t('totalHT')}</span>
+                    <span className="text-sm font-semibold text-gray-600">{state.orderTotalHT} <small className="text-muted-foreground">DZD</small></span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">{t('tva')}</span>
+                    <span className="text-sm font-semibold text-purple-600">{price(String(Number(state.orderTotalTTC) - Number(state.orderTotalHT)))} <small className="text-muted-foreground">DZD</small></span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">{t('debts')}</span>
+                    <span className="text-sm font-semibold text-orange-600">{state.orderDebts} <small className="text-muted-foreground">DZD</small></span>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-base font-bold text-gray-900">{t('totalTTC')}</span>
+                    <span className="text-xl font-bold text-primary">{state.orderTotalTTC} <small className="text-muted-foreground text-xs font-normal">DZD</small></span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Payment Card */}
+              <Card className="border bg-white shadow-sm">
+                <CardHeader className="pb-3 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    {t('paymentDetails')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-5 space-y-3">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('paidAmount')}</Label>
+                    <CustomInput
+                      name="orderPaid"
+                      type={'number'}
+                      handleChange={(e) => updateState({ orderPaid: e.target.value })}
+                      handleBlur={(e) => updateState({ orderPaid: e.target.value })}
+                      value={state.orderPaid}
+                      errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
+                      currency='DZD'
+                      className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:text-base [&_input]:font-semibold"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700 font-medium"
+                    onClick={(e) => { e.preventDefault(); setFullyPaid(); }}
+                  >
+                    <BiSolidCheckCircle className="h-4 w-4 mr-2" />
+                    {t('fully_paid')}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Notes Card */}
+              <Card className="border bg-white shadow-sm">
+                <CardHeader className="pb-3 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
+                    <StickyNote className="h-4 w-4" />
+                    {t('notes')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-5">
                   <CustomInput
                     name="description"
                     placeholder={t('addNotes')}
@@ -356,75 +434,22 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                     isTextArea={true}
                     defaultValue={values.description}
                     errorMessage={errors.description && touched.description && errors.description}
-                    className="min-h-[120px] bg-white resize-none"
+                    className="[&_textarea]:rounded-lg [&_textarea]:bg-gray-50 [&_textarea]:min-h-[80px] [&_textarea]:resize-none"
                   />
                 </CardContent>
               </Card>
 
-              {/* Financial Totals */}
-              <Card className="lg:col-span-2 border bg-white">
-                <CardHeader className="pb-2 pt-4">
-                  <CardTitle className="text-lg font-medium">{t('paymentDetails')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {/* Totals Summary Vertical List */}
-                    <div className="space-y-3 pb-4 border-b border-gray-100">
-                      <div className="flex justify-between items-center">
-                         <span className="text-muted-foreground">{t('totalHT')}</span>
-                         <span className="font-semibold text-gray-700">{state.orderTotalHT} <small>DZD</small></span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                         <span className="text-muted-foreground">{t('debts')}</span>
-                         <span className="font-semibold text-orange-600">{state.orderDebts} <small>DZD</small></span>
-                      </div>
-                      <div className="flex justify-between items-center pt-2">
-                         <span className="text-lg font-bold text-gray-900">{t('totalTTC')}</span>
-                         <span className="text-2xl font-bold text-primary">{state.orderTotalTTC} <small>DZD</small></span>
-                      </div>
-                    </div>
-
-                    {/* Payment Input & Actions */}
-                    <div className="flex flex-col gap-4">
-                      <div className="flex gap-3 items-end">
-                        <div className="flex-1">
-                          <CustomInput
-                            name="orderPaid"
-                            label={t('paidAmount')}
-                            type={'number'}
-                            handleChange={(e) => updateState({ orderPaid: e.target.value })}
-                            handleBlur={(e) => updateState({ orderPaid: e.target.value })}
-                            value={state.orderPaid}
-                            errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
-                            currency='DZD'
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-10 text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={(e) => { e.preventDefault(); setFullyPaid(); }}
-                          title={t('fully_paid')}
-                        >
-                          <span className="mr-2 font-medium">{t('fully_paid')}</span>
-                          <BiSolidCheckCircle className="h-5 w-5" />
-                        </Button>
-                      </div>
-
-                      <div className="flex justify-end pt-2">
-                        <Button
-                          size="lg"
-                          type="submit"
-                          className="w-full md:w-auto min-w-[200px] bg-gray-900 hover:bg-black text-white"
-                        >
-                           {t('submit')}
-                        </Button>
-                      </div>
-                    </div>
-                </CardContent>
-              </Card>
+              {/* Submit Button */}
+              <Button
+                size="lg"
+                type="submit"
+                className="w-full py-6 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-xl"
+              >
+                {t('submit')}
+              </Button>
             </div>
-          </CustomForm>
-        </div>
+          </div>
+        </CustomForm>
       </CustomModal>
       <Alert
         isOpen={isAlertOpen}
@@ -438,7 +463,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
               {t('close')}
             </Button>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
-              <a href={`/billpdf/${state.receiptBillId}`} target="_blank" rel="noreferrer">
+              <a href={`/billpdf/${state.receiptBillId}`}>
                 <AiFillFilePdf className="mr-2" /> {t('print')}
               </a>
             </Button>

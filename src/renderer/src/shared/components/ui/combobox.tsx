@@ -16,9 +16,10 @@ interface ComboboxProps {
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  size?: 'default' | 'sm'
 }
 
-export function Combobox({ options, value, onChange, placeholder = "Select option...", className }: ComboboxProps) {
+export function Combobox({ options, value, onChange, placeholder = "Select option...", className, size = 'default' }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -44,7 +45,10 @@ export function Combobox({ options, value, onChange, placeholder = "Select optio
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
       <div
-        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+        className={cn(
+          "flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+          size === 'sm' ? "h-8 text-xs py-0" : "h-10"
+        )}
         onClick={() => setOpen(!open)}
       >
         {selectedLabel || <span className="text-muted-foreground">{placeholder}</span>}

@@ -82,5 +82,12 @@
   "debts": "Dettes",
   "totalTTC": "Total TTC",
   "paidAmount": "Montant payé",
-  "number": "Numéro"
+  "number": "Numéro",
+  "billInfo": "Informations du bon",
+  "summary": "Résumé",
+  "searchProduct": "Rechercher un produit...",
+  "noProducts": "Aucun produit",
+  "clickToAdd": "Cliquez sur \"Ajouter un produit\" pour commencer",
+  "productExists": "Produit en double",
+  "productAlreadyInList": "Ce produit est déjà dans la liste"
 }

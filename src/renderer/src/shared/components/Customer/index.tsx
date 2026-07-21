@@ -17,10 +17,10 @@ const CustomerModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
-  
+
   const { mutateAsync: createCustomer } = useCreateCustomer();
   const { toast } = useToast();
-  
+
   const initialValues = {
     fullname: '',
     address: '',
@@ -31,7 +31,7 @@ const CustomerModal = () => {
     nar: '',
     type: 'Client',
   };
-  
+
   const onSubmit = async (values: Payload) => {
     try {
       await createCustomer(values);
@@ -48,15 +48,15 @@ const CustomerModal = () => {
       );
     }
   };
-  
+
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
   const selectOptions = [{ label: 'Client', value: 'Client' }, { label: 'Supplier', value: 'Supplier' }];
-  
+
   return (
     <>
-      <Button 
-        onClick={onOpen} 
-        className="w-fit p-0 rounded-xl m-1 bg-green-500 hover:bg-green-600 h-8 px-3"
+      <Button
+        onClick={onOpen}
+        className="w-fit p-0 rounded-xl bg-green-500 hover:bg-green-600 h-8 px-3"
         size="sm"
       >
         <FaUserPlus className="text-white" />

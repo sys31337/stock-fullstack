@@ -82,5 +82,12 @@
   "debts": "الديون",
   "totalTTC": "المجموع (شامل الضريبة)",
   "paidAmount": "المبلغ المدفوع",
-  "number": "الرقم"
+  "number": "الرقم",
+  "billInfo": "معلومات السند",
+  "summary": "الملخص",
+  "searchProduct": "بحث عن منتج...",
+  "noProducts": "لا توجد منتجات",
+  "clickToAdd": "انقر على \"إضافة منتج\" للبدء",
+  "productExists": "منتج مكرر",
+  "productAlreadyInList": "هذا المنتج موجود بالفعل في القائمة"
 }

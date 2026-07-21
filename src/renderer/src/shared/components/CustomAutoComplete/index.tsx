@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { cn } from '@web/shared/utils/cn';
 import Any from '@web/shared/types/any';
 import { Input } from '@web/shared/components/ui/input';
@@ -110,7 +109,7 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
         />
       </div>
 
-      {open && filteredItems.length > 0 && createPortal(
+      {open && filteredItems.length > 0 && (
         <div
             ref={dropdownRef}
             style={{
@@ -125,19 +124,16 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
                 <div
                     key={index}
                     className="cursor-pointer px-4 py-2 hover:bg-accent hover:text-accent-foreground text-sm transition-colors"
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                        e.preventDefault();
                         onSelectOption(item);
-                        // We don't setQuery here because onSelectOption usually updates the parent state which flows back via props.value
-                        // But if uncontrolled, we might want to.
-                        // Given usage, it seems controlled.
                         setOpen(false);
                     }}
                 >
                     {item[selector]}
                 </div>
             ))}
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );

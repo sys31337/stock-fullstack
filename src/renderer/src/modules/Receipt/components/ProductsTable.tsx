@@ -1,21 +1,11 @@
 import React from "react"
 import TableRows from "@web/modules/Receipt/components/TableRows";
 import { Button } from "@web/shared/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@web/shared/components/ui/table"
 import { t } from "i18next";
-import { BiTrash } from "react-icons/bi";
-import { price, randomId } from "@web/shared/functions/words";
+import { BiPlus } from "react-icons/bi";
+import { randomId } from "@web/shared/functions/words";
 import { IProduct } from "@web/shared/types/product";
-
-const decimalInputs = ['sellPrice_1', 'sellPrice_2', 'sellPrice_3', 'buyPrice', 'totalHT', 'totalTTC']
+import { Package } from "lucide-react";
 
 interface ProductsTableProps {
   productsValues: IProduct[];
@@ -41,6 +31,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
     }
     setProductsValues([...productsValues, rowsInput])
   }
+
   const deleteTableRows = (id: string) => {
     const index = productsValues.findIndex((item) => item.id === id)
     setProductsValues(productsValues.filter((_p, k) => k !== index));
@@ -60,11 +51,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
     const rowsInput = [...productsValues];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _productId, ...productData } = product;
-
     rowsInput[index] = {
       ...rowsInput[index],
       ...productData,
-      // Reset totals or recalculate? Previous code reset them to 0.
       totalHT: 0,
       totalTTC: 0
     };
@@ -73,62 +62,67 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
 
   const handleBlur = (index: number, e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const decimalInputs = ['sellPrice_1', 'sellPrice_2', 'sellPrice_3', 'buyPrice', 'totalHT', 'totalTTC'];
     if (decimalInputs.includes(name)) {
+      const formatted = parseFloat(value).toFixed(2);
       const rowsInput = [...productsValues];
       rowsInput[index] = {
         ...rowsInput[index],
-        [name]: price(value)
+        [name]: formatted
       };
       setProductsValues(rowsInput);
     }
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="w-full overflow-auto border rounded-md bg-white">
-        <Table>
-          <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead className="text-center w-[50px]">#</TableHead>
-            <TableHead className="text-center w-[40px]"><BiTrash size={16} className="mx-auto" /></TableHead>
-            <TableHead className="text-left w-[140px] pl-4">{t('barCode')}</TableHead>
-            <TableHead className="text-left min-w-[200px] pl-4">{t('designation')}</TableHead>
-            <TableHead className="text-center w-[80px]">{t('qty')}</TableHead>
-            <TableHead className="text-center w-[80px]">{t('units')}</TableHead>
-            <TableHead className="text-right w-[100px] pr-4">{t('buyPrice')}</TableHead>
-            <TableHead className="text-right w-[100px] pr-4 text-orange-600 font-medium">{t('sellPrice')} 1</TableHead>
-            <TableHead className="text-right w-[100px] pr-4 text-blue-600 font-medium">{t('sellPrice')} 2</TableHead>
-            <TableHead className="text-right w-[100px] pr-4 text-green-600 font-medium">{t('sellPrice')} 3</TableHead>
-            <TableHead className="text-center w-[80px]">{t('tva')}</TableHead>
-            <TableHead className="text-right w-[120px] pr-4">{t('totalHT')}</TableHead>
-            <TableHead className="text-right w-[120px] pr-4">{t('totalTTC')}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {
-            productsValues.map((data, index) => (
-              <TableRows
-                index={index}
-                key={index}
-                products={productsValues}
-                data={data}
-                deleteTableRows={deleteTableRows}
-                handleChange={handleChange}
-                handleProductSelect={handleProductSelect}
-                handleBlur={handleBlur}
-              />
-            ))
-          }
-        </TableBody>
-      </Table>
-      </div>
+    <div className="flex flex-col gap-1.5">
+      {/* Header row */}
+      {productsValues.length > 0 && (
+        <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider select-none">
+          <span className="w-5 shrink-0" />
+          <span className="w-5 shrink-0" />
+          <span className="w-[100px] shrink-0">{t('barCode')}</span>
+          <span className="flex-1 min-w-[140px]">{t('designation')}</span>
+          <span className="w-[50px] shrink-0 text-center">{t('qty')}</span>
+          <span className="w-[50px] shrink-0 text-center">{t('units')}</span>
+          <span className="w-[70px] shrink-0 text-center">{t('buyPrice')}</span>
+          <span className="w-[45px] shrink-0 text-center">TVA</span>
+          <span className="w-[65px] shrink-0 text-center text-orange-600">P.V 1</span>
+          <span className="w-[65px] shrink-0 text-center text-blue-600">P.V 2</span>
+          <span className="w-[65px] shrink-0 text-center text-green-600">P.V 3</span>
+          <span className="shrink-0 text-right ml-1">{t('total')}</span>
+        </div>
+      )}
+
+      {productsValues.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Package className="h-10 w-10 mb-2 opacity-40" />
+          <p className="text-sm">{t('noProducts')}</p>
+          <p className="text-xs">{t('clickToAdd')}</p>
+        </div>
+      )}
+
+      {productsValues.map((data, index) => (
+        <TableRows
+          index={index}
+          key={data.id}
+          products={productsValues}
+          data={data}
+          deleteTableRows={deleteTableRows}
+          handleChange={handleChange}
+          handleProductSelect={handleProductSelect}
+          handleBlur={handleBlur}
+        />
+      ))}
+
       <Button
         type="button"
-        variant="ghost"
-        className="w-full py-4 text-sm font-medium text-muted-foreground border-t border-dashed hover:bg-muted/50 rounded-none rounded-b-md"
+        variant="outline"
+        className="w-full py-3 border-dashed border-2 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-colors rounded-lg text-xs"
         onClick={addTableRows}
       >
-        + {t('addProduct')}
+        <BiPlus className="h-4 w-4 mr-1" />
+        {t('addProduct')}
       </Button>
     </div>
   )
