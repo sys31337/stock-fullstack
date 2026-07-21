@@ -13,7 +13,7 @@ import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useRef, useCallback } from 'react'
 import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFillRightCircle } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@web/shared/utils/cn'
@@ -56,14 +56,40 @@ const NAV_ITEMS: Array<NavItem> = [
   },
 ]
 
+const HoverPopover = ({ children, content, align = "center" }: { children: React.ReactNode; content: React.ReactNode; align?: "center" | "start" | "end" }) => {
+  const [open, setOpen] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleMouseEnter = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setOpen(true)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150)
+  }, [])
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        {children}
+      </PopoverTrigger>
+      <PopoverContent
+        align={align}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="p-0 border-0 shadow-xl bg-white dark:bg-gray-800"
+      >
+        {content}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 const Languages = ({ className }: { className?: string }) => (
   <div className={className}>
-    <Popover trigger={'hover'} placement={'bottom'}>
-      <PopoverTrigger className="text-sm font-medium hover:text-gray-900 dark:hover:text-white transition-colors">
-        {t('language')}
-      </PopoverTrigger>
-
-      <PopoverContent className="w-[150px] p-0 border-0 shadow-xl bg-white dark:bg-gray-800 rounded-md">
+    <HoverPopover
+      content={
         <div className="flex flex-col py-1">
           {languages.map(({ id, label, code }) => (
             <div
@@ -91,8 +117,12 @@ const Languages = ({ className }: { className?: string }) => (
             </div>
           ))}
         </div>
-      </PopoverContent>
-    </Popover>
+      }
+    >
+      <button className="text-sm font-medium hover:text-gray-900 dark:hover:text-white transition-colors">
+        {t('language')}
+      </button>
+    </HoverPopover>
   </div>
 )
 
@@ -174,21 +204,28 @@ const DesktopNav = () => {
     <div className="flex flex-row gap-4">
       {NAV_ITEMS.map((navItem, k) => (
         <div key={k}>
-          <Popover trigger={'hover'} placement={'bottom-start'}>
-            <PopoverTrigger className="p-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white hover:no-underline cursor-pointer">
-              {navItem.label}
-            </PopoverTrigger>
-
-            {navItem.children && (
-              <PopoverContent className="mt-2 border-0 shadow-xl bg-white dark:bg-gray-800 p-4 rounded-xl min-w-[384px]">
-                <div className="flex flex-col">
-                  {navItem.children.map((child, k) => (
-                    child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
-                  ))}
+          {navItem.children ? (
+            <HoverPopover
+              align="start"
+              content={
+                <div className="p-4 rounded-xl min-w-[384px]">
+                  <div className="flex flex-col">
+                    {navItem.children.map((child, k) => (
+                      child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
+                    ))}
+                  </div>
                 </div>
-              </PopoverContent>
-            )}
-          </Popover>
+              }
+            >
+              <button className="p-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white hover:no-underline cursor-pointer">
+                {navItem.label}
+              </button>
+            </HoverPopover>
+          ) : (
+            <a href={navItem.href} className="p-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white">
+              {navItem.label}
+            </a>
+          )}
         </div>
       ))}
     </div>

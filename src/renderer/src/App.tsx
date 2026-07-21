@@ -3,6 +3,7 @@ import Shortcuts from 'shortcuts';
 import { Route, Routes } from 'react-router-dom';
 import { PrivateRoute } from '@web/shared/components/Authentication';
 import AppSection from '@web/shared/components/AppSection';
+import { ToastProvider, ToastStateProvider } from '@web/shared/components/ui/use-toast';
 import './App.css';
 
 const shortcuts = new Shortcuts({
@@ -35,7 +36,7 @@ const App = () => {
 
   return (
     <Routes>
-      <Route path="connexion/*" element={<Authentication />} />
+      <Route path="connexion/*" element={<ToastProvider><ToastStateProvider><Authentication /></ToastStateProvider></ToastProvider>} />
       <Route element={<AppSection />}>
         <Route
           path="/*"

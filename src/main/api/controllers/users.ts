@@ -206,6 +206,15 @@ const logout = async (req: Request, res: Response) => {
   return res.sendStatus(200);
 };
 
+const getAllUsers = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await User.find().select('username fullname profilePicture');
+    return res.status(200).send(users);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export {
-  refreshUserToken, createAccount, login, logout, getCurrentUser, updateUser,
+  refreshUserToken, createAccount, login, logout, getCurrentUser, updateUser, getAllUsers,
 };

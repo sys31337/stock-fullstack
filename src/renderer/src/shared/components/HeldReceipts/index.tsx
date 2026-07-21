@@ -4,7 +4,7 @@ import { useReceiptHold, HeldReceipt } from '@web/shared/contexts/ReceiptHoldCon
 import ReceiptModal from '@web/modules/Receipt/ReceiptModal';
 import { t } from 'i18next';
 import { Button } from '@web/shared/components/ui/button';
-import { Tooltip } from '@web/shared/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip';
 
 const HeldReceipts: React.FC = () => {
   const { heldReceipts, removeHeldReceipt } = useReceiptHold();
@@ -45,19 +45,24 @@ const HeldReceipts: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <Tooltip content={t('close')}>
-                 <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeHeldReceipt(receipt.id);
-                    }}
-                  >
-                    <AiOutlineClose />
-                  </Button>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                       variant="ghost"
+                       size="icon"
+                       className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         removeHeldReceipt(receipt.id);
+                       }}
+                     >
+                       <AiOutlineClose />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('close')}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           ))}
         </div>

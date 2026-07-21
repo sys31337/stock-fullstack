@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  refreshUserToken, createAccount, login, logout, getCurrentUser, updateUser,
+  refreshUserToken, createAccount, login, logout, getCurrentUser, updateUser, getAllUsers,
 } from '@api/controllers/users';
 import { auth } from '@api/middlewares/auth';
 import {
@@ -10,6 +10,7 @@ import {
 const router = express.Router();
 
 router.route('/')
+  .get(getAllUsers)
   .post(createAccountValidator, createAccount)
   .put(auth, updateUserValidator, updateUser);
 

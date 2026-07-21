@@ -9,6 +9,11 @@ const languages = [
     label: 'English',
     code: 'en',
   },
+  {
+    id: 3,
+    label: 'العربية',
+    code: 'ar',
+  },
 ];
 
 export default languages;

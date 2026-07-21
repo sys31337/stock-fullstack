@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@web/shared/components/ui/button'
-import { Tooltip } from '@web/shared/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip'
 import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
@@ -229,30 +229,38 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         onClose={onClose}
         title={t('newReceiptBill')}
         headerActions={
-          <div className="flex items-center gap-2">
-            <Tooltip content={t('minimize')}>
-              <Button
-                type="button"
-                variant="default"
-                size="icon"
-                className="h-8 w-8 bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
-                onClick={handleMinimize}
-              >
-                <AiOutlineMinus className="w-4 h-4" />
-              </Button>
-            </Tooltip>
-            <Tooltip content={t('close')}>
-              <Button
-                type="button"
-                variant="default"
-                size="icon"
-                className="h-8 w-8 bg-red-500 text-white hover:bg-red-600 shadow-sm"
-                onClick={onClose}
-              >
-                <AiOutlineClose className="w-4 h-4" />
-              </Button>
-            </Tooltip>
-          </div>
+          <TooltipProvider>
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="icon"
+                    className="h-8 w-8 bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
+                    onClick={handleMinimize}
+                  >
+                    <AiOutlineMinus className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('minimize')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="icon"
+                    className="h-8 w-8 bg-red-500 text-white hover:bg-red-600 shadow-sm"
+                    onClick={onClose}
+                  >
+                    <AiOutlineClose className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('close')}</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         }
       >
         <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
