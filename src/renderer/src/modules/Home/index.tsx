@@ -11,26 +11,33 @@ const Home: React.FC = () => {
   const { fullname } = userInfo;
 
   return (
-    <div className="p-4">
-      <div className="container max-w-6xl mx-auto text-center space-y-4">
-        <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
-          {t('welcomeUser', { fullname })}
-        </h1>
+    <div className="flex flex-col h-full">
+      <div className="px-8 pt-8 pb-2">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {t('welcomeUser', { fullname })}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('dashboard')}
+          </p>
+        </div>
       </div>
-      <div className="container max-w-[90rem] mx-auto mt-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          <Receipt />
-          {modules.map(({ label, icon, href, keyBind, bg }, key) => (
-            <Card
-              key={key}
-              label={label}
-              keyBind={keyBind}
-              icon={icon}
-              href={href}
-              bg={bg}
-            />
-          ))}
-          <AllReceiptBills />
+      <div className="flex-1 px-8 pb-8 pt-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Receipt />
+            {modules.map(({ label, icon, href, keyBind, bg }, key) => (
+              <Card
+                key={key}
+                label={label}
+                keyBind={keyBind}
+                icon={icon}
+                href={href}
+                bg={bg}
+              />
+            ))}
+            <AllReceiptBills />
+          </div>
         </div>
       </div>
     </div>

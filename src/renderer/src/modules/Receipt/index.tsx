@@ -17,35 +17,45 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar }) => {
     <div>
       {isTopBar ? (
         <div
-          className="cursor-pointer group block p-2 px-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-900"
+          className="cursor-pointer group block p-2 px-3 rounded-md hover:bg-accent transition-colors"
           onClick={onOpen}
           role="group"
         >
           <div className="flex items-center">
             <div>
-              <p className="font-medium transition-all duration-300 group-hover:text-blue-500">
+              <p className="text-sm font-medium transition-colors group-hover:text-primary">
                 {t('newReceiptBill')}
               </p>
-              <p className="text-sm">{t('newReceiptBillLabel')}</p>
+              <p className="text-xs text-muted-foreground">{t('newReceiptBillLabel')}</p>
             </div>
-            <div className="flex-1 flex justify-end items-center transition-all duration-300 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
-              <AiFillRightCircle className="text-blue-400 w-5 h-5" />
+            <div className="flex-1 flex justify-end items-center transition-all duration-200 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
+              <AiFillRightCircle className="text-primary w-4 h-4" />
             </div>
           </div>
         </div>
       ) : (
         <div
           onClick={onOpen}
-          className="cursor-pointer w-full border border-gray-200 rounded-3xl relative bg-blue-400 mx-5 p-5 hover:shadow-lg transition-shadow"
+          className={cn(
+            "group relative block w-full rounded-xl border border-border bg-card p-6",
+            "shadow-sm transition-all duration-200 cursor-pointer",
+            "hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5"
+          )}
         >
-          <div className="flex items-center justify-center text-sm absolute bg-gray-800 text-white -top-2 -right-2 p-5 rounded-2xl h-8 w-8">
-            F1
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center justify-center rounded-md bg-muted px-2 py-0.5 text-xs font-mono font-medium text-muted-foreground border border-border">
+              F1
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="min-w-[5rem] min-h-[5rem] flex items-center justify-center text-white rounded-2xl bg-white">
-              <img src="/assets/icons/buy.gif" width={64} alt="Buy" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+              <img src="/assets/icons/buy.gif" width={40} alt="Buy" />
             </div>
-            <h2 className="text-xl font-bold text-white">{t('newReceiptBill')}</h2>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                {t('newReceiptBill')}
+              </h3>
+            </div>
           </div>
         </div>
       )}

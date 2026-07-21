@@ -55,19 +55,19 @@ const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
       {isTopBar ? (
         <div
           onClick={onOpen}
-          className="group block p-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-900"
+          className="group block p-2.5 px-3 rounded-lg cursor-pointer hover:bg-accent transition-colors"
         >
           <div className="flex flex-row items-center">
             <div>
-              <p className="font-medium transition-all duration-300 group-hover:text-blue-500">
+              <p className="text-sm font-medium transition-colors group-hover:text-primary">
                 {t('productsList')}
               </p>
-              <p className="text-sm">{t('productsListSublabel')}</p>
+              <p className="text-xs text-muted-foreground">{t('productsListSublabel')}</p>
             </div>
             <div
-              className="flex-1 flex justify-end items-center transition-all duration-300 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"
+              className="flex-1 flex justify-end items-center transition-all duration-200 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"
             >
-              <AiFillRightCircle className="w-5 h-5 text-blue-400" />
+              <AiFillRightCircle className="w-4 h-4 text-primary" />
             </div>
           </div>
         </div>

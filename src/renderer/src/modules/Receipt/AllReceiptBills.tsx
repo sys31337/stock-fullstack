@@ -13,7 +13,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@web/shared/components/ui/dropdown-menu"
 import { Button } from "@web/shared/components/ui/button"
@@ -29,9 +28,8 @@ import EditReceiptBill from '@web/modules/Receipt/EditReceiptBill';
 import { IBill } from '@web/shared/types/bills';
 import { ICategory } from '@web/shared/types/category';
 import { ICustomer } from '@web/shared/types/customer';
-import { Card, CardContent, CardHeader, CardTitle } from '@web/shared/components/ui/card';
+import { Card } from '@web/shared/components/ui/card';
 import { cn } from '@web/shared/utils/cn';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip';
 
 
 const ReceiptBillActions = ({ billId }: { billId: string }) => {
@@ -58,10 +56,10 @@ const ReceiptBillActions = ({ billId }: { billId: string }) => {
                 {t('print')}
              </a>
           </DropdownMenuItem>
-           <DropdownMenuItem className="text-red-600 focus:text-red-600">
+           <DropdownMenuItem className="text-destructive focus:text-destructive">
              <AiFillDelete className="mr-2 h-4 w-4" />
              {t('delete')}
-          </DropdownMenuItem>
+           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -109,35 +107,45 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
     <>
       {isTopBar ? (
         <div
-          className="cursor-pointer group block p-2 px-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-900"
+          className="cursor-pointer group block p-2 px-3 rounded-md hover:bg-accent transition-colors"
           onClick={onOpen}
           role="group"
         >
           <div className="flex flex-row items-center">
             <div>
-              <p className="font-medium transition-all duration-300 group-hover:text-blue-500">
+              <p className="text-sm font-medium transition-colors group-hover:text-primary">
                 {t('allReceiptBill')}
               </p>
-              <p className="text-sm text-gray-500">{t('allReceiptBillLabel')}</p>
+              <p className="text-xs text-muted-foreground">{t('allReceiptBillLabel')}</p>
             </div>
-            <div className="flex-1 flex justify-end items-center transition-all duration-300 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
-              <AiFillRightCircle className="text-blue-400 w-5 h-5" />
+            <div className="flex-1 flex justify-end items-center transition-all duration-200 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0">
+              <AiFillRightCircle className="text-primary w-4 h-4" />
             </div>
           </div>
         </div>
       ) : (
         <div
           onClick={onOpen}
-          className="cursor-pointer w-full border border-gray-200 rounded-3xl relative bg-blue-400 mx-5 p-5 shadow-sm hover:shadow-md transition-shadow"
+          className={cn(
+            "group relative block w-full rounded-xl border border-border bg-card p-6",
+            "shadow-sm transition-all duration-200 cursor-pointer",
+            "hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5"
+          )}
         >
-          <div className="absolute top-[-8px] right-[-8px] bg-gray-800 text-white p-2 rounded-2xl h-8 w-8 flex items-center justify-center text-sm font-bold">
-            F1
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center justify-center rounded-md bg-muted px-2 py-0.5 text-xs font-mono font-medium text-muted-foreground border border-border">
+              F1
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="min-w-[5rem] min-h-[5rem] flex items-center justify-center text-white rounded-2xl bg-white">
-              <img src="/assets/icons/inventory.gif" width={64} alt="Inventory" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-teal-50">
+              <img src="/assets/icons/inventory.gif" width={40} alt="Inventory" />
             </div>
-            <h2 className="text-xl font-bold text-white">{t('allReceiptBill')}</h2>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                {t('allReceiptBill')}
+              </h3>
+            </div>
           </div>
         </div>
       )}
@@ -147,75 +155,75 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar }) => {
         onClose={onClose}
         title={t('allReceiptBill')}
       >
-        <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
+        <div className="h-full bg-background p-4">
           <Card className="h-full flex flex-col border-none shadow-none bg-transparent">
             <div className="flex justify-between items-center mb-4 gap-4">
                <div className="relative w-full max-w-sm">
-                  <AiOutlineSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <AiOutlineSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder={t('search')}
-                    className="pl-9 bg-white"
+                    className="pl-9"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                   />
                </div>
-               <div className="text-sm text-gray-500">
+               <div className="text-sm text-muted-foreground">
                   {filteredBills.length} {t('records')}
                </div>
             </div>
 
-            <Card className="flex-1 overflow-hidden border bg-white">
+            <Card className="flex-1 overflow-hidden border bg-card">
               <div className="h-full overflow-auto">
                 <Table>
-                  <TableHeader className="bg-gray-50 sticky top-0 z-10">
+                  <TableHeader className="bg-muted/50 sticky top-0 z-10">
                     <TableRow>
-                      <TableHead className="w-[100px] font-semibold text-gray-700">{t('id')}</TableHead>
-                      <TableHead className="font-semibold text-gray-700">{t('customer')}</TableHead>
-                      <TableHead className="font-semibold text-gray-700">{t('date')}</TableHead>
-                      <TableHead className="font-semibold text-gray-700">{t('items')}</TableHead>
-                      <TableHead className="font-semibold text-gray-700">{t('category')}</TableHead>
-                      <TableHead className="text-right font-semibold text-gray-700">{t('total')}</TableHead>
-                      <TableHead className="w-[150px] text-center font-semibold text-gray-700">{t('actions')}</TableHead>
+                      <TableHead className="w-[100px] font-semibold">{t('id')}</TableHead>
+                      <TableHead className="font-semibold">{t('customer')}</TableHead>
+                      <TableHead className="font-semibold">{t('date')}</TableHead>
+                      <TableHead className="font-semibold">{t('items')}</TableHead>
+                      <TableHead className="font-semibold">{t('category')}</TableHead>
+                      <TableHead className="text-right font-semibold">{t('total')}</TableHead>
+                      <TableHead className="w-[150px] text-center font-semibold">{t('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {!isFetched ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                           {t('loading')}...
                         </TableCell>
                       </TableRow>
                     ) : filteredBills.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center text-gray-500">
+                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                           {t('noRecordsFound')}
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredBills.slice(startIndex, endIndex).map(({ _id, orderId, customer, billDate, products, category, orderTotalTTC }, k) => (
-                        <TableRow key={k} className="hover:bg-gray-50/80 transition-colors data-[state=selected]:bg-gray-100">
-                          <TableCell className="font-medium">#{orderId}</TableCell>
+                        <TableRow key={k} className="hover:bg-muted/50 transition-colors data-[state=selected]:bg-muted">
+                          <TableCell className="font-medium font-mono text-xs">#{orderId}</TableCell>
                           <TableCell>
                              <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
                                    {(customer as ICustomer)?.fullname?.[0]?.toUpperCase() || 'C'}
                                 </div>
-                                <span className="font-medium text-gray-700">{(customer as ICustomer)?.fullname || t('counter')}</span>
+                                <span className="font-medium">{(customer as ICustomer)?.fullname || t('counter')}</span>
                              </div>
                           </TableCell>
-                          <TableCell className="text-gray-500">{dayjs(billDate).format('DD/MM/YYYY')}</TableCell>
+                          <TableCell className="text-muted-foreground">{dayjs(billDate).format('DD/MM/YYYY')}</TableCell>
                           <TableCell>
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
                               {products.length} {products.length === 1 ? t('item') : t('items')}
                             </span>
                           </TableCell>
                           <TableCell>
-                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
                                {(category as ICategory)?.name || t('undefined')}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right font-bold text-gray-900">{price(orderTotalTTC)} <span className="text-xs font-normal text-gray-500">DZD</span></TableCell>
+                          <TableCell className="text-right font-bold">{price(orderTotalTTC)} <span className="text-xs font-normal text-muted-foreground">DZD</span></TableCell>
                           <TableCell className="text-center">
                              <ReceiptBillActions billId={_id} />
                           </TableCell>

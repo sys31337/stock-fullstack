@@ -78,7 +78,7 @@ const HoverPopover = ({ children, content, align = "center" }: { children: React
         align={align}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="p-0 border-0 shadow-xl bg-white dark:bg-gray-800"
+        className="p-0 border border-border shadow-xl bg-popover text-popover-foreground rounded-xl w-auto"
       >
         {content}
       </PopoverContent>
@@ -90,37 +90,34 @@ const Languages = ({ className }: { className?: string }) => (
   <div className={className}>
     <HoverPopover
       content={
-        <div className="flex flex-col py-1">
+        <div className="flex flex-col py-1.5">
           {languages.map(({ id, label, code }) => (
             <div
               key={id}
               role={'group'}
-              className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded-md mx-1"
+              className="flex items-center gap-3 p-2 px-3 mx-1.5 rounded-lg hover:bg-accent cursor-pointer transition-colors"
               onClick={() => {
                 i18next.changeLanguage(code);
                 // eslint-disable-next-line no-restricted-globals
                 location.reload();
               }}
             >
-              <div className="flex items-center">
-                <div className="flex items-center">
-                  <img
-                    className="w-8 h-8 rounded-full mr-3"
-                    src={`/assets/${code}.svg`}
-                    alt={label}
-                  />
-                  <span className="font-medium transition-colors group-hover:text-blue-400">
-                    {label}
-                  </span>
-                </div>
-              </div>
+              <img
+                className="w-6 h-6 rounded-full ring-2 ring-border"
+                src={`/assets/${code}.svg`}
+                alt={label}
+              />
+              <span className="text-sm font-medium text-foreground">
+                {label}
+              </span>
             </div>
           ))}
         </div>
       }
     >
-      <button className="text-sm font-medium hover:text-gray-900 dark:hover:text-white transition-colors">
+      <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
         {t('language')}
+        <AiOutlineDown className="h-3 w-3" />
       </button>
     </HoverPopover>
   </div>
@@ -150,46 +147,54 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   };
 
   return (
-    <div className="w-full">
-      <div className="bg-white dark:bg-gray-800 text-gray-600 dark:text-white min-h-[60px] py-2 px-4 border-b border-gray-200 dark:border-gray-900 flex items-center">
-        <div className="flex flex-1 md:hidden ml-[-8px]">
+    <div className="w-full shrink-0">
+      <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50 flex items-center px-4 sm:px-6">
+        <div className="flex items-center md:hidden mr-2">
           <Button
             onClick={onToggle}
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             aria-label={'Toggle Navigation'}
           >
-            {isOpen ? <AiOutlineClose className="w-5 h-5" /> : <AiOutlineMore className="w-5 h-5" />}
+            {isOpen ? <AiOutlineClose className="h-4 w-4" /> : <AiOutlineMore className="h-4 w-4" />}
           </Button>
         </div>
-        
-        <div className="flex flex-1 justify-center md:justify-between items-center px-5">
-          <div className="flex-1 flex justify-end md:justify-start text-center md:text-left font-heading text-gray-800 dark:text-white">
-            Logo
-          </div>
 
-          <div className="hidden md:flex flex-1 justify-center">
-            <DesktopNav />
-          </div>
-
-          <div className="flex items-center flex-1 justify-end gap-2">
-            <Languages className="mr-2" />
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onLogout}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-            >
-              <AiOutlinePoweroff className="mr-1" /> {t('logout')}
-            </Button>
+        <div className="flex items-center mr-6">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-xs font-bold text-primary-foreground">S</span>
+            </div>
+            <span className="text-sm font-semibold tracking-tight text-foreground hidden sm:block">
+              SoluStock
+            </span>
           </div>
         </div>
-      </div>
+
+        <div className="hidden md:flex items-center gap-0.5 mr-auto">
+          <DesktopNav />
+        </div>
+
+        <div className="flex items-center gap-0.5 ml-auto">
+          <Languages />
+          <div className="w-px h-5 bg-border mx-1.5" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onLogout}
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5 h-8 px-2.5"
+          >
+            <AiOutlinePoweroff className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-sm">{t('logout')}</span>
+          </Button>
+        </div>
+      </header>
 
       {/* Mobile Nav Collapse */}
       <div className={cn(
-        "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
-        isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        "md:hidden overflow-hidden transition-all duration-200 ease-in-out border-b border-border bg-card",
+        isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0 border-b-0"
       )}>
         <MobileNav />
       </div>
@@ -201,14 +206,14 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
 
 const DesktopNav = () => {
   return (
-    <div className="flex flex-row gap-4">
+    <>
       {NAV_ITEMS.map((navItem, k) => (
         <div key={k}>
           {navItem.children ? (
             <HoverPopover
               align="start"
               content={
-                <div className="p-4 rounded-xl min-w-[384px]">
+                <div className="p-2 min-w-[320px]">
                   <div className="flex flex-col">
                     {navItem.children.map((child, k) => (
                       child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
@@ -217,18 +222,19 @@ const DesktopNav = () => {
                 </div>
               }
             >
-              <button className="p-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white hover:no-underline cursor-pointer">
+              <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors cursor-pointer">
                 {navItem.label}
+                <AiOutlineDown className="h-3 w-3 opacity-50" />
               </button>
             </HoverPopover>
           ) : (
-            <a href={navItem.href} className="p-2 text-sm font-medium text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white">
+            <a href={navItem.href} className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
               {navItem.label}
             </a>
           )}
         </div>
       ))}
-    </div>
+    </>
   )
 }
 
@@ -236,26 +242,24 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
   return (
     <a
       href={href}
-      className="group block p-2 px-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-900 transition-colors"
+      className="group flex items-center gap-3 p-2.5 px-3 rounded-lg hover:bg-accent transition-colors"
     >
-      <div className="flex items-center">
-        <div>
-          <p className="font-medium transition-colors group-hover:text-blue-500 text-gray-900 dark:text-gray-100">
-            {label}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{subLabel}</p>
-        </div>
-        <div className="flex-1 flex justify-end items-center opacity-0 transform -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-          <AiFillRightCircle className="w-5 h-5 text-blue-400" />
-        </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium transition-colors group-hover:text-primary text-foreground truncate">
+          {label}
+        </p>
+        {subLabel && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{subLabel}</p>
+        )}
       </div>
+      <AiFillRightCircle className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary shrink-0 transition-colors" />
     </a>
   )
 }
 
 const MobileNav = () => {
   return (
-    <div className="bg-white dark:bg-gray-800 p-4 block md:hidden">
+    <div className="p-3 block md:hidden">
       {NAV_ITEMS.map((navItem, k) => (
         <MobileNavItem key={k} {...navItem} />
       ))}
@@ -268,11 +272,11 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
   const onToggle = () => setIsOpen(!isOpen);
 
   return (
-    <div className="flex flex-col gap-4" onClick={children && onToggle}>
-      <div className="py-2 flex justify-between items-center hover:no-underline cursor-pointer">
+    <div className="flex flex-col" onClick={children && onToggle}>
+      <div className="py-2 px-2 flex justify-between items-center hover:bg-accent rounded-lg cursor-pointer transition-colors">
         <a 
           href={href ?? '#'} 
-          className="font-semibold text-gray-600 dark:text-gray-200"
+          className="text-sm font-medium text-foreground"
           onClick={(e) => {
              if (children) {
                  e.preventDefault();
@@ -285,7 +289,7 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
         {children && (
           <AiOutlineDown
             className={cn(
-              "w-6 h-6 transition-transform duration-250 ease-in-out",
+              "w-4 h-4 text-muted-foreground transition-transform duration-200 ease-in-out",
               isOpen ? "rotate-180" : ""
             )}
           />
@@ -293,13 +297,13 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
       </div>
 
       <div className={cn(
-        "overflow-hidden transition-all duration-300 ease-in-out pl-4 border-l border-gray-200 dark:border-gray-700 mt-0",
-        isOpen ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"
+        "overflow-hidden transition-all duration-200 ease-in-out pl-3 border-l-2 border-primary/20 ml-3",
+        isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
       )}>
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col items-start py-1">
           {children &&
             children.map((child, k) => (
-              <a key={k} className="py-2 block w-full" href={child.href}>
+              <a key={k} className="py-1.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md block w-full transition-colors" href={child.href}>
                 {child.label}
               </a>
             ))}
