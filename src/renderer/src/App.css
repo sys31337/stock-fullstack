@@ -128,7 +128,7 @@ body,
   background: hsl(var(--card));
   border-bottom: 1px solid hsl(var(--border));
   position: relative;
-  z-index: 100;
+  z-index: 10;
   user-select: none;
 }
 
