@@ -13,7 +13,7 @@ const Home: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       <div className="px-8 pt-8 pb-2">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t('welcomeUser', { fullname })}
           </h1>
@@ -23,8 +23,8 @@ const Home: React.FC = () => {
         </div>
       </div>
       <div className="flex-1 px-8 pb-8 pt-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Receipt />
             {modules.map(({ label, icon, href, keyBind, bg }, key) => (
               <Card
