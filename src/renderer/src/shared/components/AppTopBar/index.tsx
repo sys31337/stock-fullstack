@@ -161,27 +161,22 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
           </Button>
         </div>
 
-        <div className="flex items-center mr-6">
+        <div className="flex items-center flex-1 mr-6">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-xs font-bold text-primary-foreground">S</span>
-            </div>
-            <span className="text-sm font-semibold tracking-tight text-foreground hidden sm:block">
-              SoluStock
-            </span>
+            <img src="/assets/logo-h.png" alt="SoluStock" className="h-12 rounded-lg object-contain" />
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-0.5 mr-auto">
+        <div className="hidden md:flex items-center flex-1 gap-0.5 mr-auto">
           <DesktopNav />
         </div>
 
         <div className="flex items-center gap-0.5 ml-auto">
           <Languages />
           <div className="w-px h-5 bg-border mx-1.5" />
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onLogout}
             className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5 h-8 px-2.5"
           >
@@ -198,7 +193,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
       )}>
         <MobileNav />
       </div>
-      
+
       {children}
     </div>
   )
@@ -274,8 +269,8 @@ const MobileNavItem = ({ label, children, href }: NavItem) => {
   return (
     <div className="flex flex-col" onClick={children && onToggle}>
       <div className="py-2 px-2 flex justify-between items-center hover:bg-accent rounded-lg cursor-pointer transition-colors">
-        <a 
-          href={href ?? '#'} 
+        <a
+          href={href ?? '#'}
           className="text-sm font-medium text-foreground"
           onClick={(e) => {
              if (children) {

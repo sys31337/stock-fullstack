@@ -14,18 +14,16 @@ const AppSection: React.FC = () => {
     <ReceiptHoldProvider>
       <ToastProvider>
         <ToastStateProvider>
-          <div className="w-screen h-screen bg-background overflow-x-hidden">
-            <div className="h-full flex flex-col">
-              <AppTopBar>
-                <div className="flex-1 overflow-auto">
-                  <Suspense fallback={<Loading />}>
-                    <Outlet context={[currentPageTitle, setCurrentPageTitle, currentProfilePicture, setCurrentProfilePicture]} />
-                  </Suspense>
-                </div>
-              </AppTopBar>
-            </div>
-            <HeldReceipts />
+          <div className="w-full h-full flex flex-col overflow-hidden">
+            <AppTopBar>
+              <div className="flex-1 overflow-auto h-full">
+                <Suspense fallback={<Loading />}>
+                  <Outlet context={[currentPageTitle, setCurrentPageTitle, currentProfilePicture, setCurrentProfilePicture]} />
+                </Suspense>
+              </div>
+            </AppTopBar>
           </div>
+          <HeldReceipts />
         </ToastStateProvider>
       </ToastProvider>
     </ReceiptHoldProvider>

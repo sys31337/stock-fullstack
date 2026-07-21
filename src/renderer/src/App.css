@@ -97,3 +97,130 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+/* Custom Frame */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.app-frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+/* Custom Title Bar */
+.custom-titlebar {
+  height: 38px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  background: hsl(var(--card));
+  border-bottom: 1px solid hsl(var(--border));
+  position: relative;
+  z-index: 100;
+  user-select: none;
+}
+
+.custom-titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 14px;
+}
+
+.custom-titlebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.custom-titlebar-drag {
+  flex: 1;
+  height: 100%;
+}
+
+.custom-titlebar-drag:active {
+  cursor: grabbing;
+}
+
+.custom-titlebar-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.custom-titlebar-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: opacity 0.15s ease;
+}
+
+.custom-titlebar-btn:hover {
+  opacity: 0.8;
+}
+
+.custom-titlebar-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.custom-titlebar-buttons:hover .custom-titlebar-btn::after {
+  opacity: 1;
+}
+
+.custom-titlebar-btn-close {
+  background: #ff5f57;
+}
+
+.custom-titlebar-btn-close::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1l6 6M7 1l-6 6' stroke='%23800' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.custom-titlebar-btn-minimize {
+  background: #febc2e;
+}
+
+.custom-titlebar-btn-minimize::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 4h6' stroke='%23995700' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.custom-titlebar-btn-maximize {
+  background: #28c840;
+}
+
+.custom-titlebar-btn-maximize::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1.5 1.5h5v5h-5z' stroke='%23006500' stroke-width='1' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}

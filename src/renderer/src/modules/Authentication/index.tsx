@@ -91,10 +91,8 @@ const Authentication = () => {
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
-          <div className="w-24 h-24 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-8 ring-1 ring-white/20">
-            <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
+          <div className="w-24 h-24 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-8 ring-1 ring-white/20 overflow-hidden">
+            <img src="/assets/logo.png" alt="SoluStock" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">SoluStock 2.0</h1>
           <p className="text-blue-100 text-lg text-center max-w-sm leading-relaxed">
@@ -122,10 +120,8 @@ const Authentication = () => {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
+              <img src="/assets/logo-h.png" alt="SoluStock" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-bold tracking-tight">SoluStock</span>
           </div>

@@ -1,5 +1,5 @@
 import {
-  app, shell, BrowserWindow, dialog, ipcMain,
+  app, shell, BrowserWindow, dialog, ipcMain, screen,
 } from 'electron';
 import electronReloader from 'electron-reloader';
 import { join } from 'path';
@@ -16,9 +16,7 @@ function createWindow(): void {
     width: 900,
     height: 670,
     show: false,
-    // autoHideMenuBar: true,
     icon: join(__dirname, './assets/logo.ico'),
-    // kiosk: true,
     webPreferences: {
       allowRunningInsecureContent: true,
       preload: join(__dirname, '../preload/index.js'),
@@ -30,7 +28,9 @@ function createWindow(): void {
       webSecurity: false,
       contextIsolation: false,
     },
-    frame: true,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
   });
 
   mainWindow.on('ready-to-show', () => {
@@ -50,6 +50,36 @@ function createWindow(): void {
 
   ipcMain.on('close', () => app.quit());
   ipcMain.on('minimize', () => mainWindow.minimize());
+  ipcMain.on('maximize', () => {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  });
+  ipcMain.handle('isMaximized', () => mainWindow.isMaximized());
+
+  let dragOffset: { x: number; y: number } | null = null;
+  ipcMain.on('drag-start', () => {
+    const [winX, winY] = mainWindow.getPosition();
+    const mouse = screen.getCursorScreenPoint();
+    dragOffset = { x: mouse.x - winX, y: mouse.y - winY };
+  });
+  ipcMain.on('drag-move', () => {
+    if (!dragOffset) return;
+    const mouse = screen.getCursorScreenPoint();
+    mainWindow.setPosition(mouse.x - dragOffset.x, mouse.y - dragOffset.y);
+  });
+  ipcMain.on('drag-end', () => {
+    dragOffset = null;
+  });
+
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send('maximize-change', true);
+  });
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send('maximize-change', false);
+  });
 
   mainWindow.maximize();
 }
