@@ -89,5 +89,20 @@
   "noProducts": "No products yet",
   "clickToAdd": "Click \"Add Product\" to get started",
   "productExists": "Duplicate product",
-  "productAlreadyInList": "This product is already in the list"
+  "productAlreadyInList": "This product is already in the list",
+  "home": "Home",
+  "reception": "Reception",
+  "commande": "Commande",
+  "livraison": "Livraison",
+  "factures": "Factures",
+  "tiers": "Tiers",
+  "clients": "Clients",
+  "suppliers": "Suppliers",
+  "newReceiptBillMenu": "New Receipt",
+  "allReceiptBillsMenu": "All Receipts",
+  "newOrderMenu": "New Order",
+  "newDeliveryNoteMenu": "New Delivery Note",
+  "newInvoiceMenu": "New Invoice",
+  "dashboard": "Dashboard",
+  "comingSoon": "Coming soon"
 }

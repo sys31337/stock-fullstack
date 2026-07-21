@@ -89,5 +89,20 @@
   "noProducts": "لا توجد منتجات",
   "clickToAdd": "انقر على \"إضافة منتج\" للبدء",
   "productExists": "منتج مكرر",
-  "productAlreadyInList": "هذا المنتج موجود بالفعل في القائمة"
+  "productAlreadyInList": "هذا المنتج موجود بالفعل في القائمة",
+  "home": "الرئيسية",
+  "reception": "استلام",
+  "commande": "طلب",
+  "livraison": "تسليم",
+  "factures": "فواتير",
+  "tiers": " الأطراف",
+  "clients": "العملاء",
+  "suppliers": "الموردين",
+  "newReceiptBillMenu": "سند استلام جديد",
+  "allReceiptBillsMenu": "جميع سندات الاستلام",
+  "newOrderMenu": "طلب جديد",
+  "newDeliveryNoteMenu": "سند تسليم جديد",
+  "newInvoiceMenu": "فاتورة جديدة",
+  "dashboard": "لوحة التحكم",
+  "comingSoon": "قريباً"
 }

@@ -20,12 +20,15 @@ import { IProduct } from '@web/shared/types/product';
 
 interface ProductsProps {
   isTopBar?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const onOpen = () => setIsOpen(true);
-  const onClose = () => setIsOpen(false);
+const Products: React.FC<ProductsProps> = ({ isTopBar, open: controlledOpen, onOpenChange }) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
+  const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
   const { data: getProducts, isFetched } = useGetAllProducts();
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,46 +53,52 @@ const Products: React.FC<ProductsProps> = ({ isTopBar }) => {
     ))
     : products;
 
+  const isControlled = controlledOpen !== undefined;
+
   return (
     <>
-      {isTopBar ? (
-        <div
-          onClick={onOpen}
-          className="group block p-2.5 px-3 rounded-lg cursor-pointer hover:bg-accent transition-colors"
-        >
-          <div className="flex flex-row items-center">
-            <div>
-              <p className="text-sm font-medium transition-colors group-hover:text-primary">
-                {t('productsList')}
-              </p>
-              <p className="text-xs text-muted-foreground">{t('productsListSublabel')}</p>
-            </div>
+      {!isControlled && (
+        <>
+          {isTopBar ? (
             <div
-              className="flex-1 flex justify-end items-center transition-all duration-200 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"
+              onClick={onOpen}
+              className="group block p-2.5 px-3 rounded-lg cursor-pointer hover:bg-accent transition-colors"
             >
-              <AiFillRightCircle className="w-4 h-4 text-primary" />
+              <div className="flex flex-row items-center">
+                <div>
+                  <p className="text-sm font-medium transition-colors group-hover:text-primary">
+                    {t('productsList')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('productsListSublabel')}</p>
+                </div>
+                <div
+                  className="flex-1 flex justify-end items-center transition-all duration-200 transform -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"
+                >
+                  <AiFillRightCircle className="w-4 h-4 text-primary" />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      ) : (
-        <div
-          onClick={onOpen}
-          className="cursor-pointer w-full border rounded-3xl relative bg-blue-400 mx-5 p-5"
-        >
-          <div
-            className="flex items-center justify-center text-sm absolute bg-gray-800 -top-2 -right-2 p-5 rounded-2xl h-8 w-8 text-white"
-          >
-            F1
-          </div>
-          <div className="flex items-center gap-4">
+          ) : (
             <div
-              className="min-w-20 min-h-20 flex items-center justify-center text-white rounded-2xl bg-gray-100"
+              onClick={onOpen}
+              className="cursor-pointer w-full border rounded-3xl relative bg-blue-400 mx-5 p-5"
             >
-              <LiaFileInvoiceDollarSolid className="text-black text-4xl" />
+              <div
+                className="flex items-center justify-center text-sm absolute bg-gray-800 -top-2 -right-2 p-5 rounded-2xl h-8 w-8 text-white"
+              >
+                F1
+              </div>
+              <div className="flex items-center gap-4">
+                <div
+                  className="min-w-20 min-h-20 flex items-center justify-center text-white rounded-2xl bg-gray-100"
+                >
+                  <LiaFileInvoiceDollarSolid className="text-black text-4xl" />
+                </div>
+                <h2 className="text-xl font-bold text-white">{t('productsList')}</h2>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-white">{t('productsList')}</h2>
-          </div>
-        </div>
+          )}
+        </>
       )}
       <CustomModal
         modalProps={{ size: 'full' }}

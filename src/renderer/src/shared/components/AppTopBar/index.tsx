@@ -1,311 +1,392 @@
 'use client'
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@web/shared/components/ui/popover'
 import { Button } from '@web/shared/components/ui/button'
 import languages from '@web/config/languages'
 import Products from '@web/modules/Products'
 import Receipt from '@web/modules/Receipt'
 import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
+import ClientsList from '@web/shared/components/ClientsList'
+import SuppliersList from '@web/shared/components/SuppliersList'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
-import { Fragment, useState, useRef, useCallback } from 'react'
-import { AiOutlineClose, AiOutlineMore, AiOutlineDown, AiOutlinePoweroff, AiFillRightCircle } from 'react-icons/ai'
+import { useState, useRef, useCallback, useEffect, createContext, useContext } from 'react'
+import {
+  AiOutlineClose,
+  AiOutlineMore,
+  AiOutlineDown,
+  AiOutlinePoweroff,
+} from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@web/shared/utils/cn'
 
-interface NavItem {
-  label: string;
-  subLabel?: string;
-  children?: Array<NavItem>;
-  href?: string;
-  component?: JSX.Element;
+interface ModalActions {
+  openProducts: () => void
+  openClients: () => void
+  openSuppliers: () => void
+  openReceipt: () => void
+  openAllBills: () => void
 }
 
-const NAV_ITEMS: Array<NavItem> = [
+const ModalContext = createContext<ModalActions>({
+  openProducts: () => {},
+  openClients: () => {},
+  openSuppliers: () => {},
+  openReceipt: () => {},
+  openAllBills: () => {},
+})
+
+interface SubMenuItem {
+  label: string
+  action: (actions: ModalActions) => void
+}
+
+interface NavItem {
+  label: string
+  href?: string
+  children?: SubMenuItem[]
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
-    label: 'Home',
-    href: '/',
+    label: 'tiers',
+    children: [
+      { label: 'products', action: (a) => a.openProducts() },
+      { label: 'clients', action: (a) => a.openClients() },
+      { label: 'suppliers', action: (a) => a.openSuppliers() },
+    ],
   },
   {
-    label: 'Stock',
+    label: 'reception',
     children: [
-      {
-        label: t('productsList'),
-        subLabel: t('productsListSublabel'),
-        href: 'products',
-        component: <Products isTopBar />
-      },
-      {
-        label: t('newReceiptBill'),
-        subLabel: t('newReceiptBillLabel'),
-        href: 'receipt',
-        component: <Receipt isTopBar />
-      },
-      {
-        label: t('allReceiptBill'),
-        subLabel: t('allReceiptBillLabel'),
-        href: 'receipt',
-        component: <AllReceiptBills isTopBar />
-      },
+      { label: 'newReceiptBillMenu', action: (a) => a.openReceipt() },
+      { label: 'allReceiptBillsMenu', action: (a) => a.openAllBills() },
+    ],
+  },
+  {
+    label: 'commande',
+    children: [
+      { label: 'newOrderMenu', action: () => {} },
+    ],
+  },
+  {
+    label: 'livraison',
+    children: [
+      { label: 'newDeliveryNoteMenu', action: () => {} },
+    ],
+  },
+  {
+    label: 'factures',
+    children: [
+      { label: 'newInvoiceMenu', action: () => {} },
     ],
   },
 ]
 
-const HoverPopover = ({ children, content, align = "center" }: { children: React.ReactNode; content: React.ReactNode; align?: "center" | "start" | "end" }) => {
-  const [open, setOpen] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleMouseEnter = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setOpen(true)
-  }, [])
-
-  const handleMouseLeave = useCallback(() => {
-    timeoutRef.current = setTimeout(() => setOpen(false), 150)
-  }, [])
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-        {children}
-      </PopoverTrigger>
-      <PopoverContent
-        align={align}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className="p-0 border border-border shadow-xl bg-popover text-popover-foreground rounded-xl w-auto"
-      >
-        {content}
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-const Languages = ({ className }: { className?: string }) => (
-  <div className={className}>
-    <HoverPopover
-      content={
-        <div className="flex flex-col py-1.5">
-          {languages.map(({ id, label, code }) => (
-            <div
-              key={id}
-              role={'group'}
-              className="flex items-center gap-3 p-2 px-3 mx-1.5 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-              onClick={() => {
-                i18next.changeLanguage(code);
-                // eslint-disable-next-line no-restricted-globals
-                location.reload();
-              }}
-            >
-              <img
-                className="w-6 h-6 rounded-full ring-2 ring-border"
-                src={`/assets/${code}.svg`}
-                alt={label}
-              />
-              <span className="text-sm font-medium text-foreground">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      }
-    >
-      <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
-        {t('language')}
-        <AiOutlineDown className="h-3 w-3" />
-      </button>
-    </HoverPopover>
-  </div>
-)
-
-interface AppTopBarProps {
-  children: JSX.Element | JSX.Element[];
-}
-
-const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { mutateAsync: logout } = useLogout();
-  const navigate = useNavigate();
-
-  const onToggle = () => setIsOpen(!isOpen);
-
-  const onLogout = async () => {
-    try {
-      const { token } = authService.loadUserInfo() || { token: undefined };
-      await logout(token as void);
-      authService.resetUserInfo();
-      navigate('/connexion');
-    } catch (e) {
-      authService.resetUserInfo();
-      navigate('/connexion');
+function useClickOutside(ref: React.RefObject<HTMLElement>, handler: () => void) {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) return
+      handler()
     }
-  };
+    document.addEventListener('mousedown', listener)
+    document.addEventListener('touchstart', listener)
+    return () => {
+      document.removeEventListener('mousedown', listener)
+      document.removeEventListener('touchstart', listener)
+    }
+  }, [ref, handler])
+}
+
+const Dropdown = ({
+  trigger,
+  children,
+  align = 'start',
+}: {
+  trigger: React.ReactNode
+  children: React.ReactNode
+  align?: 'start' | 'end'
+}) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useClickOutside(ref, () => setOpen(false))
 
   return (
-    <div className="w-full shrink-0">
-      <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50 flex items-center px-4 sm:px-6">
-        <div className="flex items-center md:hidden mr-2">
-          <Button
-            onClick={onToggle}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label={'Toggle Navigation'}
-          >
-            {isOpen ? <AiOutlineClose className="h-4 w-4" /> : <AiOutlineMore className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        <div className="flex items-center flex-1 mr-6">
-          <div className="flex items-center gap-2.5">
-            <img src="/assets/logo-h.png" alt="SoluStock" className="h-12 rounded-lg object-contain" />
-          </div>
-        </div>
-
-        <div className="hidden md:flex items-center flex-1 gap-0.5 mr-auto">
-          <DesktopNav />
-        </div>
-
-        <div className="flex items-center gap-0.5 ml-auto">
-          <Languages />
-          <div className="w-px h-5 bg-border mx-1.5" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLogout}
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5 h-8 px-2.5"
-          >
-            <AiOutlinePoweroff className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline text-sm">{t('logout')}</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* Mobile Nav Collapse */}
-      <div className={cn(
-        "md:hidden overflow-hidden transition-all duration-200 ease-in-out border-b border-border bg-card",
-        isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0 border-b-0"
-      )}>
-        <MobileNav />
+    <div ref={ref} className="relative">
+      <div onClick={() => setOpen((prev) => !prev)}>
+        {trigger}
       </div>
-
-      {children}
+      {open && (
+        <div
+          className={cn(
+            'absolute top-full mt-1 z-[250] bg-popover border border-border rounded-xl shadow-xl py-1 min-w-[180px] animate-in fade-in-0 zoom-in-95',
+            align === 'end' ? 'right-0' : 'left-0'
+          )}
+        >
+          {children}
+        </div>
+      )}
     </div>
   )
 }
 
-const DesktopNav = () => {
-  return (
-    <>
-      {NAV_ITEMS.map((navItem, k) => (
-        <div key={k}>
-          {navItem.children ? (
-            <HoverPopover
-              align="start"
-              content={
-                <div className="p-2 min-w-[320px]">
-                  <div className="flex flex-col">
-                    {navItem.children.map((child, k) => (
-                      child.component ? (<Fragment key={k}>{child.component}</Fragment>) : <DesktopSubNav key={k} {...child} />
-                    ))}
-                  </div>
-                </div>
-              }
-            >
-              <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors cursor-pointer">
-                {navItem.label}
-                <AiOutlineDown className="h-3 w-3 opacity-50" />
-              </button>
-            </HoverPopover>
-          ) : (
-            <a href={navItem.href} className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
-              {navItem.label}
-            </a>
-          )}
+const Languages = () => (
+  <Dropdown
+    align="end"
+    trigger={
+      <button className="inline-flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+        <img
+          className="w-5 h-5 rounded-full ring-1 ring-border"
+          src={`/assets/${i18next.language || 'fr'}.svg`}
+          alt=""
+        />
+        <AiOutlineDown className="h-3 w-3 opacity-50" />
+      </button>
+    }
+  >
+    <div className="py-1">
+      {languages.map(({ id, label, code }) => (
+        <div
+          key={id}
+          role="group"
+          className="flex items-center gap-3 p-2 px-3 mx-1 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+          onClick={() => {
+            i18next.changeLanguage(code)
+            // eslint-disable-next-line no-restricted-globals
+            location.reload()
+          }}
+        >
+          <img
+            className="w-5 h-5 rounded-full ring-1 ring-border"
+            src={`/assets/${code}.svg`}
+            alt={label}
+          />
+          <span className="text-sm font-medium text-foreground">{label}</span>
         </div>
       ))}
+    </div>
+  </Dropdown>
+)
+
+const DesktopNav = () => {
+  const actions = useContext(ModalContext)
+
+  return (
+    <>
+      {NAV_ITEMS.map((item) =>
+        item.children ? (
+          <Dropdown
+            key={item.label}
+            trigger={
+              <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors cursor-pointer">
+                {t(item.label)}
+                <AiOutlineDown className="h-3 w-3 opacity-50" />
+              </button>
+            }
+          >
+            <div className="py-1">
+              {item.children.map((child) => (
+                <button
+                  key={child.label}
+                  onClick={() => child.action(actions)}
+                  className="w-full text-left px-3 py-2 mx-1 rounded-lg text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                >
+                  {t(child.label)}
+                </button>
+              ))}
+            </div>
+          </Dropdown>
+        ) : (
+          <a
+            key={item.label}
+            href={item.href}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+          >
+            {t(item.label)}
+          </a>
+        )
+      )}
     </>
   )
 }
 
-const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
+interface AppTopBarProps {
+  children: JSX.Element | JSX.Element[]
+}
+
+const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const { mutateAsync: logout } = useLogout()
+  const navigate = useNavigate()
+
+  const [openProducts, setOpenProducts] = useState(false)
+  const [openReceipt, setOpenReceipt] = useState(false)
+  const [openAllBills, setOpenAllBills] = useState(false)
+  const [openClients, setOpenClients] = useState(false)
+  const [openSuppliers, setOpenSuppliers] = useState(false)
+
+  const modalActions: ModalActions = {
+    openProducts: () => setOpenProducts(true),
+    openClients: () => setOpenClients(true),
+    openSuppliers: () => setOpenSuppliers(true),
+    openReceipt: () => setOpenReceipt(true),
+    openAllBills: () => setOpenAllBills(true),
+  }
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault()
+        setOpenReceipt(true)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  const onToggle = () => setIsOpen(!isOpen)
+
+  const onLogout = async () => {
+    try {
+      const { token } = authService.loadUserInfo() || { token: undefined }
+      await logout(token as void)
+      authService.resetUserInfo()
+      navigate('/connexion')
+    } catch (e) {
+      authService.resetUserInfo()
+      navigate('/connexion')
+    }
+  }
+
   return (
-    <a
-      href={href}
-      className="group flex items-center gap-3 p-2.5 px-3 rounded-lg hover:bg-accent transition-colors"
-    >
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium transition-colors group-hover:text-primary text-foreground truncate">
-          {label}
-        </p>
-        {subLabel && (
-          <p className="text-xs text-muted-foreground truncate mt-0.5">{subLabel}</p>
-        )}
+    <ModalContext.Provider value={modalActions}>
+      <div className="w-full shrink-0">
+        <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50 flex items-center px-4 sm:px-6">
+          <div className="flex items-center md:hidden mr-2">
+            <Button
+              onClick={onToggle}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Toggle Navigation"
+            >
+              {isOpen ? (
+                <AiOutlineClose className="h-4 w-4" />
+              ) : (
+                <AiOutlineMore className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          <div className="flex items-center mr-6">
+            <img
+              src="/assets/logo-h.png"
+              alt="SoluStock"
+              className="h-10 rounded-lg object-contain"
+            />
+          </div>
+
+          <nav className="hidden md:flex items-center gap-0.5">
+            <DesktopNav />
+          </nav>
+
+          <div className="flex items-center gap-1 ml-auto">
+            <Languages />
+            <div className="w-px h-5 bg-border mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onLogout}
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5 h-8 px-2.5"
+            >
+              <AiOutlinePoweroff className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-sm">{t('logout')}</span>
+            </Button>
+          </div>
+        </header>
+
+        <div
+          className={cn(
+            'md:hidden overflow-hidden transition-all duration-200 ease-in-out border-b border-border bg-card',
+            isOpen
+              ? 'max-h-[500px] opacity-100'
+              : 'max-h-0 opacity-0 border-b-0'
+          )}
+        >
+          <MobileNav />
+        </div>
+
+        {children}
+
+        {openProducts && <Products isTopBar open={openProducts} onOpenChange={setOpenProducts} />}
+        {openReceipt && <Receipt isTopBar open={openReceipt} onOpenChange={setOpenReceipt} />}
+        {openAllBills && <AllReceiptBills isTopBar open={openAllBills} onOpenChange={setOpenAllBills} />}
+        {openClients && <ClientsList open={openClients} onOpenChange={setOpenClients} />}
+        {openSuppliers && <SuppliersList open={openSuppliers} onOpenChange={setOpenSuppliers} />}
       </div>
-      <AiFillRightCircle className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary shrink-0 transition-colors" />
-    </a>
+    </ModalContext.Provider>
   )
 }
 
 const MobileNav = () => {
+  const actions = useContext(ModalContext)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
+
   return (
-    <div className="p-3 block md:hidden">
-      {NAV_ITEMS.map((navItem, k) => (
-        <MobileNavItem key={k} {...navItem} />
-      ))}
-    </div>
+    <nav className="p-3 flex flex-col gap-1 md:hidden">
+      {NAV_ITEMS.map((item) => {
+        if (!item.children) {
+          return (
+            <a
+              key={item.label}
+              href={item.href}
+              className="inline-flex items-center px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+            >
+              {t(item.label)}
+            </a>
+          )
+        }
+
+        const isExpanded = expandedSection === item.label
+
+        return (
+          <div key={item.label}>
+            <button
+              className="flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+              onClick={() => setExpandedSection((prev) => (prev === item.label ? null : item.label))}
+            >
+              {t(item.label)}
+              <AiOutlineDown
+                className={cn(
+                  'w-3.5 h-3.5 opacity-50 transition-transform duration-200',
+                  isExpanded && 'rotate-180'
+                )}
+              />
+            </button>
+            <div
+              className={cn(
+                'overflow-hidden transition-all duration-200 ease-in-out',
+                isExpanded ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
+              )}
+            >
+              <div className="pl-4 py-1 flex flex-col">
+                {item.children.map((child) => (
+                  <button
+                    key={child.label}
+                    onClick={() => child.action(actions)}
+                    className="text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                  >
+                    {t(child.label)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </nav>
   )
 }
 
-const MobileNavItem = ({ label, children, href }: NavItem) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const onToggle = () => setIsOpen(!isOpen);
-
-  return (
-    <div className="flex flex-col" onClick={children && onToggle}>
-      <div className="py-2 px-2 flex justify-between items-center hover:bg-accent rounded-lg cursor-pointer transition-colors">
-        <a
-          href={href ?? '#'}
-          className="text-sm font-medium text-foreground"
-          onClick={(e) => {
-             if (children) {
-                 e.preventDefault();
-                 onToggle();
-             }
-          }}
-        >
-          {label}
-        </a>
-        {children && (
-          <AiOutlineDown
-            className={cn(
-              "w-4 h-4 text-muted-foreground transition-transform duration-200 ease-in-out",
-              isOpen ? "rotate-180" : ""
-            )}
-          />
-        )}
-      </div>
-
-      <div className={cn(
-        "overflow-hidden transition-all duration-200 ease-in-out pl-3 border-l-2 border-primary/20 ml-3",
-        isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
-      )}>
-        <div className="flex flex-col items-start py-1">
-          {children &&
-            children.map((child, k) => (
-              <a key={k} className="py-1.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md block w-full transition-colors" href={child.href}>
-                {child.label}
-              </a>
-            ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default AppTopBar;
+export default AppTopBar

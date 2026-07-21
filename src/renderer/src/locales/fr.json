@@ -89,5 +89,20 @@
   "noProducts": "Aucun produit",
   "clickToAdd": "Cliquez sur \"Ajouter un produit\" pour commencer",
   "productExists": "Produit en double",
-  "productAlreadyInList": "Ce produit est déjà dans la liste"
+  "productAlreadyInList": "Ce produit est déjà dans la liste",
+  "home": "Accueil",
+  "reception": "Réception",
+  "commande": "Commande",
+  "livraison": "Livraison",
+  "factures": "Factures",
+  "tiers": "Tiers",
+  "clients": "Clients",
+  "suppliers": "Fournisseurs",
+  "newReceiptBillMenu": "Nouveau bon",
+  "allReceiptBillsMenu": "Tous les bons",
+  "newOrderMenu": "Nouvelle commande",
+  "newDeliveryNoteMenu": "Nouveau bon de livraison",
+  "newInvoiceMenu": "Nouvelle facture",
+  "dashboard": "Tableau de bord",
+  "comingSoon": "Bientôt disponible"
 }
