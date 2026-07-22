@@ -22,7 +22,7 @@ const useGetAllBillsOfType = (type: string) => useQuery(
 );
 
 const useGetLatestBillNumber = (type: string) => useQuery(
-  ['Get latest bill number'],
+  ['Get latest bill number', type],
   async () => axiosInstance
     .request({
       url: `bills/${type}`,
@@ -88,4 +88,8 @@ const useCompleteOrder = () => useMutation((id: string) => axiosInstance.request
   }
 });
 
-export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, useCancelOrder, useCompleteOrder, };
+const useCheckBillOrderId = () => useMutation(({ type, orderId }: { type: string, orderId: number }) => axiosInstance.request({
+  url: `bills/${type}/check-id/${orderId}`,
+}).then(({ data }) => data.exists));
+
+export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, useCancelOrder, useCompleteOrder, useCheckBillOrderId, };

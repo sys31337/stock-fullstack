@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { auth } from '@api/middlewares/auth';
-import { getAllBills, createOne, updateOne, getBillsOfType, getSingleBill, } from '@api/controllers/bills';
+import { getAllBills, createOne, updateOne, getBillsOfType, getSingleBill, checkOrderIdExists, } from '@api/controllers/bills';
 import { cancelOrder, completeOrder } from '@api/controllers/orders';
 import { createBillValidator } from '@api/validations/bills';
 
@@ -22,6 +22,9 @@ router.route('/')
 
 router.route('/:type')
   .get(auth, getBillsOfType);
+
+router.route('/:type/check-id/:orderId')
+  .get(auth, checkOrderIdExists);
 
 router.route('/info/:id')
   .get(auth, getSingleBill)

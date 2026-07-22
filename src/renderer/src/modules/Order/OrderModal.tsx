@@ -9,7 +9,7 @@ import CustomInput from '@web/shared/components/CustomForm/Input'
 import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
-import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
+import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -207,7 +207,22 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     }
   }
 
-  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
+  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue, setFieldError } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
+  const { mutateAsync: checkOrderId } = useCheckBillOrderId();
+
+  const handleOrderIdBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    handleBlur(e);
+    const id = Number(e.target.value);
+    if (!id) return;
+    try {
+      const exists = await checkOrderId({ type: 'ORDER', orderId: id });
+      if (exists) {
+        setFieldError('orderId', 'orderIdExists');
+      }
+    } catch {
+      // ignore network errors on blur check
+    }
+  };
 
   const handleMinimize = () => {
     holdReceipt({
@@ -298,9 +313,8 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                         <CustomInput
                           name="orderId"
                           handleChange={handleChange}
-                          handleBlur={handleBlur}
+                          handleBlur={handleOrderIdBlur}
                           value={values.orderId}
-                          errorMessage={errors.orderId && touched.orderId && errors.orderId}
                           className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:font-semibold [&_input]:h-8 [&_input]:text-xs"
                         />
                       </div>

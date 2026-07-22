@@ -9,10 +9,17 @@ import { IProduct } from '@api/types/IProducts';
 const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { body, userId } = req;
-    const { type, products, category, customer } = body;
+    const { type, products, category, customer, orderId } = body;
+    const finalOrderId = orderId > 0 ? orderId : parseInt(await getLatestBill(type), 10) + 1;
+
+    const existing = await Bill.findOne({ type, orderId: finalOrderId });
+    if (existing) {
+      return res.status(409).send({ message: `Order ID ${finalOrderId} already exists for type ${type}` });
+    }
+
     const payload = {
       ...body,
-      orderId: parseInt(await getLatestBill(type), 10) + 1,
+      orderId: finalOrderId,
       createBy: userId,
       ...(type === 'ORDER' && { status: 'pending' }),
     }
@@ -116,10 +123,21 @@ const getSingleBill = async (req: IUserIdRequest, res: Response, next: NextFunct
   }
 }
 
+const checkOrderIdExists = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { type, orderId } = req.params;
+    const existing = await Bill.findOne({ type, orderId: Number(orderId) });
+    return res.status(200).send({ exists: !!existing });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export {
   createOne,
   updateOne,
   getBillsOfType,
   getAllBills,
   getSingleBill,
+  checkOrderIdExists,
 }
