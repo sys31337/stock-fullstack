@@ -39,8 +39,8 @@ const Home: React.FC = () => {
                 bg={bg}
               />
             ))}
-            <AllOrders />
             <AllReceiptBills />
+            <AllOrders />
           </div>
         </div>
       </div>

@@ -231,78 +231,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
           <div className="flex h-[calc(100vh-100px)] gap-6 p-6 bg-gray-50/50 dark:bg-gray-900/50">
             {/* LEFT COLUMN: Main Content */}
             <div className="flex-1 flex flex-col gap-5 overflow-y-auto min-w-0 pr-1">
-              {/* Bill Info */}
-              <Card className="border bg-white shadow-sm">
-                <CardHeader className="pb-2 pt-3 px-5">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
-                    <FileText className="h-3.5 w-3.5" />
-                    {t('billInfo')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-5 pb-4">
-                  <div className="flex items-end gap-3">
-                    <div className="w-24 shrink-0">
-                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('number')}</Label>
-                      <CustomInput
-                        name="orderId"
-                        handleChange={handleChange}
-                        handleBlur={handleBlur}
-                        value={values.orderId}
-                        errorMessage={errors.orderId && touched.orderId && errors.orderId}
-                        className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:font-semibold [&_input]:h-8 [&_input]:text-xs"
-                      />
-                    </div>
-                    <div className="w-36 shrink-0">
-                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('date')}</Label>
-                      <DatePicker
-                        value={values.billDate ? new Date(values.billDate) : new Date()}
-                        onSelect={(date) => setFieldValue('billDate', date)}
-                      />
-                    </div>
-                    <div className="flex items-end gap-1.5 flex-1 min-w-0">
-                      <div className="flex-1 min-w-0">
-                        <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('customer')}</Label>
-                        <CustomInput
-                          name="customer"
-                          setFieldValue={setFieldValue}
-                          onFocus={() => refetch()}
-                          handleBlur={handleBlur}
-                          value={values.customer}
-                          errorMessage={errors.customer && touched.customer && errors.customer}
-                          selectOptions={
-                            allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
-                          }
-                          isSelect={true}
-                          inputSize="sm"
-                          className="[&_>div>div]:rounded-lg"
-                        />
-                      </div>
-                      <CustomerModal />
-                    </div>
-                    <div className="flex items-end gap-1.5">
-                      <div className="flex-1 min-w-0">
-                        <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('category')}</Label>
-                        <CustomInput
-                          name="category"
-                          setFieldValue={setFieldValue}
-                          onFocus={() => refetchCategories()}
-                          handleBlur={handleBlur}
-                          value={values.category}
-                          errorMessage={errors.category && touched.category && errors.category}
-                          selectOptions={
-                            allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
-                          }
-                          isSelect={true}
-                          inputSize="sm"
-                          className="[&_>div>div]:rounded-lg"
-                        />
-                      </div>
-                      <CategoryModal />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Products Section */}
               <Card className="flex-1 border bg-white shadow-sm flex flex-col min-h-0">
                 <CardHeader className="pb-3 pt-4 px-5">
@@ -324,6 +252,91 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
 
             {/* RIGHT COLUMN: Sticky Sidebar */}
             <div className="w-80 flex-shrink-0 flex flex-col gap-4 sticky top-0 h-fit">
+              {/* Bill Info */}
+              <Card className="border bg-white shadow-sm">
+                <CardHeader className="pb-2 pt-3 px-5">
+                  <CardTitle className="text-xs font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
+                    <FileText className="h-3.5 w-3.5" />
+                    {t('billInfo')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('number')}</Label>
+                        <CustomInput
+                          name="orderId"
+                          handleChange={handleChange}
+                          handleBlur={handleBlur}
+                          value={values.orderId}
+                          errorMessage={errors.orderId && touched.orderId && errors.orderId}
+                          className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:font-semibold [&_input]:h-8 [&_input]:text-xs"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('date')}</Label>
+                        <DatePicker
+                          value={values.billDate ? new Date(values.billDate) : new Date()}
+                          onSelect={(date) => setFieldValue('billDate', date)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('customer')}</Label>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex-1">
+                          <CustomInput
+                            name="customer"
+                            setFieldValue={setFieldValue}
+                            onFocus={() => refetch()}
+                            handleBlur={handleBlur}
+                            value={values.customer}
+                            errorMessage={errors.customer && touched.customer && errors.customer}
+                            selectOptions={
+                              allCustomers && allCustomers
+                                .slice()
+                                .sort((a, b) => a.type === b.type ? 0 : a.type === 'Client' ? -1 : 1)
+                                .map((customer) => ({
+                                  label: customer?.fullname,
+                                  value: customer?._id,
+                                  group: customer?.type === 'Client' ? 'Clients' : 'Fournisseurs',
+                                }))
+                            }
+                            isSelect={true}
+                            inputSize="sm"
+                            className="[&_>div>div]:rounded-lg"
+                          />
+                        </div>
+                        <CustomerModal />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('category')}</Label>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex-1">
+                          <CustomInput
+                            name="category"
+                            setFieldValue={setFieldValue}
+                            onFocus={() => refetchCategories()}
+                            handleBlur={handleBlur}
+                            value={values.category}
+                            errorMessage={errors.category && touched.category && errors.category}
+                            selectOptions={
+                              allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))
+                            }
+                            isSelect={true}
+                            inputSize="sm"
+                            className="[&_>div>div]:rounded-lg"
+                          />
+                        </div>
+                        <CategoryModal />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Totals Card */}
               <Card className="border bg-white shadow-sm">
                 <CardHeader className="pb-3 pt-4 px-5">

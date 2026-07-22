@@ -137,7 +137,7 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-                  <img src="/assets/icons/boxing.gif" width={40} alt="Orders" />
+                  <img src="/assets/icons/boxes.gif" width={40} alt="Orders" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">
