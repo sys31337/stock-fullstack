@@ -9,6 +9,8 @@ export interface IBill {
   category: string | ICategory;
   customer: string | ICustomer;
   type: 'BUY' | 'SALE' | 'ORDER';
+  status?: 'pending' | 'cancelled' | 'completed';
+  reservedUntil?: string;
   products: IProduct[],
   orderTotalHT: string | number;
   orderTotalTTC: string | number;

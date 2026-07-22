@@ -115,3 +115,63 @@ export const buyBillproductUpdateHandler = async (oldProducts: IProduct[], newPr
 
   await buyBillProductHandler(added);
 };
+
+export const orderReserveProducts = async (products: IProduct[]) => {
+  for (const product of products) {
+    const { barCode, quantity } = product;
+    const existingProduct = await Product.findOne({ barCode });
+
+    if (!existingProduct) {
+      throw new Error(`Product with barcode ${barCode} not found`);
+    }
+
+    const available = Number(existingProduct.quantity) - Number(existingProduct.reserved || 0);
+    if (available < Number(quantity)) {
+      throw new Error(`Insufficient stock for product ${existingProduct.productName}. Available: ${available}, requested: ${quantity}`);
+    }
+
+    await Product.findOneAndUpdate(
+      { barCode },
+      {
+        $inc: {
+          quantity: -Number(quantity),
+          reserved: +Number(quantity),
+        },
+      },
+      { new: true }
+    );
+  }
+};
+
+export const orderReleaseProducts = async (products: IProduct[]) => {
+  for (const product of products) {
+    const { barCode, quantity } = product;
+
+    await Product.findOneAndUpdate(
+      { barCode },
+      {
+        $inc: {
+          quantity: +Number(quantity),
+          reserved: -Number(quantity),
+        },
+      },
+      { new: true }
+    );
+  }
+};
+
+export const orderCompleteProducts = async (products: IProduct[]) => {
+  for (const product of products) {
+    const { barCode, quantity } = product;
+
+    await Product.findOneAndUpdate(
+      { barCode },
+      {
+        $inc: {
+          reserved: -Number(quantity),
+        },
+      },
+      { new: true }
+    );
+  }
+};

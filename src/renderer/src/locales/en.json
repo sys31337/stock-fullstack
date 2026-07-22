@@ -111,5 +111,19 @@
   "newDeliveryNoteMenu": "New Delivery Note",
   "newInvoiceMenu": "New Invoice",
   "dashboard": "Dashboard",
-  "comingSoon": "Coming soon"
+  "comingSoon": "Coming soon",
+  "reservedUntil": "Reservation until",
+  "status": "Status",
+  "pending": "Pending",
+  "cancelled": "Cancelled",
+  "completed": "Completed",
+  "allOrders": "All Orders",
+  "allOrdersLabel": "View all orders",
+  "newOrderLabel": "Create a new order",
+  "cancelOrder": "Cancel order",
+  "orderCancelled": "Order cancelled successfully",
+  "orderCompleted": "Order completed successfully",
+  "complete": "Complete",
+  "reservation": "Reservation",
+  "price": "Price"
 }

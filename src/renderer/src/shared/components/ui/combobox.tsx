@@ -8,6 +8,7 @@ import { Check, ChevronsUpDown } from "lucide-react"
 interface Option {
   value: string
   label: string
+  group?: string
 }
 
 interface ComboboxProps {
@@ -66,34 +67,44 @@ export function Combobox({ options, value, onChange, placeholder = "Select optio
               autoFocus
             />
           </div>
-          <div className="overflow-y-auto max-h-[200px]">
-             {filteredOptions.length === 0 ? (
-                <div className="py-6 text-center text-sm">No option found.</div>
-             ) : (
-                filteredOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className={cn(
-                      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-                      value === option.value ? "bg-accent" : ""
-                    )}
-                    onClick={() => {
-                      onChange(option.value)
-                      setOpen(false)
-                      setQuery("")
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === option.value ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {option.label}
-                  </div>
-                ))
-             )}
-          </div>
+           <div className="overflow-y-auto max-h-[200px]">
+              {filteredOptions.length === 0 ? (
+                 <div className="py-6 text-center text-sm">No option found.</div>
+              ) : (
+                 filteredOptions.map((option, idx) => {
+                   const prevGroup = idx > 0 ? filteredOptions[idx - 1].group : undefined;
+                   const showGroupHeader = option.group && option.group !== prevGroup;
+                   return (
+                     <React.Fragment key={option.value}>
+                       {showGroupHeader && (
+                         <div className="px-2 py-1.5 mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 border-y border-border">
+                           {option.group}
+                         </div>
+                       )}
+                       <div
+                         className={cn(
+                           "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                           value === option.value ? "bg-accent" : ""
+                         )}
+                         onClick={() => {
+                           onChange(option.value)
+                           setOpen(false)
+                           setQuery("")
+                         }}
+                       >
+                         <Check
+                           className={cn(
+                             "mr-2 h-4 w-4",
+                             value === option.value ? "opacity-100" : "opacity-0"
+                           )}
+                         />
+                         {option.label}
+                       </div>
+                     </React.Fragment>
+                   )
+                 })
+              )}
+           </div>
         </div>
       )}
     </div>

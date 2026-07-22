@@ -9,6 +9,7 @@ import { connectDB } from '@api/config/mongoose';
 import { errorHandler, notFound } from '@api/middlewares/error';
 import api from '@api/routes';
 import socketHelper from '@api/socket';
+import { startOrderScheduler } from '@api/functions/orderScheduler';
 import { log } from '@api/utils';
 
 const whitelist = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4172', 'http://localhost:4030', 'http://localhost:5030'];
@@ -37,6 +38,9 @@ app.get('/', (_req, res) => res.sendStatus(200));
 
 /** Initialise mongoose connection */
 connectDB();
+
+/** Start order auto-cancel scheduler */
+startOrderScheduler();
 
 app.use('/api', api);
 

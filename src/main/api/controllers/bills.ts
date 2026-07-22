@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import Bill from '@api/models/bills';
 import { IUserIdRequest } from '@api/types/common';
-import { buyBillProductHandler, buyBillproductUpdateHandler } from '@api/functions/products';
+import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts } from '@api/functions/products';
 import { getLatestBill } from '@api/functions/bills';
 import { IProduct } from '@api/types/IProducts';
 
@@ -13,9 +13,16 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       orderId: parseInt(await getLatestBill(type), 10) + 1,
       createBy: userId,
+      ...(type === 'ORDER' && { status: 'pending' }),
     }
 
-    if (type === 'BUY') buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })));
+    if (type === 'BUY') {
+      await buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })));
+    }
+
+    if (type === 'ORDER') {
+      await orderReserveProducts(products);
+    }
 
     const createBill = await new Bill(payload).save();
     return res.status(200).send(createBill);
@@ -36,6 +43,10 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     if (!oldBill) {
       return res.status(404).send({ message: 'Bill not found' });
+    }
+
+    if (oldBill.type === 'ORDER') {
+      return res.status(400).send({ message: 'Orders cannot be updated via this endpoint. Use cancel/complete instead.' });
     }
 
     const { products: oldProducts } = oldBill || { products: [] };

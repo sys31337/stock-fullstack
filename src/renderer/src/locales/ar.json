@@ -111,5 +111,19 @@
   "newDeliveryNoteMenu": "سند تسليم جديد",
   "newInvoiceMenu": "فاتورة جديدة",
   "dashboard": "لوحة التحكم",
-  "comingSoon": "قريباً"
+  "comingSoon": "قريباً",
+  "reservedUntil": "الحجز حتى",
+  "status": "الحالة",
+  "pending": "قيد الانتظار",
+  "cancelled": "ملغي",
+  "completed": "مكتمل",
+  "allOrders": "جميع الطلبات",
+  "allOrdersLabel": "عرض جميع الطلبات",
+  "newOrderLabel": "إنشاء طلب جديد",
+  "cancelOrder": "إلغاء الطلب",
+  "orderCancelled": "تم إلغاء الطلب بنجاح",
+  "orderCompleted": "تم إكمال الطلب بنجاح",
+  "complete": "إكمال",
+  "reservation": "حجز",
+  "price": "السعر"
 }

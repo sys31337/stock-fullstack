@@ -18,7 +18,7 @@ export interface IProduct {
   sellPrice_2: number;
   sellPrice_3: number;
   tva: number;
-  reserved?: string;
+  reserved?: number;
   category?: ICategory | string;
   customer?: ICustomer | string;
   notify?: boolean;

@@ -5,6 +5,8 @@ import cacheService from '@web/shared/services/cache';
 import { t } from 'i18next';
 import Receipt from '@web/modules/Receipt';
 import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills';
+import Order from '@web/modules/Order';
+import AllOrders from '@web/modules/Order/AllOrders';
 
 const Home: React.FC = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
@@ -26,6 +28,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Receipt />
+            <Order />
             {modules.map(({ label, icon, href, keyBind, bg }, key) => (
               <Card
                 key={key}
@@ -36,6 +39,7 @@ const Home: React.FC = () => {
                 bg={bg}
               />
             ))}
+            <AllOrders />
             <AllReceiptBills />
           </div>
         </div>

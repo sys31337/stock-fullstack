@@ -111,5 +111,19 @@
   "newDeliveryNoteMenu": "Nouveau bon de livraison",
   "newInvoiceMenu": "Nouvelle facture",
   "dashboard": "Tableau de bord",
-  "comingSoon": "Bientôt disponible"
+  "comingSoon": "Bientôt disponible",
+  "reservedUntil": "Réservation jusqu'au",
+  "status": "Statut",
+  "pending": "En attente",
+  "cancelled": "Annulé",
+  "completed": "Terminé",
+  "allOrders": "Tous les bons de commande",
+  "allOrdersLabel": "Afficher tous les bons de commande",
+  "newOrderLabel": "Créer un nouveau bon de commande",
+  "cancelOrder": "Annuler la commande",
+  "orderCancelled": "Commande annulée avec succès",
+  "orderCompleted": "Commande terminée avec succès",
+  "complete": "Terminer",
+  "reservation": "Réservation",
+  "price": "Prix"
 }

@@ -18,7 +18,7 @@ interface ProductRowProps {
 }
 
 const ProductRow: React.FC<ProductRowProps> = ({ product }) => {
-  const { _id, barCode, productName, buyPrice, quantity, stack, tva, sellPrice_1, sellPrice_2, sellPrice_3, notify } = product;
+  const { _id, barCode, productName, buyPrice, quantity, stack, tva, sellPrice_1, sellPrice_2, sellPrice_3, notify, reserved } = product;
   const { mutateAsync: setNotification } = useUpdateProduct(_id || '');
   const { mutateAsync: deleteProduct } = useDeleteProduct();
   const { toast } = useToast();
@@ -62,7 +62,11 @@ const ProductRow: React.FC<ProductRowProps> = ({ product }) => {
       <TableRow key={_id} className="group">
         <TableCell className="font-mono text-xs text-muted-foreground">{barCode}</TableCell>
         <TableCell className="font-medium">{productName}</TableCell>
-        <TableCell className="text-muted-foreground">{`${quantity} × ${stack}`}</TableCell>
+        <TableCell className="text-muted-foreground">
+          {reserved && Number(reserved) > 0
+            ? `${quantity} (${reserved}) × ${stack}`
+            : `${quantity} × ${stack}`}
+        </TableCell>
         <TableCell className="text-muted-foreground">{price(buyPrice)} DA</TableCell>
         <TableCell className="text-muted-foreground">%{tva}</TableCell>
         <TableCell className="text-muted-foreground">{price(sellPrice_1)} DA</TableCell>

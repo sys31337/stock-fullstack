@@ -15,7 +15,7 @@ export interface IProduct {
   sellPrice_2: Number;
   sellPrice_3: Number;
   tva: Number;
-  reserved?: String;
+  reserved?: Number;
   category?: ICategory | ObjectId;
   customer?: ICustomer | ObjectId;
   notify?: boolean;
