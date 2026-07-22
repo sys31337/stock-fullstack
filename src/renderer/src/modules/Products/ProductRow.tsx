@@ -41,27 +41,27 @@ const ProductRow: React.FC<ProductRowProps> = ({ product }) => {
   }
 
   return (
-    <TableRow key={_id}>
-      <TableCell>{barCode}</TableCell>
-      <TableCell>{productName}</TableCell>
-      <TableCell>{`${quantity} × ${stack}`}</TableCell>
-      <TableCell>{price(buyPrice)} DA</TableCell>
-      <TableCell>%{tva}</TableCell>
-      <TableCell>{price(sellPrice_1)} DA</TableCell>
-      <TableCell>{price(sellPrice_2)} DA</TableCell>
-      <TableCell>{price(sellPrice_3)} DA</TableCell>
+    <TableRow key={_id} className="group">
+      <TableCell className="font-mono text-xs text-muted-foreground">{barCode}</TableCell>
+      <TableCell className="font-medium">{productName}</TableCell>
+      <TableCell className="text-muted-foreground">{`${quantity} × ${stack}`}</TableCell>
+      <TableCell className="text-muted-foreground">{price(buyPrice)} DA</TableCell>
+      <TableCell className="text-muted-foreground">%{tva}</TableCell>
+      <TableCell className="text-muted-foreground">{price(sellPrice_1)} DA</TableCell>
+      <TableCell className="text-muted-foreground">{price(sellPrice_2)} DA</TableCell>
+      <TableCell className="text-muted-foreground">{price(sellPrice_3)} DA</TableCell>
       <TableCell className="text-center">
         <CustomSwitch colorScheme='teal' defaultValue={notify} onChange={onNotifyChange} />
       </TableCell>
       <TableCell>
-        <div className="flex gap-1 justify-end">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-2xl text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700" asChild>
+        <div className="flex gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10" asChild>
             <a href={`/editbill/${_id}`}>
-              <AiFillEdit />
+              <AiFillEdit className="h-3.5 w-3.5" />
             </a>
           </Button>
-          <Button variant="destructive" size="sm" className="h-8 w-8 p-0 rounded-2xl">
-            <AiFillDelete />
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+            <AiFillDelete className="h-3.5 w-3.5" />
           </Button>
         </div>
       </TableCell>

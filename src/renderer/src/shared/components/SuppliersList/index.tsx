@@ -12,7 +12,7 @@ import CustomModal from '@web/shared/components/CustomModal'
 import CustomerModal from '@web/shared/components/Customer'
 import { useGetSuppliers } from '@web/shared/hooks/useCustomers'
 import { t } from 'i18next'
-import { AiOutlineSearch } from 'react-icons/ai'
+import { Search, Truck } from 'lucide-react'
 import Pagination from '@web/shared/components/Pagination'
 import { ICustomer } from '@web/shared/types/customer'
 
@@ -48,57 +48,63 @@ const SuppliersList: React.FC<SuppliersListProps> = ({ open, onOpenChange }) => 
       title={t('suppliers')}
       headerActions={<CustomerModal />}
     >
-      <div className="h-full bg-background">
-        <div className="flex justify-between items-center mb-4 gap-4">
-          <div className="relative w-full max-w-sm">
-            <AiOutlineSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder={t('search')}
-              className="pl-9"
+              className="pl-9 bg-muted/40 border-border/50 focus:bg-background transition-colors"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground whitespace-nowrap">
             {filtered.length} {t('items')}
           </div>
         </div>
 
-        <div className="rounded-xl overflow-hidden border">
+        <div className="rounded-xl border border-border/60 overflow-hidden">
           <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead className="font-semibold">{t('fullname')}</TableHead>
-                <TableHead className="font-semibold">{t('phoneNumber')}</TableHead>
-                <TableHead className="font-semibold">{t('email')}</TableHead>
-                <TableHead className="font-semibold">{t('address')}</TableHead>
-                <TableHead className="font-semibold">{t('nif')}</TableHead>
-                <TableHead className="font-semibold">{t('rc')}</TableHead>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/60">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('fullname')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('phoneNumber')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('email')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('address')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('nif')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('rc')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!isFetched ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    {t('loading')}...
+                  <TableCell colSpan={6} className="h-32 text-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <p className="text-sm">{t('loading')}...</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    {t('noRecordsFound')}
+                  <TableCell colSpan={6} className="h-32 text-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Truck className="h-8 w-8 opacity-40" />
+                      <p className="text-sm">{t('noRecordsFound')}</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.slice(startIndex, endIndex).map((supplier) => (
-                  <TableRow key={supplier._id} className="hover:bg-muted/50 transition-colors">
+                  <TableRow key={supplier._id} className="group">
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
                           {supplier.fullname?.[0]?.toUpperCase() || 'S'}
                         </div>
-                        {supplier.fullname}
+                        <span className="group-hover:text-primary transition-colors">{supplier.fullname}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{supplier.phoneNumber || '-'}</TableCell>
@@ -113,7 +119,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({ open, onOpenChange }) => 
           </Table>
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="flex justify-center mt-auto pt-2">
           <Pagination
             currentPage={currentPage}
             totalCount={filtered.length}

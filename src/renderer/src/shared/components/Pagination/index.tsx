@@ -34,14 +34,15 @@ const Pagination = (props) => {
   const lastPage = paginationRange && paginationRange[paginationRange.length - 1];
 
   return (
-    <div className="flex gap-1 justify-center mt-10">
+    <div className="flex items-center gap-1.5 justify-center py-4">
       <Button
         size="icon"
-        variant="secondary"
-        className="h-6 w-6 rounded-full bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+        variant="outline"
+        className="h-8 w-8 rounded-lg border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
         disabled={currentPage === 1}
-        onClick={onPrevious}>
-        <AiOutlineArrowLeft />
+        onClick={onPrevious}
+      >
+        <AiOutlineArrowLeft className="h-3.5 w-3.5" />
       </Button>
 
       {paginationRange && paginationRange.map((pageNumber, i) => {
@@ -49,9 +50,9 @@ const Pagination = (props) => {
           return (
             <div
               key={`dots-${i}`}
-              className="flex items-center justify-center h-6 w-6"
+              className="flex items-center justify-center h-8 w-8"
             >
-              <AiOutlineSmallDash className="text-black" />
+              <AiOutlineSmallDash className="text-muted-foreground" />
             </div>
           );
         }
@@ -59,8 +60,14 @@ const Pagination = (props) => {
           <Button
             key={pageNumber}
             size="icon"
-            className={`h-6 w-6 rounded-full ${pageNumber === currentPage ? 'bg-gray-900 text-white hover:bg-gray-900' : 'bg-gray-500 text-white hover:bg-gray-600'}`}
-            onClick={() => onPageChange(pageNumber)}>
+            variant={pageNumber === currentPage ? 'default' : 'ghost'}
+            className={`h-8 w-8 rounded-lg text-xs font-medium ${
+              pageNumber === currentPage
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            onClick={() => onPageChange(pageNumber)}
+          >
             {pageNumber}
           </Button>
         );
@@ -68,11 +75,12 @@ const Pagination = (props) => {
 
       <Button
         size="icon"
-        variant="secondary"
-        className="h-6 w-6 rounded-full bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+        variant="outline"
+        className="h-8 w-8 rounded-lg border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
         disabled={currentPage === lastPage}
-        onClick={onNext}>
-        <AiOutlineArrowRight />
+        onClick={onNext}
+      >
+        <AiOutlineArrowRight className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
