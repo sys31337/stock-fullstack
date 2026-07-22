@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@web/shared/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip'
 import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiSolidCheckCircle } from 'react-icons/bi';
-import { AiFillFilePdf, AiOutlineMinus, AiOutlineClose } from 'react-icons/ai';
+import { AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
 import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
@@ -224,40 +223,9 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         isOpen={isOpen}
         onClose={onClose}
         title={t('newReceiptBill')}
-        headerActions={
-          <TooltipProvider>
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-                    onClick={handleMinimize}
-                  >
-                    <AiOutlineMinus className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('minimize')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
-                    onClick={onClose}
-                  >
-                    <AiOutlineClose className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('close')}</TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
-        }
+        onMinimize={handleMinimize}
+        minimizeTooltip={t('minimize')}
+        closeTooltip={t('close')}
       >
         <CustomForm handleSubmit={handleSubmit} className="h-full" hideSubmit={true}>
           <div className="flex h-[calc(100vh-100px)] gap-6 p-6 bg-gray-50/50 dark:bg-gray-900/50">

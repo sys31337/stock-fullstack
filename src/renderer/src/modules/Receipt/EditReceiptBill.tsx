@@ -4,7 +4,7 @@ import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
 import { BiLabel, BiSolidCheckCircle } from 'react-icons/bi';
-import { AiFillEdit, AiFillFilePdf, AiOutlineClose } from 'react-icons/ai';
+import { AiFillEdit, AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
 import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
@@ -23,6 +23,7 @@ import { IProduct } from '@web/shared/types/product';
 import { IBill } from '@web/shared/types/bills';
 import { cn } from '@web/shared/utils/cn';
 import { Card, CardContent, CardHeader, CardTitle } from '@web/shared/components/ui/card';
+import { useReceiptHold } from '@web/shared/contexts/ReceiptHoldContext';
 
 interface EditReceiptBillProps {
   justCreated?: boolean;
@@ -48,6 +49,17 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
     } else {
       setInternalIsOpen(false);
     }
+  };
+
+  const { holdReceipt } = useReceiptHold();
+
+  const handleMinimize = () => {
+    holdReceipt({
+      values: values,
+      productsValues: productsValues,
+      state: state
+    }, `Receipt #${values.orderId}`);
+    onClose();
   };
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -236,19 +248,9 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         isOpen={isOpen}
         onClose={onClose}
         title={t('editReceiptBill')}
-        headerActions={
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="default"
-              size="icon"
-              className="h-8 w-8 bg-red-500 text-white hover:bg-red-600 shadow-sm"
-              onClick={onClose}
-            >
-              <AiOutlineClose className="w-4 h-4" />
-            </Button>
-          </div>
-        }
+        onMinimize={handleMinimize}
+        minimizeTooltip={t('minimize')}
+        closeTooltip={t('close')}
       >
         <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
           <CustomForm handleSubmit={handleSubmit} className="h-full flex flex-col gap-4" hideSubmit={true}>

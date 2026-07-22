@@ -6,6 +6,9 @@ import {
   DialogFooter,
   DialogTitle,
 } from '@web/shared/components/ui/dialog'
+import { Button } from '@web/shared/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip'
+import { AiOutlineMinus, AiOutlineClose } from 'react-icons/ai'
 import { cn } from '@web/shared/utils/cn'
 
 interface props {
@@ -23,10 +26,12 @@ interface CustomModalProps {
   children?: ReactNode;
   footer?: ReactNode;
   headerActions?: ReactNode;
+  onMinimize?: () => void;
+  minimizeTooltip?: string;
+  closeTooltip?: string;
 }
 
-const CustomModal = ({ modalProps, overlayProps, contentProps, bodyProps, isOpen, onClose, title, children, footer, headerActions }: CustomModalProps) => {
-  // Map Chakra size='full' to Tailwind classes
+const CustomModal = ({ modalProps, overlayProps, contentProps, bodyProps, isOpen, onClose, title, children, footer, headerActions, onMinimize, minimizeTooltip, closeTooltip }: CustomModalProps) => {
   const isFull = modalProps?.size === 'full';
   const { className: contentClassName, style: contentStyle, ...restContentProps } = contentProps || {};
 
@@ -42,7 +47,45 @@ const CustomModal = ({ modalProps, overlayProps, contentProps, bodyProps, isOpen
       >
         <DialogHeader className="px-6 pt-6 flex-shrink-0 flex flex-row items-center justify-between space-y-0">
           {title && <DialogTitle>{title}</DialogTitle>}
-          {headerActions && <div>{headerActions}</div>}
+          <div className="flex items-center gap-2">
+            {headerActions}
+            {isFull && onMinimize && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                      onClick={onMinimize}
+                    >
+                      <AiOutlineMinus className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{minimizeTooltip || 'Minimize'}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {isFull && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+                      onClick={onClose}
+                    >
+                      <AiOutlineClose className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{closeTooltip || 'Close'}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </DialogHeader>
         <div className={cn("overflow-y-auto flex-1", isFull ? "p-0" : "px-6 py-4")} style={bodyProps}>
           {children}
