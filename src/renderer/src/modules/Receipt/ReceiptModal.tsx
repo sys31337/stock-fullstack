@@ -241,6 +241,12 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         onMinimize={handleMinimize}
         minimizeTooltip={t('minimize')}
         closeTooltip={t('close')}
+        confirmOnClose={productsValues.some(p => p.productName || p.barCode)}
+        confirmTitle={t('unsavedChanges')}
+        confirmMessage={t('unsavedChangesMessage')}
+        confirmMinimizeLabel={t('saveAndMinimize')}
+        confirmDiscardLabel={t('discard')}
+        confirmCancelLabel={t('cancel')}
       >
         <CustomForm handleSubmit={handleSubmit} className="h-full" hideSubmit={true}>
           <div className="flex h-[calc(100vh-100px)] gap-6 p-6 bg-gray-50/50 dark:bg-gray-900/50">

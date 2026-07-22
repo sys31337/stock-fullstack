@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { randomId } from '@web/shared/functions/words';
+import cacheService from '@web/shared/services/cache';
+
+const HELD_KEY = 'held_receipts';
 
 export type BillType = 'RECEIPT' | 'ORDER' | 'DELIVERY';
 
@@ -25,7 +28,13 @@ interface ReceiptHoldContextType {
 const ReceiptHoldContext = createContext<ReceiptHoldContextType | undefined>(undefined);
 
 export const ReceiptHoldProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [heldReceipts, setHeldReceipts] = useState<HeldReceipt[]>([]);
+  const [heldReceipts, setHeldReceipts] = useState<HeldReceipt[]>(() =>
+    cacheService.get<HeldReceipt[]>(HELD_KEY) || [],
+  );
+
+  useEffect(() => {
+    cacheService.set(HELD_KEY, heldReceipts);
+  }, [heldReceipts]);
 
   const holdReceipt = (data: HeldReceipt['data'], type: BillType, label?: string, id?: string) => {
     setHeldReceipts((prev) => {

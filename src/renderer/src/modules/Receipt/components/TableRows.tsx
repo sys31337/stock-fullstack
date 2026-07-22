@@ -152,6 +152,10 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
                 value={productName || ''}
                 name="productName"
                 onChange={onProductChange}
+                renderItem={(item) => {
+                  const p = item as IProduct;
+                  return `${p.barCode} - ${p.productName} - ${p.buyPrice} / ${p.sellPrice_1} DA`;
+                }}
                 inputProps={{
                     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e),
                     className: cn(cls, "w-full text-left placeholder:text-muted-foreground/50 h-7")

@@ -11,21 +11,34 @@ interface CustomAutoCompleteProps {
   items: Any[];
   onFocus?: () => void;
   selector: string;
+  renderItem?: (item: Any) => React.ReactNode;
   inputProps?: { [key: string]: Any };
   value?: string;
   placeholder?: string;
   className?: string;
 }
 
+const highlightMatch = (text: string, query: string) => {
+  if (!query) return text;
+  const lower = text.toLowerCase();
+  const q = query.toLowerCase();
+  const idx = lower.indexOf(q);
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="font-semibold text-primary">{text.slice(idx, idx + q.length)}</span>
+      {text.slice(idx + q.length)}
+    </>
+  );
+};
+
 const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
-  const { filter, name, value, onSelectOption, onChange, items, inputProps, selector, onFocus, placeholder, className } = props;
+  const { filter, name, value, onSelectOption, onChange, items, inputProps, selector, renderItem, onFocus, placeholder, className } = props;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value || "");
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [dropdownStyle, setDropdownStyle] = useState({ top: 0, left: 0, width: 0 });
 
-  // Update query when value changes externally
   useEffect(() => {
      if (value !== undefined) {
          setQuery(value);
@@ -37,9 +50,7 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
       const target = event.target as Node;
       if (
         containerRef.current &&
-        !containerRef.current.contains(target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target)
+        !containerRef.current.contains(target)
       ) {
         setOpen(false);
       }
@@ -48,47 +59,20 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (open && containerRef.current) {
-      const updatePosition = () => {
-        if (containerRef.current) {
-          const rect = containerRef.current.getBoundingClientRect();
-          setDropdownStyle({
-            top: rect.bottom + 4,
-            left: rect.left,
-            width: rect.width,
-          });
-        }
-      };
-
-      updatePosition();
-      window.addEventListener('resize', updatePosition);
-      window.addEventListener('scroll', updatePosition, true);
-
-      return () => {
-        window.removeEventListener('resize', updatePosition);
-        window.removeEventListener('scroll', updatePosition, true);
-      };
-    }
-    return undefined;
-  }, [open]);
-
   const handleFocus = () => {
-      setOpen(true);
+      if (query.length >= 0) setOpen(true);
       if (onFocus) onFocus();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setQuery(e.target.value);
+      const val = e.target.value;
+      setQuery(val);
       if (onChange) onChange(e);
-      setOpen(true);
+      setOpen(val.length >= 0);
   };
 
   const filteredItems = (items || []).filter(item => {
-      if (!query) return true;
       if (filter) {
-          // Note: filter signature in props is (query, optionValue, optionLabel)
-          // We pass query, value, label. Assuming selector gives both value and label for simplicity or checking logic.
           return filter(query, item[selector], item[selector]);
       }
       return String(item[selector]).toLowerCase().includes(query.toLowerCase());
@@ -96,41 +80,32 @@ const CustomAutoComplete = (props: CustomAutoCompleteProps) => {
 
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
-      <div className="relative">
-        <Input
-            name={name}
-            value={query}
-            onChange={handleInputChange}
-            onFocus={handleFocus}
-            placeholder={placeholder}
-            className={cn("w-full text-center rounded-xl bg-background border-input", inputProps?.className)}
-            autoComplete="off"
-            {...inputProps}
-        />
-      </div>
+      <Input
+          name={name}
+          value={query}
+          onChange={handleInputChange}
+          onFocus={handleFocus}
+          placeholder={placeholder}
+          className={cn("w-full text-center rounded-xl bg-background border-input", inputProps?.className)}
+          autoComplete="off"
+          {...inputProps}
+      />
 
       {open && filteredItems.length > 0 && (
         <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              top: dropdownStyle.top,
-              left: dropdownStyle.left,
-              width: dropdownStyle.width,
-            }}
-            className="z-[9999] max-h-60 overflow-auto rounded-xl border bg-popover text-popover-foreground shadow-lg"
+            className="autocomplete-dropdown absolute left-0 right-0 top-full mt-1 z-[9999] max-h-60 overflow-auto rounded-xl border bg-popover text-popover-foreground shadow-lg"
         >
             {filteredItems.map((item, index) => (
                 <div
                     key={index}
-                    className="cursor-pointer px-4 py-2 hover:bg-accent hover:text-accent-foreground text-sm transition-colors"
+                    className="cursor-pointer px-4 py-2.5 text-sm text-start transition-colors hover:bg-accent hover:text-accent-foreground border-b border-border/50 last:border-b-0"
                     onMouseDown={(e) => {
                         e.preventDefault();
                         onSelectOption(item);
                         setOpen(false);
                     }}
                 >
-                    {item[selector]}
+                    {renderItem ? renderItem(item) : highlightMatch(String(item[selector]), query)}
                 </div>
             ))}
         </div>

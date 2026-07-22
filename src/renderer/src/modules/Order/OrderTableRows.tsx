@@ -162,6 +162,10 @@ const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, 
                 value={productName || ''}
                 name="productName"
                 onChange={onProductChange}
+                renderItem={(item) => {
+                  const p = item as IProduct;
+                  return `${p.barCode} - ${p.productName} - ${p[sellPriceField as keyof IProduct]} DA`;
+                }}
                 inputProps={{
                     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e),
                     onBlur: () => handleProductNameBlur(),

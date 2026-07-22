@@ -251,6 +251,12 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         onMinimize={handleMinimize}
         minimizeTooltip={t('minimize')}
         closeTooltip={t('close')}
+        confirmOnClose={productsValues.some(p => p.productName || p.barCode)}
+        confirmTitle={t('unsavedChanges')}
+        confirmMessage={t('unsavedChangesMessage')}
+        confirmMinimizeLabel={t('saveAndMinimize')}
+        confirmDiscardLabel={t('discard')}
+        confirmCancelLabel={t('cancel')}
       >
         <div className="h-full bg-gray-50/50 dark:bg-gray-900/50 p-4">
           <CustomForm handleSubmit={handleSubmit} className="h-full flex flex-col gap-4" hideSubmit={true}>
