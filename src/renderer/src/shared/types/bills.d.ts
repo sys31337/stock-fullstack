@@ -8,7 +8,7 @@ export interface IBill {
   orderId: number;
   category: string | ICategory;
   customer: string | ICustomer;
-  type: 'BUY' | 'SALE' | 'ORDER';
+  type: 'BUY' | 'SALE' | 'ORDER' | 'DELIVERY';
   status?: 'pending' | 'cancelled' | 'completed';
   reservedUntil?: string;
   products: IProduct[],

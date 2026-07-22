@@ -15,7 +15,7 @@ const billsSchema = new Schema({
   },
   type: {
     type: String,
-    enum: ['BUY', 'SALE', 'ORDER'],
+    enum: ['BUY', 'SALE', 'ORDER', 'DELIVERY'],
     required: true,
   },
   status: {

@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { randomId } from '@web/shared/functions/words';
 
+export type BillType = 'RECEIPT' | 'ORDER' | 'DELIVERY';
+
 export interface HeldReceipt {
   id: string;
   timestamp: number;
-  label: string; // e.g., "Customer Name - Date" or just "Receipt #1"
+  label: string;
+  type: BillType;
   data: {
     values: any;
     productsValues: any[];
@@ -14,7 +17,7 @@ export interface HeldReceipt {
 
 interface ReceiptHoldContextType {
   heldReceipts: HeldReceipt[];
-  holdReceipt: (data: HeldReceipt['data'], label?: string, id?: string) => void;
+  holdReceipt: (data: HeldReceipt['data'], type: BillType, label?: string, id?: string) => void;
   removeHeldReceipt: (id: string) => void;
   restoreReceipt: (id: string) => HeldReceipt | undefined;
 }
@@ -24,14 +27,15 @@ const ReceiptHoldContext = createContext<ReceiptHoldContextType | undefined>(und
 export const ReceiptHoldProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [heldReceipts, setHeldReceipts] = useState<HeldReceipt[]>([]);
 
-  const holdReceipt = (data: HeldReceipt['data'], label?: string, id?: string) => {
+  const holdReceipt = (data: HeldReceipt['data'], type: BillType, label?: string, id?: string) => {
     setHeldReceipts((prev) => {
       const existingIndex = id ? prev.findIndex((r) => r.id === id) : -1;
 
       const newHeldReceipt: HeldReceipt = {
         id: id || randomId(),
         timestamp: Date.now(),
-        label: label || `Receipt ${prev.length + 1}`,
+        label: label || `${type} ${prev.length + 1}`,
+        type,
         data,
       };
 

@@ -120,10 +120,16 @@
   "allOrders": "جميع الطلبات",
   "allOrdersLabel": "عرض جميع الطلبات",
   "newOrderLabel": "إنشاء طلب جديد",
+  "newDeliveryNote": "سند تسليم",
+  "newDeliveryNoteLabel": "إنشاء سند تسليم جديد",
+  "allDeliveryNotes": "جميع سندات التسليم",
+  "allDeliveryNotesLabel": "عرض جميع سندات التسليم",
+  "allDeliveryNotesMenu": "جميع سندات التسليم",
   "cancelOrder": "إلغاء الطلب",
   "orderCancelled": "تم إلغاء الطلب بنجاح",
   "orderCompleted": "تم إكمال الطلب بنجاح",
   "complete": "إكمال",
   "reservation": "حجز",
-  "price": "السعر"
+  "price": "السعر",
+  "available": "متاح"
 }

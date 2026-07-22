@@ -58,7 +58,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
       values: values,
       productsValues: productsValues,
       state: state
-    }, `Receipt #${values.orderId}`);
+    }, 'RECEIPT', `Receipt #${values.orderId}`);
     onClose();
   };
 

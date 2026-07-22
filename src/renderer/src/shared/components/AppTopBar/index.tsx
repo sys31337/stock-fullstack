@@ -73,6 +73,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'livraison',
     children: [
       { label: 'newDeliveryNoteMenu', action: () => {} },
+      { label: 'allDeliveryNotesMenu', action: () => {} },
     ],
   },
   {

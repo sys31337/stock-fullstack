@@ -201,7 +201,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
       values: values,
       productsValues: productsValues,
       state: state
-    }, `Receipt #${values.orderId}`, heldReceiptId);
+    }, 'RECEIPT', `Receipt #${values.orderId}`, heldReceiptId);
 
     setProductsValues([{
       id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,

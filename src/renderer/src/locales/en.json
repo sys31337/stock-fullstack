@@ -120,10 +120,16 @@
   "allOrders": "All Orders",
   "allOrdersLabel": "View all orders",
   "newOrderLabel": "Create a new order",
+  "newDeliveryNote": "Delivery Note",
+  "newDeliveryNoteLabel": "Create a new delivery note",
+  "allDeliveryNotes": "All Delivery Notes",
+  "allDeliveryNotesLabel": "View all delivery notes",
+  "allDeliveryNotesMenu": "All Delivery Notes",
   "cancelOrder": "Cancel order",
   "orderCancelled": "Order cancelled successfully",
   "orderCompleted": "Order completed successfully",
   "complete": "Complete",
   "reservation": "Reservation",
-  "price": "Price"
+  "price": "Price",
+  "available": "Available"
 }

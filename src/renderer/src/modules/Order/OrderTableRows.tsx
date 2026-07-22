@@ -59,6 +59,8 @@ const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, 
   }, [barCode, allProducts]);
 
   const isLocked = matchedProduct !== null;
+  const available = isLocked ? Number(matchedProduct.quantity) - Number(matchedProduct.reserved || 0) : 0;
+  const exceedsStock = isLocked && Number(quantity) > available;
 
   const handleBarcodeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const barcode = e.target.value.trim();
@@ -169,15 +171,22 @@ const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, 
             )}
           </div>
 
-          <Input
-            name="quantity"
-            type="number"
-            className={cn(numCls, "w-[50px] shrink-0 text-center font-medium")}
-            onChange={(e) => handleChange(index, e)}
-            onKeyDown={(e) => handleKeyDown(e)}
-            value={quantity}
-            readOnly={!isLocked}
-          />
+          <div className="relative shrink-0">
+            <Input
+              name="quantity"
+              type="number"
+              className={cn(numCls, "w-[50px] shrink-0 text-center font-medium", exceedsStock && "border-red-500 text-red-600")}
+              onChange={(e) => handleChange(index, e)}
+              onKeyDown={(e) => handleKeyDown(e)}
+              value={quantity}
+              readOnly={!isLocked}
+            />
+            {exceedsStock && (
+              <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500 text-white text-[7px] font-bold flex items-center justify-center" title={`${t('available')}: ${available}`}>
+                !
+              </span>
+            )}
+          </div>
 
           <Input
             name="stack"

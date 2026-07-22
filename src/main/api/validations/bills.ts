@@ -9,7 +9,7 @@ const createBillSchema = Joi.object({
   orderId: number.required(),
   category: mongooseId,
   customer: mongooseId,
-  type: string.required().valid('BUY', 'SALE', 'ORDER'),
+  type: string.required().valid('BUY', 'SALE', 'ORDER', 'DELIVERY'),
   products: array.items(object.keys({
     id: string.required(),
     barCode: string.required(),
@@ -32,7 +32,7 @@ const createBillSchema = Joi.object({
   pricingCategory: Joi.when('type', {
     is: 'BUY',
     then: Joi.forbidden(),
-    otherwise: string.required(),
+    otherwise: number.required(),
   }),
   description: string.optional().allow(''),
   reservedUntil: date.optional(),

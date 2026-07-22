@@ -10,8 +10,8 @@ const billBeautifier = (req: Request, _res: Response, next: NextFunction) => {
   const { category, customer, ...rest } = req.body;
   req.body = {
     ...rest,
-    ...(category.length === 24 && { category }),
-    ...(customer.length === 24 && { customer }),
+    ...(typeof category === 'string' && category.length === 24 && { category }),
+    ...(typeof customer === 'string' && customer.length === 24 && { customer }),
   }
   next();
 }

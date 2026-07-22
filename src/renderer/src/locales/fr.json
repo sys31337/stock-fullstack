@@ -120,10 +120,16 @@
   "allOrders": "Tous les bons de commande",
   "allOrdersLabel": "Afficher tous les bons de commande",
   "newOrderLabel": "Créer un nouveau bon de commande",
+  "newDeliveryNote": "Bon de livraison",
+  "newDeliveryNoteLabel": "Créer un nouveau bon de livraison",
+  "allDeliveryNotes": "Tous les bons de livraison",
+  "allDeliveryNotesLabel": "Afficher tous les bons de livraison",
+  "allDeliveryNotesMenu": "Tous les bons de livraison",
   "cancelOrder": "Annuler la commande",
   "orderCancelled": "Commande annulée avec succès",
   "orderCompleted": "Commande terminée avec succès",
   "complete": "Terminer",
   "reservation": "Réservation",
-  "price": "Prix"
+  "price": "Prix",
+  "available": "Disponible"
 }

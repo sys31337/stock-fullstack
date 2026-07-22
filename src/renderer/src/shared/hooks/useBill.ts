@@ -47,6 +47,7 @@ const useCreateBill = () => useMutation((data: Payload) => axiosInstance.request
 }), {
   onSuccess: () => {
     queryClient.invalidateQueries(['Get all bills']);
+    queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get all products']);
   }
 });
@@ -58,6 +59,7 @@ const useUpdateBill = (id?: string) => useMutation((data) => axiosInstance.reque
 }), {
   onSuccess: () => {
     queryClient.invalidateQueries(['Get all bills']);
+    queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get bill information', id])
     queryClient.invalidateQueries(['Get all products']);
   }
@@ -70,6 +72,7 @@ const useCancelOrder = () => useMutation((id: string) => axiosInstance.request({
 }), {
   onSuccess: () => {
     queryClient.invalidateQueries(['Get all bills']);
+    queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get all products']);
   }
 });
@@ -80,6 +83,7 @@ const useCompleteOrder = () => useMutation((id: string) => axiosInstance.request
 }), {
   onSuccess: () => {
     queryClient.invalidateQueries(['Get all bills']);
+    queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get all products']);
   }
 });

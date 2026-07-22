@@ -7,6 +7,8 @@ import Receipt from '@web/modules/Receipt';
 import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills';
 import Order from '@web/modules/Order';
 import AllOrders from '@web/modules/Order/AllOrders';
+import Delivery from '@web/modules/Delivery';
+import AllDeliveries from '@web/modules/Delivery/AllDeliveries';
 
 const Home: React.FC = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
@@ -29,6 +31,7 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Receipt />
             <Order />
+            <Delivery />
             {modules.map(({ label, icon, href, keyBind, bg }, key) => (
               <Card
                 key={key}
@@ -41,6 +44,7 @@ const Home: React.FC = () => {
             ))}
             <AllReceiptBills />
             <AllOrders />
+            <AllDeliveries />
           </div>
         </div>
       </div>

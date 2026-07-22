@@ -1,7 +1,8 @@
 import { Response, NextFunction } from 'express';
 import Bill from '@api/models/bills';
+import { orderReleaseProducts } from '@api/functions/products';
 import { IUserIdRequest } from '@api/types/common';
-import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts } from '@api/functions/products';
+import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts } from '@api/functions/products';
 import { getLatestBill } from '@api/functions/bills';
 import { IProduct } from '@api/types/IProducts';
 
@@ -22,6 +23,10 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     if (type === 'ORDER') {
       await orderReserveProducts(products);
+    }
+
+    if (type === 'DELIVERY') {
+      await deliveryDecrementProducts(products);
     }
 
     const createBill = await new Bill(payload).save();
@@ -45,8 +50,8 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       return res.status(404).send({ message: 'Bill not found' });
     }
 
-    if (oldBill.type === 'ORDER') {
-      return res.status(400).send({ message: 'Orders cannot be updated via this endpoint. Use cancel/complete instead.' });
+    if (oldBill.type === 'ORDER' || oldBill.type === 'DELIVERY') {
+      return res.status(400).send({ message: `${oldBill.type} bills cannot be updated via this endpoint.` });
     }
 
     const { products: oldProducts } = oldBill || { products: [] };
@@ -72,6 +77,19 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type } = req.params;
+    if (type === 'ORDER') {
+      const now = new Date();
+      const expiredOrders = await Bill.find({
+        type: 'ORDER',
+        status: 'pending',
+        reservedUntil: { $lte: now },
+      });
+      for (const order of expiredOrders) {
+        await orderReleaseProducts(order.products);
+        order.status = 'cancelled';
+        await order.save();
+      }
+    }
     const bills = await Bill.find({ type }).populate('customer category').sort('-createdAt').lean();
     return res.status(200).send(bills);
   } catch (error) {

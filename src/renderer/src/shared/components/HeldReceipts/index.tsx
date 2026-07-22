@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { AiOutlineFileText, AiOutlineClose } from 'react-icons/ai';
 import { useReceiptHold, HeldReceipt } from '@web/shared/contexts/ReceiptHoldContext';
 import ReceiptModal from '@web/modules/Receipt/ReceiptModal';
+import OrderModal from '@web/modules/Order/OrderModal';
+import DeliveryModal from '@web/modules/Delivery/DeliveryModal';
 import { t } from 'i18next';
 import { Button } from '@web/shared/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip';
@@ -24,6 +26,24 @@ const HeldReceipts: React.FC = () => {
   if (heldReceipts.length === 0) {
     return null;
   }
+
+  const renderModal = () => {
+    if (!selectedReceipt) return null;
+    const commonProps = {
+      isOpen,
+      onClose: handleClose,
+      initialHeldData: selectedReceipt.data,
+      heldReceiptId: selectedReceipt.id,
+    };
+    switch (selectedReceipt.type) {
+      case 'ORDER':
+        return <OrderModal {...commonProps} />;
+      case 'DELIVERY':
+        return <DeliveryModal {...commonProps} />;
+      default:
+        return <ReceiptModal {...commonProps} />;
+    }
+  };
 
   return (
     <>
@@ -67,15 +87,7 @@ const HeldReceipts: React.FC = () => {
           ))}
         </div>
       </div>
-
-      {selectedReceipt && (
-        <ReceiptModal
-          isOpen={isOpen}
-          onClose={handleClose}
-          initialHeldData={selectedReceipt.data}
-          heldReceiptId={selectedReceipt.id}
-        />
-      )}
+      {renderModal()}
     </>
   );
 };
