@@ -18,7 +18,13 @@ const useUpdateProduct = (id: string) => useMutation((payload: Payload) => axios
   data: payload,
 }), { onSuccess: () => queryClient.invalidateQueries(['Get all products']) });
 
+const useDeleteProduct = () => useMutation((id: string) => axiosInstance.request({
+  method: 'DELETE',
+  url: `products/${id}`,
+}), { onSuccess: () => queryClient.invalidateQueries(['Get all products']) });
+
 export {
   useUpdateProduct,
   useGetAllProducts,
+  useDeleteProduct,
 }

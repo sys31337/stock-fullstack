@@ -41,11 +41,42 @@ const useCreateCustomer = () => useMutation((payload: Payload) => axiosInstance.
   method: 'POST',
   url: 'customers',
   data: payload,
-}), { onSuccess: () => queryClient.invalidateQueries(['Get all customers']) });
+}), {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['Get all customers']);
+    queryClient.invalidateQueries(['Get all clients']);
+    queryClient.invalidateQueries(['Get all suppliers']);
+  },
+});
+
+const useUpdateCustomer = (id: string) => useMutation((payload: Payload) => axiosInstance.request({
+  method: 'PUT',
+  url: `customers/${id}`,
+  data: payload,
+}), {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['Get all customers']);
+    queryClient.invalidateQueries(['Get all clients']);
+    queryClient.invalidateQueries(['Get all suppliers']);
+  },
+});
+
+const useDeleteCustomer = () => useMutation((id: string) => axiosInstance.request({
+  method: 'DELETE',
+  url: `customers/${id}`,
+}), {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['Get all customers']);
+    queryClient.invalidateQueries(['Get all clients']);
+    queryClient.invalidateQueries(['Get all suppliers']);
+  },
+});
 
 export {
   useCreateCustomer,
   useGetAllCustomers,
   useGetClients,
   useGetSuppliers,
+  useUpdateCustomer,
+  useDeleteCustomer,
 }

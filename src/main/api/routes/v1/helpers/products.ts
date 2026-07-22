@@ -2,6 +2,7 @@ import express from 'express';
 import {
   createOne,
   updateOne,
+  deleteOne,
   getAllProducts,
 } from '@api/controllers/products';
 import { auth } from '@api/middlewares/auth';
@@ -14,6 +15,7 @@ router.route('/')
   .post(auth, createOne);
 
 router.route('/:id')
-  .put(auth, updateProductValidator, updateOne);
+  .put(auth, updateProductValidator, updateOne)
+  .delete(auth, deleteOne);
 
 export default router;

@@ -6,35 +6,49 @@ import CustomInput from '@web/shared/components/CustomForm/Input';
 import CustomForm from '@web/shared/components/CustomForm';
 import { useFormik } from 'formik';
 import { t } from 'i18next';
-import { useCreateCustomer } from '@web/shared/hooks/useCustomers';
+import { useCreateCustomer, useUpdateCustomer } from '@web/shared/hooks/useCustomers';
 import { AxiosError } from 'axios';
 import showToast from '@web/shared/functions/showToast';
 import { Payload } from '@web/shared/types/payload';
 import Any from '@web/shared/types/any';
 import CustomModal from '@web/shared/components/CustomModal';
+import { ICustomer } from '@web/shared/types/customer';
+import { ReactNode } from 'react';
 
-const CustomerModal = () => {
+interface CustomerModalProps {
+  customer?: ICustomer;
+  type?: 'Client' | 'Supplier';
+  trigger?: ReactNode;
+}
+
+const CustomerModal = ({ customer, type, trigger }: CustomerModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
 
+  const isEdit = !!customer;
   const { mutateAsync: createCustomer } = useCreateCustomer();
+  const { mutateAsync: updateCustomer } = useUpdateCustomer(isEdit ? customer._id : '');
   const { toast } = useToast();
 
   const initialValues = {
-    fullname: '',
-    address: '',
-    phoneNumber: '',
-    email: '',
-    rc: '',
-    nif: '',
-    nar: '',
-    type: 'Client',
+    fullname: customer?.fullname || '',
+    address: customer?.address || '',
+    phoneNumber: customer?.phoneNumber || '',
+    email: customer?.email || '',
+    rc: customer?.rc || '',
+    nif: customer?.nif || '',
+    nar: customer?.nar || '',
+    type: customer?.type || type || 'Client',
   };
 
   const onSubmit = async (values: Payload) => {
     try {
-      await createCustomer(values);
+      if (isEdit) {
+        await updateCustomer(values);
+      } else {
+        await createCustomer(values);
+      }
       showToast(
         toast,
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
@@ -54,19 +68,23 @@ const CustomerModal = () => {
 
   return (
     <>
-      <Button
-        onClick={onOpen}
-        className="w-fit p-0 rounded-xl bg-green-500 hover:bg-green-600 h-8 px-3"
-        size="sm"
-      >
-        <FaUserPlus className="text-white" />
-      </Button>
+      {trigger ? (
+        <span onClick={onOpen} className="cursor-pointer">{trigger}</span>
+      ) : (
+        <Button
+          onClick={onOpen}
+          className="w-fit p-0 rounded-xl bg-green-500 hover:bg-green-600 h-8 px-3"
+          size="sm"
+        >
+          <FaUserPlus className="text-white" />
+        </Button>
+      )}
       <CustomModal
-        modalProps={{ size: '2xl' }} // Handled by CustomModal mapping, though we might want to update CustomModal to accept className
+        modalProps={{ size: '2xl' }}
         isOpen={isOpen}
         onClose={onClose}
-        title={t('addCustomer')}
-        contentProps={{ style: { maxWidth: '42rem' } }} // 2xl is approx 42rem
+        title={isEdit ? t('editCustomer') : t('addCustomer')}
+        contentProps={{ style: { maxWidth: '42rem' } }}
       >
         <CustomForm handleSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-1">

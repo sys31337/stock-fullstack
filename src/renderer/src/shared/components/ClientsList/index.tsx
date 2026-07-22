@@ -8,13 +8,18 @@ import {
   TableRow,
 } from '@web/shared/components/ui/table'
 import { Input } from '@web/shared/components/ui/input'
+import { Button } from '@web/shared/components/ui/button'
 import CustomModal from '@web/shared/components/CustomModal'
 import CustomerModal from '@web/shared/components/Customer'
-import { useGetClients } from '@web/shared/hooks/useCustomers'
+import { useGetClients, useDeleteCustomer } from '@web/shared/hooks/useCustomers'
+import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
+import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
 import { Search, Users } from 'lucide-react'
 import Pagination from '@web/shared/components/Pagination'
 import { ICustomer } from '@web/shared/types/customer'
+import { AxiosError } from 'axios'
+import showToast from '@web/shared/functions/showToast'
 
 interface ClientsListProps {
   open: boolean
@@ -23,8 +28,11 @@ interface ClientsListProps {
 
 const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
   const { data: clients, isFetched } = useGetClients()
+  const { mutateAsync: deleteCustomer } = useDeleteCustomer()
+  const { toast } = useToast()
   const [filter, setFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const itemsPerPage = 10
   const allClients = (clients || []) as ICustomer[]
@@ -40,13 +48,25 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
 
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteCustomer(deleteId)
+      showToast(toast, { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' })
+      setDeleteId(null)
+    } catch (err) {
+      const error = err as AxiosError
+      showToast(toast, { title: `Error occured ${error.response?.status}`, description: `${error.response?.statusText}`, status: 'error' })
+    }
+  }
+
   return (
     <CustomModal
       modalProps={{ size: 'full' }}
       isOpen={open}
       onClose={() => onOpenChange(false)}
       title={t('clients')}
-      headerActions={<CustomerModal />}
+      headerActions={<CustomerModal type="Client" />}
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 mb-4">
@@ -75,12 +95,13 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('address')}</TableHead>
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('nif')}</TableHead>
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('rc')}</TableHead>
+                <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!isFetched ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       <p className="text-sm">{t('loading')}...</p>
@@ -89,7 +110,7 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Users className="h-8 w-8 opacity-40" />
                       <p className="text-sm">{t('noRecordsFound')}</p>
@@ -112,6 +133,26 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
                     <TableCell className="text-muted-foreground">{client.address || '-'}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{client.nif || '-'}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{client.rc || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
+                        <CustomerModal
+                          customer={client}
+                          trigger={
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10">
+                              <AiFillEdit className="h-3.5 w-3.5" />
+                            </Button>
+                          }
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => setDeleteId(client._id)}
+                        >
+                          <AiFillDelete className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -128,6 +169,18 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
           />
         </div>
       </div>
+
+      <CustomModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        title={t('confirmDelete')}
+      >
+        <p className="text-sm text-muted-foreground mb-4">{t('confirmDeleteMessage')}</p>
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={() => setDeleteId(null)}>{t('cancel')}</Button>
+          <Button variant="destructive" onClick={handleDelete}>{t('delete')}</Button>
+        </div>
+      </CustomModal>
     </CustomModal>
   )
 }

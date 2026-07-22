@@ -36,9 +36,31 @@ const createNewCustomer = async (req: Request, res: Response, next: NextFunction
   }
 }
 
+const updateOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { params: { id }, body: payload } = req;
+    const updatedCustomer = await Customer.findByIdAndUpdate(id, payload, { new: true });
+    return res.status(200).send(updatedCustomer);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+const deleteOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { params: { id } } = req;
+    await Customer.findByIdAndDelete(id);
+    return res.status(200).send({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export {
   getAllCustomers,
   getAllClients,
   getAllSuppliers,
   createNewCustomer,
+  updateOne,
+  deleteOne,
 }

@@ -21,6 +21,16 @@ const updateOne = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+const deleteOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { params: { id } } = req;
+    await Product.findByIdAndDelete(id);
+    return res.status(200).send({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 const getAllProducts = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const updatedProduct = await Product.find();
@@ -33,5 +43,6 @@ const getAllProducts = async (_req: Request, res: Response, next: NextFunction) 
 export {
   createOne,
   updateOne,
+  deleteOne,
   getAllProducts,
 }
