@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import Bill from '@api/models/bills';
 import StockMovement from '@api/models/stockMovement';
 import Product from '@api/models/products';
@@ -278,6 +279,52 @@ const getSingleBill = async (req: IUserIdRequest, res: Response, next: NextFunct
   }
 };
 
+const updateContent = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { body, userId, params: { id }, username } = req;
+    const { content, description: changeDescription } = body;
+
+    if (!userId) {
+      return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+    const oldBill = await Bill.findById(id);
+    if (!oldBill) {
+      return res.status(404).send({ message: 'Bill not found' });
+    }
+
+    const bill = oldBill as any;
+    const historyEntry = {
+      content: bill.content || '',
+      editedBy: new mongoose.Types.ObjectId(userId),
+      editedAt: new Date(),
+      description: changeDescription || 'Content updated',
+    };
+
+    if (!bill.contentHistory) {
+      bill.contentHistory = [];
+    }
+
+    bill.contentHistory.push(historyEntry);
+    bill.content = content;
+    bill.updatedBy = new mongoose.Types.ObjectId(userId);
+
+    const updatedBill = await bill.save();
+
+    await createAuditLog(req, {
+      action: 'edit',
+      resource: 'bill',
+      resourceId: id,
+      details: `Content updated for ${bill.type} bill #${bill.orderId} by ${username || userId}`,
+      metadata: { changeDescription },
+    });
+
+    return res.status(200).send(updatedBill);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const checkOrderIdExists = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type, orderId } = req.params;
@@ -295,4 +342,5 @@ export {
   getAllBills,
   getSingleBill,
   checkOrderIdExists,
+  updateContent,
 };

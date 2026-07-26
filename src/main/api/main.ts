@@ -32,8 +32,8 @@ io.on('connection', (socket: Socket) => {
 });
 
 app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.get('/', (_req, res) => res.sendStatus(200));
 
 /** Initialise mongoose connection */

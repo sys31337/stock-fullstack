@@ -33,6 +33,13 @@ const billsSchema = new Schema({
   paymentMethod: { type: String, default: 'Cash', required: true },
   pricingCategory: { type: Number, default: 0 },
   description: String,
+  content: { type: String, default: '' },
+  contentHistory: [{
+    content: { type: String, default: '' },
+    editedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    editedAt: { type: Date, default: Date.now },
+    description: { type: String, default: '' },
+  }],
 }, { timestamps: true });
 
 billsSchema.index({ type: 1, orderId: 1 }, { unique: true });

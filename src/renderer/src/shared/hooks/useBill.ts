@@ -88,8 +88,20 @@ const useCompleteOrder = () => useMutation((id: string) => axiosInstance.request
   }
 });
 
+const useUpdateBillContent = (id?: string) => useMutation((data: { content: string; description?: string }) => axiosInstance.request({
+  method: 'PUT',
+  url: `bills/info/${id}/content`,
+  data,
+}), {
+  onSuccess: () => {
+    queryClient.invalidateQueries(['Get bill information', id])
+    queryClient.invalidateQueries(['Get all bills']);
+    queryClient.invalidateQueries(['Get all bills of type']);
+  }
+});
+
 const useCheckBillOrderId = () => useMutation(({ type, orderId }: { type: string, orderId: number }) => axiosInstance.request({
   url: `bills/${type}/check-id/${orderId}`,
 }).then(({ data }) => data.exists));
 
-export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, useCancelOrder, useCompleteOrder, useCheckBillOrderId, };
+export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, useCancelOrder, useCompleteOrder, useCheckBillOrderId, useUpdateBillContent, };
