@@ -12,7 +12,7 @@ interface ReceiptBillPdfProps {
   data: {
     billDate: Date;
     orderId: string;
-    type: 'BUY' | 'SALE' | 'ORDER';
+    type: 'BUY' | 'SALE' | 'ORDER' | 'DELIVERY';
     products: IProduct[];
     orderTotalHT: number;
     orderTotalTTC: number;
@@ -57,6 +57,7 @@ const ReceiptBillPdf: React.FC<ReceiptBillPdfProps> = ({ data }) => {
               {type === 'BUY' && (<Text>{t('receiptBillId')}{orderId}</Text>)}
               {type === 'SALE' && (<Text>{t('saleBillId')}{orderId}</Text>)}
               {type === 'ORDER' && (<Text>{t('orderId')}{orderId}</Text>)}
+              {type === 'DELIVERY' && (<Text>{t('deliveryBillId')}{orderId}</Text>)}
             </View>
           </View>
           <View style={styles.table}>

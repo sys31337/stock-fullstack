@@ -4,7 +4,7 @@ import cacheService from '@web/shared/services/cache';
 
 const HELD_KEY = 'held_receipts';
 
-export type BillType = 'RECEIPT' | 'ORDER' | 'DELIVERY';
+export type BillType = 'RECEIPT' | 'ORDER' | 'DELIVERY' | 'INVOICE';
 
 export interface HeldReceipt {
   id: string;

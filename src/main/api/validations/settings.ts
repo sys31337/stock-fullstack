@@ -12,6 +12,15 @@ const updateSettingsSchema = Joi.object({
   nis: Joi.string().allow('').optional(),
   companyAddress: Joi.string().allow('').optional(),
   companyPhone: Joi.string().allow('').optional(),
+  mobile: Joi.string().allow('').optional(),
+  website: Joi.string().allow('').optional(),
+  email: Joi.string().allow('').optional(),
+  wilaya: Joi.string().allow('').optional(),
+  accountNumber: Joi.string().allow('').optional(),
+  rib: Joi.string().allow('').optional(),
+  articleNumber: Joi.string().allow('').optional(),
+  stamp: Joi.number().optional(),
+  tva: Joi.number().optional(),
 }).min(1);
 
 export const updateSettingsValidator = validator.body(updateSettingsSchema);

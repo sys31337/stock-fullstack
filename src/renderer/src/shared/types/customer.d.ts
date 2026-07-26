@@ -9,6 +9,8 @@ export interface ICustomer {
   rc?: string,
   nif?: string,
   nar?: string,
+  town?: string,
+  city?: string,
   debts?: Number,
   type: string,
   products: IProduct[],

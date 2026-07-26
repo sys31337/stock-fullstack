@@ -11,6 +11,8 @@ const customersSchema = new Schema({
   rc: String,
   nif: String,
   nar: String,
+  town: String,
+  city: String,
   debts: {
     type: Number,
     default: 0

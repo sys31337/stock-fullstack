@@ -9,6 +9,8 @@ import Order from '@web/modules/Order';
 import AllOrders from '@web/modules/Order/AllOrders';
 import Delivery from '@web/modules/Delivery';
 import AllDeliveries from '@web/modules/Delivery/AllDeliveries';
+import Invoice from '@web/modules/Invoice';
+import AllInvoices from '@web/modules/Invoice/AllInvoices';
 
 const Home: React.FC = () => {
   const userInfo = cacheService.get('USER_INFO_KEY') as { fullname: string };
@@ -34,6 +36,7 @@ const Home: React.FC = () => {
             <Receipt />
             <Order />
             <Delivery />
+            <Invoice />
             {modules.map(({ label, icon, href, keyBind, bg }, key) => (
               <Card
                 key={key}
@@ -47,6 +50,7 @@ const Home: React.FC = () => {
             <AllReceiptBills />
             <AllOrders />
             <AllDeliveries />
+            <AllInvoices />
           </div>
         </div>
       </div>

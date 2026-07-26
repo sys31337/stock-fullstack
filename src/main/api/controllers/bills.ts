@@ -34,9 +34,13 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...body,
       orderId: finalOrderId,
       createBy: userId,
-      warehouse: warehouse || req.defaultWarehouse,
+      ...(type !== 'SALE' && { warehouse: warehouse || req.defaultWarehouse }),
       ...(type === 'ORDER' && { status: 'pending' }),
     };
+
+    if (type === 'SALE') {
+      delete payload.warehouse;
+    }
 
     const settings = await Settings.findOne();
 
@@ -89,7 +93,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             warehouse: payload.warehouse,
             type: 'OUT',
             quantity: -Number(product.quantity),
-            reference: `DELIVERY-${finalOrderId}`,
+            reference: `${type}-${finalOrderId}`,
             createdBy: userId,
           });
         }
@@ -105,7 +109,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             warehouse: payload.warehouse,
             type: 'OUT',
             quantity: -Number(product.quantity),
-            reference: `DELIVERY-CONV-${body.convertFromOrder}-${finalOrderId}`,
+            reference: `${type}-CONV-${body.convertFromOrder}-${finalOrderId}`,
             createdBy: userId,
           });
         }
@@ -171,7 +175,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             quantity: Number(product.quantity),
             unitPrice: Number(product.buyPrice),
             totalPrice: Number(product.buyPrice) * Number(product.quantity),
-            reference: `DELIVERY-UPDATE-REVERT-${oldBill.orderId}`,
+            reference: `${oldBill.type}-UPDATE-REVERT-${oldBill.orderId}`,
             relatedBill: oldBill._id,
             createdBy: userId,
           });
@@ -188,7 +192,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             quantity: -Number(product.quantity),
             unitPrice: Number(product.buyPrice),
             totalPrice: Number(product.buyPrice) * Number(product.quantity),
-            reference: `DELIVERY-UPDATE-${oldBill.orderId}`,
+            reference: `${oldBill.type}-UPDATE-${oldBill.orderId}`,
             relatedBill: oldBill._id,
             createdBy: userId,
           });
@@ -233,10 +237,12 @@ const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunc
     }
 
     const filter: any = { type };
-    if (warehouse) {
-      filter.warehouse = warehouse;
-    } else if (!req.isMainAccount && req.assignedWarehouses?.length) {
-      filter.warehouse = { $in: req.assignedWarehouses };
+    if (type !== 'SALE') {
+      if (warehouse) {
+        filter.warehouse = warehouse;
+      } else if (!req.isMainAccount && req.assignedWarehouses?.length) {
+        filter.warehouse = { $in: req.assignedWarehouses };
+      }
     }
 
     const bills = await Bill.find(filter).populate('customer category warehouse').sort('-createdAt').lean();

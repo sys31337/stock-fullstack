@@ -39,6 +39,15 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const [nis, setNis] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyPhone, setCompanyPhone] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [website, setWebsite] = useState('');
+  const [email, setEmail] = useState('');
+  const [wilaya, setWilaya] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [rib, setRib] = useState('');
+  const [articleNumber, setArticleNumber] = useState('');
+  const [stamp, setStamp] = useState(0);
+  const [tva, setTva] = useState(19);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -52,6 +61,15 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       setNis(settings.nis ?? '');
       setCompanyAddress(settings.companyAddress ?? '');
       setCompanyPhone(settings.companyPhone ?? '');
+      setMobile(settings.mobile ?? '');
+      setWebsite(settings.website ?? '');
+      setEmail(settings.email ?? '');
+      setWilaya(settings.wilaya ?? '');
+      setAccountNumber(settings.accountNumber ?? '');
+      setRib(settings.rib ?? '');
+      setArticleNumber(settings.articleNumber ?? '');
+      setStamp(settings.stamp ?? 0);
+      setTva(settings.tva ?? 19);
       setDirty(false);
     }
   }, [isFetched, settings]);
@@ -61,7 +79,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       return { allowOutOfStockSales, allowOutOfStockOrders };
     }
     if (activeTab === 'company') {
-      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone };
+      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, accountNumber, rib, articleNumber, stamp, tva };
     }
     return {};
   };
@@ -198,6 +216,44 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                   <div>
                     <Label className="text-sm font-medium">{t('phone')}</Label>
                     <Input value={companyPhone} onChange={(e) => { setCompanyPhone(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('mobile')}</Label>
+                    <Input value={mobile} onChange={(e) => { setMobile(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('website')}</Label>
+                    <Input value={website} onChange={(e) => { setWebsite(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('email')}</Label>
+                    <Input value={email} onChange={(e) => { setEmail(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('wilaya')}</Label>
+                    <Input value={wilaya} onChange={(e) => { setWilaya(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-sm font-medium">{t('account')}</Label>
+                      <Input value={accountNumber} onChange={(e) => { setAccountNumber(e.target.value); setDirty(true); }} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">{t('rib')}</Label>
+                      <Input value={rib} onChange={(e) => { setRib(e.target.value); setDirty(true); }} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">{t('article_number')}</Label>
+                      <Input value={articleNumber} onChange={(e) => { setArticleNumber(e.target.value); setDirty(true); }} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">{t('stamp')}</Label>
+                      <Input type="number" value={stamp} onChange={(e) => { setStamp(Number(e.target.value)); setDirty(true); }} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">{t('tva')}</Label>
+                      <Input type="number" value={tva} onChange={(e) => { setTva(Number(e.target.value)); setDirty(true); }} className="mt-1" />
+                    </div>
                   </div>
                 </div>
                 <div className="flex justify-end pt-3">

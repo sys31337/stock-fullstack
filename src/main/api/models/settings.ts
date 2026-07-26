@@ -10,6 +10,15 @@ const settingsSchema = new Schema({
   nis: String,
   companyAddress: String,
   companyPhone: String,
+  mobile: String,
+  website: String,
+  email: String,
+  wilaya: String,
+  accountNumber: String,
+  rib: String,
+  articleNumber: String,
+  stamp: { type: Number, default: 0 },
+  tva: { type: Number, default: 19 },
 }, { timestamps: true });
 
 const Settings = model('Settings', settingsSchema);

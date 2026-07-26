@@ -5,6 +5,8 @@ import languages from '@web/config/languages'
 import Products from '@web/modules/Products'
 import Receipt from '@web/modules/Receipt'
 import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
+import Invoice from '@web/modules/Invoice'
+import AllInvoices from '@web/modules/Invoice/AllInvoices'
 import ClientsList from '@web/shared/components/ClientsList'
 import SuppliersList from '@web/shared/components/SuppliersList'
 import Warehouses from '@web/modules/Warehouses'
@@ -33,6 +35,8 @@ interface ModalActions {
   openSuppliers: () => void
   openReceipt: () => void
   openAllBills: () => void
+  openInvoice: () => void
+  openAllInvoices: () => void
   openWarehouses: () => void
   openRoles: () => void
   openUsers: () => void
@@ -45,6 +49,8 @@ const ModalContext = createContext<ModalActions>({
   openSuppliers: () => {},
   openReceipt: () => {},
   openAllBills: () => {},
+  openInvoice: () => {},
+  openAllInvoices: () => {},
   openWarehouses: () => {},
   openRoles: () => {},
   openUsers: () => {},
@@ -94,7 +100,8 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'factures',
     children: [
-      { label: 'newInvoiceMenu', action: () => {} },
+      { label: 'newInvoiceMenu', action: (a) => a.openInvoice() },
+      { label: 'allInvoicesMenu', action: (a) => a.openAllInvoices() },
     ],
   },
   {
@@ -254,6 +261,8 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [openUsers, setOpenUsers] = useState(false)
   const [openAuditLogs, setOpenAuditLogs] = useState(false)
   const [openSettings, setOpenSettings] = useState(false)
+  const [openInvoice, setOpenInvoice] = useState(false)
+  const [openAllInvoices, setOpenAllInvoices] = useState(false)
 
   const modalActions: ModalActions = {
     openProducts: () => setOpenProducts(true),
@@ -261,6 +270,8 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
     openSuppliers: () => setOpenSuppliers(true),
     openReceipt: () => setOpenReceipt(true),
     openAllBills: () => setOpenAllBills(true),
+    openInvoice: () => setOpenInvoice(true),
+    openAllInvoices: () => setOpenAllInvoices(true),
     openWarehouses: () => setOpenWarehouses(true),
     openRoles: () => setOpenRoles(true),
     openUsers: () => setOpenUsers(true),
@@ -372,6 +383,8 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openRoles && <Roles isTopBar open={openRoles} onOpenChange={setOpenRoles} />}
         {openUsers && <UsersModule isTopBar open={openUsers} onOpenChange={setOpenUsers} />}
         {openAuditLogs && <AuditLogs isTopBar open={openAuditLogs} onOpenChange={setOpenAuditLogs} />}
+        {openInvoice && <Invoice isTopBar open={openInvoice} onOpenChange={setOpenInvoice} />}
+        {openAllInvoices && <AllInvoices isTopBar open={openAllInvoices} onOpenChange={setOpenAllInvoices} />}
         <SettingsDrawer isOpen={openSettings} onClose={() => setOpenSettings(false)} />
       </div>
     </ModalContext.Provider>
