@@ -74,7 +74,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
-    if (type === 'DELIVERY') {
+    if (type === 'DELIVERY' && !body.convertFromOrder) {
       await deliveryDecrementProducts(products);
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
@@ -91,6 +91,23 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
+    if (type === 'DELIVERY' && body.convertFromOrder) {
+      for (const product of products) {
+        const dbProduct = await Product.findOne({ barCode: product.barCode });
+        if (dbProduct) {
+          await StockMovement.create({
+            product: dbProduct._id,
+            warehouse: payload.warehouse,
+            type: 'OUT',
+            quantity: -Number(product.quantity),
+            reference: `DELIVERY-CONV-${body.convertFromOrder}-${finalOrderId}`,
+            createdBy: userId,
+          });
+        }
+      }
+    }
+
+    delete payload.convertFromOrder;
     const createBill = await new Bill(payload).save();
 
     await createAuditLog(req, {

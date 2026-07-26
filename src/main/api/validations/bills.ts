@@ -38,6 +38,7 @@ const createBillSchema = Joi.object({
   description: string.optional().allow(''),
   reservedUntil: date.optional(),
   status: string.optional().valid('pending', 'cancelled', 'completed'),
+  convertFromOrder: string.optional(),
 });
 
 const createBillValidator = validator.body(createBillSchema);

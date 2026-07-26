@@ -30,9 +30,11 @@ interface DeliveryModalProps {
   onClose: () => void;
   initialHeldData?: HeldReceipt['data'];
   heldReceiptId?: string;
+  onSuccess?: (billId: string) => void;
+  convertFromOrder?: string;
 }
 
-const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialHeldData, heldReceiptId }) => {
+const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialHeldData, heldReceiptId, onSuccess, convertFromOrder }) => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const onAlertOpen = () => setIsAlertOpen(true);
   const onAlertClose = () => setIsAlertOpen(false);
@@ -143,6 +145,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
         orderDebts: state.orderDebts,
+        ...(convertFromOrder && { convertFromOrder }),
         products: productsValues.map((product) => {
           const { _id, __v, createdAt, updatedAt, notify, id, reserved, category, customer, sellPrice_1, sellPrice_2, sellPrice_3, warehouseStock, ...rest } = product as any;
           return {
@@ -162,6 +165,10 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
 
       if (heldReceiptId) {
         removeHeldReceipt(heldReceiptId);
+      }
+
+      if (onSuccess) {
+        onSuccess(newBill._id);
       }
 
       onAlertOpen();

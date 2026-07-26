@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MoreHorizontal, XCircle, CheckCircle, Clock } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { MoreHorizontal, XCircle, CheckCircle, Clock, Truck } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -20,18 +20,20 @@ import { Input } from "@web/shared/components/ui/input"
 import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillFilePdf, AiFillRightCircle, AiOutlineSearch } from 'react-icons/ai';
-import { useCancelOrder, useCompleteOrder, useGetAllBillsOfType } from '@web/shared/hooks/useBill';
+import { useCancelOrder, useCompleteOrder, useGetAllBillsOfType, useGetBillInfo } from '@web/shared/hooks/useBill';
 import dayjs from 'dayjs';
 import Pagination from '@web/shared/components/Pagination';
-import { price } from '@web/shared/functions/words';
+import { price, randomId } from '@web/shared/functions/words';
 import { IBill } from '@web/shared/types/bills';
 import { ICategory } from '@web/shared/types/category';
 import { ICustomer } from '@web/shared/types/customer';
+import { IProduct } from '@web/shared/types/product';
 import { Card } from '@web/shared/components/ui/card';
 import { cn } from '@web/shared/utils/cn';
 import showToast from '@web/shared/functions/showToast';
 import { useToast } from '@web/shared/components/ui/use-toast';
 import { AxiosError } from 'axios';
+import DeliveryModal from '@web/modules/Delivery/DeliveryModal';
 
 const statusConfig: Record<string, { color: string; bg: string; Icon: React.FC<any> }> = {
   pending: { color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', Icon: Clock },
@@ -59,6 +61,70 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
 
+  const [convertOrderId, setConvertOrderId] = useState<string | null>(null);
+  const { data: orderToConvert, isFetched: orderFetched } = useGetBillInfo(convertOrderId || '', { enabled: !!convertOrderId });
+
+  const [deliveryInitialData, setDeliveryInitialData] = useState<any>(null);
+
+  useEffect(() => {
+    if (orderFetched && orderToConvert) {
+      const { orderId, description, customer, warehouse, orderTotalHT, orderTotalTTC, products, billDate } = orderToConvert;
+      setDeliveryInitialData({
+        values: {
+          orderId,
+          description: description || '',
+          customer: customer?._id || '',
+          warehouse: warehouse?._id || warehouse || '',
+          billDate: dayjs(billDate).toDate(),
+        },
+        productsValues: (products || []).map((p: IProduct) => {
+          const { _id, createdAt, updatedAt, notify, ...rest } = p as any;
+          return {
+            ...rest,
+            id: _id || rest.id || randomId(),
+            buyPrice: Number(rest.buyPrice),
+            quantity: Number(rest.quantity),
+            stack: Number(rest.stack),
+            tva: Number(rest.tva),
+            sellPrice_1: Number(rest.sellPrice_1),
+            sellPrice_2: Number(rest.sellPrice_2),
+            sellPrice_3: Number(rest.sellPrice_3),
+          };
+        }),
+        state: {
+          orderTotalHT: price(`${orderTotalHT}`),
+          orderTotalTTC: price(`${orderTotalTTC}`),
+          orderPaid: '0.00',
+          orderDebts: price(`${orderTotalTTC}`),
+        },
+      });
+    }
+  }, [orderFetched, orderToConvert]);
+
+  const handleConvertToDelivery = (orderId: string) => {
+    setConvertOrderId(orderId);
+  };
+
+  const handleDeliverySuccess = async (_deliveryId: string) => {
+    const orderId = convertOrderId;
+    if (orderId) {
+      try {
+        await completeOrder(orderId);
+        showToast(toast, { title: t('actionPerformed'), description: t('orderCompleted'), status: 'success' });
+      } catch (err) {
+        const error = err as AxiosError;
+        showToast(toast, { title: 'Error', description: `${error.response?.statusText}`, status: 'error' });
+      }
+    }
+    setConvertOrderId(null);
+    setDeliveryInitialData(null);
+  };
+
+  const handleDeliveryClose = () => {
+    setConvertOrderId(null);
+    setDeliveryInitialData(null);
+  };
+
   const itemsPerPage = 10;
   const startIndex = (+currentPage - 1) * itemsPerPage;
   const endIndex = (+currentPage - 1) * itemsPerPage + itemsPerPage;
@@ -83,16 +149,6 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
     try {
       await cancelOrder(id);
       showToast(toast, { title: t('actionPerformed'), description: t('orderCancelled'), status: 'success' });
-    } catch (err) {
-      const error = err as AxiosError;
-      showToast(toast, { title: 'Error', description: `${error.response?.statusText}`, status: 'error' });
-    }
-  };
-
-  const handleComplete = async (id: string) => {
-    try {
-      await completeOrder(id);
-      showToast(toast, { title: t('actionPerformed'), description: t('orderCompleted'), status: 'success' });
     } catch (err) {
       const error = err as AxiosError;
       showToast(toast, { title: 'Error', description: `${error.response?.statusText}`, status: 'error' });
@@ -260,9 +316,9 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
                                   </DropdownMenuItem>
                                   {status === 'pending' && (
                                     <>
-                                      <DropdownMenuItem onClick={() => handleComplete(_id)}>
-                                        <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                                        {t('complete')}
+                                      <DropdownMenuItem onClick={() => handleConvertToDelivery(_id)}>
+                                        <Truck className="mr-2 h-4 w-4 text-blue-600" />
+                                        {t('newDeliveryNote')}
                                       </DropdownMenuItem>
                                       <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleCancel(_id)}>
                                         <XCircle className="mr-2 h-4 w-4" />
@@ -294,6 +350,16 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
           </Card>
         </div>
       </CustomModal>
+
+      {convertOrderId && deliveryInitialData && (
+        <DeliveryModal
+          isOpen={!!convertOrderId && !!deliveryInitialData}
+          onClose={handleDeliveryClose}
+          initialHeldData={deliveryInitialData}
+          convertFromOrder={convertOrderId}
+          onSuccess={handleDeliverySuccess}
+        />
+      )}
     </>
   );
 };
