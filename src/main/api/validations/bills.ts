@@ -42,6 +42,41 @@ const createBillSchema = Joi.object({
 
 const createBillValidator = validator.body(createBillSchema);
 
+const updateBillSchema = Joi.object({
+  billDate: date,
+  orderId: number,
+  category: mongooseId,
+  customer: mongooseId,
+  type: string.valid('BUY', 'SALE', 'ORDER', 'DELIVERY'),
+  products: array.items(object.keys({
+    id: string.required(),
+    barCode: string.required(),
+    productName: string.required(),
+    quantity: number.required(),
+    stack: number.required(),
+    buyPrice: number.required(),
+    sellPrice_1: number.required(),
+    sellPrice_2: number.required(),
+    sellPrice_3: number.required(),
+    totalHT: number,
+    totalTTC: number,
+    tva: number.required(),
+  })),
+  orderTotalHT: number,
+  orderTotalTTC: number,
+  orderPaid: number,
+  orderDebts: number,
+  paymentMethod: string,
+  pricingCategory: number,
+  warehouse: mongooseId,
+  description: string.optional().allow(''),
+  reservedUntil: date.optional(),
+  status: string.optional().valid('pending', 'cancelled', 'completed'),
+});
+
+const updateBillValidator = validator.body(updateBillSchema);
+
 export {
   createBillValidator,
+  updateBillValidator,
 };

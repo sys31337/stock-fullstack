@@ -182,6 +182,36 @@ export const deliveryDecrementProducts = async (products: IProduct[]) => {
   }
 };
 
+export const deliveryProductUpdateHandler = async (oldProducts: IProduct[], newProducts: IProduct[]) => {
+  // First revert old delivery: add back all old product quantities
+  for (const product of oldProducts) {
+    const { barCode, quantity } = product;
+    await Product.findOneAndUpdate(
+      { barCode },
+      { $inc: { quantity: +Number(quantity) } },
+      { new: true }
+    );
+  }
+
+  // Then apply new delivery: check stock and deduct new product quantities
+  for (const product of newProducts) {
+    const { barCode, quantity } = product;
+    const existing = await Product.findOne({ barCode });
+    if (!existing) {
+      throw new Error(`Product with barcode ${barCode} not found`);
+    }
+    const currentQty = Number(existing.quantity);
+    if (currentQty < Number(quantity)) {
+      throw new Error(`Insufficient stock for product ${existing.productName}. Available: ${currentQty}, requested: ${quantity}`);
+    }
+    await Product.findOneAndUpdate(
+      { barCode },
+      { $inc: { quantity: -Number(quantity) } },
+      { new: true }
+    );
+  }
+};
+
 export const orderCompleteProducts = async (products: IProduct[]) => {
   for (const product of products) {
     const { barCode, quantity } = product;

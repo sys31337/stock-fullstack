@@ -19,8 +19,9 @@ import { Button } from "@web/shared/components/ui/button"
 import { Input } from "@web/shared/components/ui/input"
 import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
-import { AiFillFilePdf, AiFillRightCircle, AiOutlineSearch } from 'react-icons/ai';
+import { AiFillEdit, AiFillFilePdf, AiFillRightCircle, AiOutlineSearch } from 'react-icons/ai';
 import { useGetAllBillsOfType } from '@web/shared/hooks/useBill';
+import EditDeliveryBill from '@web/modules/Delivery/EditDeliveryBill';
 import dayjs from 'dayjs';
 import Pagination from '@web/shared/components/Pagination';
 import { price } from '@web/shared/functions/words';
@@ -46,6 +47,7 @@ const AllDeliveries: React.FC<AllDeliveriesProps> = ({ isTopBar, open: controlle
 
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
+  const [editBillId, setEditBillId] = useState<string | null>(null);
 
   const itemsPerPage = 10;
   const startIndex = (+currentPage - 1) * itemsPerPage;
@@ -196,6 +198,10 @@ const AllDeliveries: React.FC<AllDeliveriesProps> = ({ isTopBar, open: controlle
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => setEditBillId(_id)}>
+                                     <AiFillEdit className="mr-2 h-4 w-4" />
+                                     {t('edit')}
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem asChild>
                                      <a href={`/billpdf/${_id}`} className="flex items-center">
                                         <AiFillFilePdf className="mr-2 h-4 w-4" />
@@ -226,6 +232,15 @@ const AllDeliveries: React.FC<AllDeliveriesProps> = ({ isTopBar, open: controlle
           </Card>
         </div>
       </CustomModal>
+
+      {editBillId && (
+        <EditDeliveryBill
+          billId={editBillId}
+          isOpen={!!editBillId}
+          onClose={() => setEditBillId(null)}
+          hideTrigger={true}
+        />
+      )}
     </>
   );
 };

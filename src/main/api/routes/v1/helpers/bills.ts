@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import { auth } from '@api/middlewares/auth';
 import { getAllBills, createOne, updateOne, getBillsOfType, getSingleBill, checkOrderIdExists, } from '@api/controllers/bills';
 import { cancelOrder, completeOrder } from '@api/controllers/orders';
-import { createBillValidator } from '@api/validations/bills';
+import { createBillValidator, updateBillValidator } from '@api/validations/bills';
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ router.route('/:type/check-id/:orderId')
 
 router.route('/info/:id')
   .get(auth, getSingleBill)
-  .put(auth, createBillValidator, updateOne);
+  .put(auth, updateBillValidator, updateOne);
 
 router.route('/order/:id/cancel')
   .put(auth, cancelOrder);

@@ -4,7 +4,7 @@ import StockMovement from '@api/models/stockMovement';
 import Product from '@api/models/products';
 import { orderReleaseProducts } from '@api/functions/products';
 import { IUserIdRequest } from '@api/types/common';
-import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts } from '@api/functions/products';
+import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts, deliveryProductUpdateHandler } from '@api/functions/products';
 import { getLatestBill } from '@api/functions/bills';
 import { IProduct } from '@api/types/IProducts';
 import { createAuditLog } from '@api/utils/auditLog';
@@ -120,7 +120,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       return res.status(404).send({ message: 'Bill not found' });
     }
 
-    if (oldBill.type === 'ORDER' || oldBill.type === 'DELIVERY') {
+    if (oldBill.type === 'ORDER') {
       return res.status(400).send({ message: `${oldBill.type} bills cannot be updated via this endpoint.` });
     }
 
@@ -134,7 +134,45 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const oldProductsArr = oldProducts.map((product: IProduct) => ({ ...product, category, customer }));
     const newProductsArr = newProducts.map((product: IProduct) => ({ ...product, category, customer }));
 
-    await buyBillproductUpdateHandler(oldProductsArr, newProductsArr);
+    if (oldBill.type === 'DELIVERY') {
+      await deliveryProductUpdateHandler(oldProductsArr, newProductsArr);
+
+      for (const product of oldProducts) {
+        const dbProduct = await Product.findOne({ barCode: product.barCode });
+        if (dbProduct) {
+          await StockMovement.create({
+            product: dbProduct._id,
+            warehouse: oldBill.warehouse,
+            type: 'IN',
+            quantity: Number(product.quantity),
+            unitPrice: Number(product.buyPrice),
+            totalPrice: Number(product.buyPrice) * Number(product.quantity),
+            reference: `DELIVERY-UPDATE-REVERT-${oldBill.orderId}`,
+            relatedBill: oldBill._id,
+            createdBy: userId,
+          });
+        }
+      }
+
+      for (const product of newProducts) {
+        const dbProduct = await Product.findOne({ barCode: product.barCode });
+        if (dbProduct) {
+          await StockMovement.create({
+            product: dbProduct._id,
+            warehouse: body.warehouse || oldBill.warehouse,
+            type: 'OUT',
+            quantity: -Number(product.quantity),
+            unitPrice: Number(product.buyPrice),
+            totalPrice: Number(product.buyPrice) * Number(product.quantity),
+            reference: `DELIVERY-UPDATE-${oldBill.orderId}`,
+            relatedBill: oldBill._id,
+            createdBy: userId,
+          });
+        }
+      }
+    } else {
+      await buyBillproductUpdateHandler(oldProductsArr, newProductsArr);
+    }
 
     const updateBill = await Bill.findByIdAndUpdate(id, payload, { new: true });
 

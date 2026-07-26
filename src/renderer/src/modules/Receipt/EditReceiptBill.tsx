@@ -66,6 +66,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const onAlertOpen = () => setIsAlertOpen(true);
   const onAlertClose = () => setIsAlertOpen(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
@@ -184,6 +185,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
   const setFullyPaid = () => updateState({ orderPaid: state.orderTotalTTC });
 
   const onSubmit = async (values: IBill) => {
+    setSubmitted(true);
     try {
       const payload = {
         ...values,
@@ -215,12 +217,9 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         toast,
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
       );
-      // Don't reset form on edit success, maybe just close?
-      // But keeping legacy behavior of resetting or just closing.
-      // Usually on edit we might want to stay or close.
-      // Legacy code reset everything. I'll just close.
       onClose();
     } catch (err) {
+      setSubmitted(false);
       const error = err as AxiosError;
       showToast(
         toast,
@@ -256,7 +255,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         onMinimize={handleMinimize}
         minimizeTooltip={t('minimize')}
         closeTooltip={t('close')}
-        confirmOnClose={productsValues.some(p => p.productName || p.barCode)}
+        confirmOnClose={!submitted && productsValues.some(p => p.productName || p.barCode)}
         confirmTitle={t('unsavedChanges')}
         confirmMessage={t('unsavedChangesMessage')}
         confirmMinimizeLabel={t('saveAndMinimize')}
