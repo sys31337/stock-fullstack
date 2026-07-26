@@ -9,6 +9,7 @@ import CustomInput from '@web/shared/components/CustomForm/Input'
 import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
+import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
@@ -37,6 +38,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
+  const { data: allWarehouses } = useGetAllWarehouses();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('ORDER');
   const { mutateAsync: createBill } = useCreateBill();
   const { holdReceipt, removeHeldReceipt } = useReceiptHold();
@@ -55,6 +57,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     orderId: 0,
     description: '',
     customer: '',
+    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -360,6 +363,21 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                         </div>
                         <CustomerModal />
                       </div>
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('warehouse')}</Label>
+                      <CustomInput
+                        name="warehouse"
+                        setFieldValue={setFieldValue}
+                        handleBlur={handleBlur}
+                        value={values.warehouse}
+                        selectOptions={
+                          allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
+                        }
+                        isSelect={true}
+                        inputSize="sm"
+                        className="[&_>div>div]:rounded-lg"
+                      />
                     </div>
                   </div>
                 </CardContent>

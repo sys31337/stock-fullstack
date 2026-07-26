@@ -6,7 +6,7 @@ const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createAccountSchema = Joi.object({
   username: string.required(),
-  email: string.required(),
+  email: string,
   fullname: string.required(),
   phone: string.required(),
   password: string.required(),

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Shortcuts from 'shortcuts';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { PrivateRoute } from '@web/shared/components/Authentication';
 import AppSection from '@web/shared/components/AppSection';
 import CustomTitleBar from '@web/shared/components/CustomTitleBar';
@@ -8,20 +8,16 @@ import { ToastProvider, ToastStateProvider } from '@web/shared/components/ui/use
 import './App.css';
 
 const shortcuts = new Shortcuts({
-  capture: true, // Handle events during the capturing phase
-  target: document, // Listening for events on the document object
+  capture: true,
+  target: document,
   shouldHandleEvent(_event: unknown) {
-    return true; // Handle all possible events
+    return true;
   }
 });
 
-
 const Authentication = React.lazy(() => import('@web/modules/Authentication'));
 const Home = React.lazy(() => import('@web/modules/Home'));
-
-/* Modules */
 const BillPdf = React.lazy(() => import('@web/modules/BillPdf'));
-/* Modules */
 
 const App = () => {
   shortcuts.add([
@@ -31,7 +27,7 @@ const App = () => {
     { shortcut: 'F4', handler: (e) => { console.log(e) } },
     { shortcut: 'F5', handler: (e) => { console.log(e) } },
   ])
-  useEffect(() => {
+  React.useEffect(() => {
     shortcuts.start();
   }, []);
 
@@ -48,8 +44,9 @@ const App = () => {
                 element={
                   <PrivateRoute>
                     <Routes>
-                      <Route path="*" element={<Home />} />
+                      <Route path="/" element={<Home />} />
                       <Route path="billpdf/*" element={<BillPdf />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </PrivateRoute>
                 }

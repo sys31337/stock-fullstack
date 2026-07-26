@@ -11,6 +11,7 @@ import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
+import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
@@ -40,6 +41,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
+  const { data: allWarehouses } = useGetAllWarehouses();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('BUY');
   const { mutateAsync: createBill } = useCreateBill();
   const { holdReceipt, removeHeldReceipt } = useReceiptHold();
@@ -57,6 +59,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
     category: '',
     description: '',
     customer: '',
+    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -134,6 +137,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         ...values,
         paymentMethod: 'CASH',
         type: 'BUY',
+        warehouse: values.warehouse || undefined,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -353,6 +357,21 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                         </div>
                         <CategoryModal />
                       </div>
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('warehouse')}</Label>
+                      <CustomInput
+                        name="warehouse"
+                        setFieldValue={setFieldValue}
+                        handleBlur={handleBlur}
+                        value={values.warehouse}
+                        selectOptions={
+                          allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
+                        }
+                        isSelect={true}
+                        inputSize="sm"
+                        className="[&_>div>div]:rounded-lg"
+                      />
                     </div>
                   </div>
                 </CardContent>

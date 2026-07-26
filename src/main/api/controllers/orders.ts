@@ -2,10 +2,11 @@ import { Response, NextFunction } from 'express';
 import Bill from '@api/models/bills';
 import { IUserIdRequest } from '@api/types/common';
 import { orderReleaseProducts, orderCompleteProducts } from '@api/functions/products';
+import { createAuditLog } from '@api/utils/auditLog';
 
 const cancelOrder = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
-    const { params: { id } } = req;
+    const { params: { id }, body, userId } = req;
 
     const bill = await Bill.findById(id);
     if (!bill) {
@@ -23,7 +24,16 @@ const cancelOrder = async (req: IUserIdRequest, res: Response, next: NextFunctio
     await orderReleaseProducts(bill.products);
 
     bill.status = 'cancelled';
+    (bill as any).cancelledBy = userId;
+    bill.cancelReason = body?.reason || '';
     await bill.save();
+
+    await createAuditLog(req, {
+      action: 'cancel',
+      resource: 'order',
+      resourceId: id,
+      details: `Cancelled order #${bill.orderId}`,
+    });
 
     return res.status(200).send(bill);
   } catch (error) {
@@ -52,6 +62,13 @@ const completeOrder = async (req: IUserIdRequest, res: Response, next: NextFunct
 
     bill.status = 'completed';
     await bill.save();
+
+    await createAuditLog(req, {
+      action: 'approve',
+      resource: 'order',
+      resourceId: id,
+      details: `Completed order #${bill.orderId}`,
+    });
 
     return res.status(200).send(bill);
   } catch (error) {

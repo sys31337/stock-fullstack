@@ -11,6 +11,7 @@ import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
+import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
@@ -69,6 +70,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
+  const { data: allWarehouses } = useGetAllWarehouses();
   const { data: billInfo, isFetched } = useGetBillInfo(billId, { enabled: !!isOpen });
   const { mutateAsync: updateBill } = useUpdateBill(billId);
 
@@ -85,6 +87,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
     category: '',
     description: '',
     customer: '',
+    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -142,12 +145,13 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
 
   useEffect(() => {
     if (isFetched && isOpen && billInfo) {
-      const { orderId, category, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
+      const { orderId, category, description, customer, warehouse, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
       setInitialValues({
         orderId,
         category: category?._id,
         description,
         customer: customer?._id,
+        warehouse: warehouse?._id || warehouse,
         orderTotalHT,
         orderTotalTTC,
         orderPaid,
@@ -185,6 +189,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         ...values,
         paymentMethod: 'CASH',
         type: 'BUY',
+        warehouse: values.warehouse || undefined,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -315,6 +320,20 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
                       className="mb-0 w-full"
                     />
                     <CategoryModal />
+                  </div>
+                  <div>
+                    <CustomInput
+                      name="warehouse"
+                      label={t('warehouse')}
+                      setFieldValue={setFieldValue}
+                      handleBlur={handleBlur}
+                      value={values.warehouse}
+                      selectOptions={
+                        allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
+                      }
+                      isSelect={true}
+                      className="mb-0 w-full"
+                    />
                   </div>
                 </div>
               </CardContent>

@@ -7,10 +7,15 @@ import Receipt from '@web/modules/Receipt'
 import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
 import ClientsList from '@web/shared/components/ClientsList'
 import SuppliersList from '@web/shared/components/SuppliersList'
+import Warehouses from '@web/modules/Warehouses'
+import Roles from '@web/modules/Roles'
+import UsersModule from '@web/modules/Users'
+import AuditLogs from '@web/modules/AuditLogs'
+import WarehouseSelector from '@web/shared/components/WarehouseSelector'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
-import { useState, useRef, useCallback, useEffect, createContext, useContext } from 'react'
+import { useState, useRef, useEffect, createContext, useContext } from 'react'
 import {
   AiOutlineClose,
   AiOutlineMore,
@@ -26,6 +31,10 @@ interface ModalActions {
   openSuppliers: () => void
   openReceipt: () => void
   openAllBills: () => void
+  openWarehouses: () => void
+  openRoles: () => void
+  openUsers: () => void
+  openAuditLogs: () => void
 }
 
 const ModalContext = createContext<ModalActions>({
@@ -34,6 +43,10 @@ const ModalContext = createContext<ModalActions>({
   openSuppliers: () => {},
   openReceipt: () => {},
   openAllBills: () => {},
+  openWarehouses: () => {},
+  openRoles: () => {},
+  openUsers: () => {},
+  openAuditLogs: () => {},
 })
 
 interface SubMenuItem {
@@ -80,6 +93,15 @@ const NAV_ITEMS: NavItem[] = [
     label: 'factures',
     children: [
       { label: 'newInvoiceMenu', action: () => {} },
+    ],
+  },
+  {
+    label: 'management',
+    children: [
+      { label: 'warehouses', action: (a) => a.openWarehouses() },
+      { label: 'roles', action: (a) => a.openRoles() },
+      { label: 'users', action: (a) => a.openUsers() },
+      { label: 'auditLogs', action: (a) => a.openAuditLogs() },
     ],
   },
 ]
@@ -154,7 +176,6 @@ const Languages = () => (
           className="flex items-center gap-3 p-2 px-3 mx-1 rounded-lg hover:bg-accent cursor-pointer transition-colors"
           onClick={() => {
             i18next.changeLanguage(code)
-            // eslint-disable-next-line no-restricted-globals
             location.reload()
           }}
         >
@@ -226,6 +247,10 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [openAllBills, setOpenAllBills] = useState(false)
   const [openClients, setOpenClients] = useState(false)
   const [openSuppliers, setOpenSuppliers] = useState(false)
+  const [openWarehouses, setOpenWarehouses] = useState(false)
+  const [openRoles, setOpenRoles] = useState(false)
+  const [openUsers, setOpenUsers] = useState(false)
+  const [openAuditLogs, setOpenAuditLogs] = useState(false)
 
   const modalActions: ModalActions = {
     openProducts: () => setOpenProducts(true),
@@ -233,6 +258,10 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
     openSuppliers: () => setOpenSuppliers(true),
     openReceipt: () => setOpenReceipt(true),
     openAllBills: () => setOpenAllBills(true),
+    openWarehouses: () => setOpenWarehouses(true),
+    openRoles: () => setOpenRoles(true),
+    openUsers: () => setOpenUsers(true),
+    openAuditLogs: () => setOpenAuditLogs(true),
   }
 
   useEffect(() => {
@@ -293,6 +322,9 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
           </nav>
 
           <div className="flex items-center gap-1 ml-auto">
+            <div className="hidden md:block">
+              <WarehouseSelector size="sm" />
+            </div>
             <Languages />
             <div className="w-px h-5 bg-border mx-1" />
             <Button
@@ -325,6 +357,10 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openAllBills && <AllReceiptBills isTopBar open={openAllBills} onOpenChange={setOpenAllBills} />}
         {openClients && <ClientsList open={openClients} onOpenChange={setOpenClients} />}
         {openSuppliers && <SuppliersList open={openSuppliers} onOpenChange={setOpenSuppliers} />}
+        {openWarehouses && <Warehouses isTopBar open={openWarehouses} onOpenChange={setOpenWarehouses} />}
+        {openRoles && <Roles isTopBar open={openRoles} onOpenChange={setOpenRoles} />}
+        {openUsers && <UsersModule isTopBar open={openUsers} onOpenChange={setOpenUsers} />}
+        {openAuditLogs && <AuditLogs isTopBar open={openAuditLogs} onOpenChange={setOpenAuditLogs} />}
       </div>
     </ModalContext.Provider>
   )

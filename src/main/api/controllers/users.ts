@@ -1,12 +1,13 @@
-/* eslint-disable camelcase */
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '@api/models/user';
+import Role from '@api/models/role';
 import { parseJwt } from '@api/utils';
 import { IUserIdRequest } from '@api/types/common';
 import { USERLOGGEDOUT, USERNOTALLOWED } from '@api/constants/users';
 import config from '@api/config';
+import { createAuditLog } from '@api/utils/auditLog';
 
 const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET } = config;
 
@@ -18,21 +19,20 @@ const refreshUserToken = async (req: Request, res: Response, next: NextFunction)
     }
     const user = await User.findOne({ refreshToken });
     if (!user) return res.status(403).send(USERNOTALLOWED);
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     return jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, async (err: jwt.VerifyErrors | null, _decoded: string | jwt.JwtPayload | undefined) => {
       if (err) {
         return res.sendStatus(403);
       }
       const {
-        _id: userId, fullname, profilePicture, email,
+        _id: userId, fullname, profilePicture, email, username, permissions,
       } = user;
       const accessToken = jwt.sign({
-        userId, fullname, profilePicture, email,
+        userId, fullname, profilePicture, email, username, permissions,
       }, ACCESS_TOKEN_SECRET, {
         expiresIn: '1d',
       });
       const newRefreshToken = jwt.sign({
-        userId, fullname, profilePicture, email,
+        userId, fullname, profilePicture, email, username, permissions,
       }, REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });
@@ -52,9 +52,9 @@ const createAccount = async (req: Request, res: Response, next: NextFunction) =>
   const salt = await bcrypt.genSalt();
   const hashPassword = await bcrypt.hash(password, salt);
 
-  const userPayload = {
+  const userPayload: any = {
     username,
-    email,
+    ...(email ? { email } : {}),
     fullname,
     phone,
     password: hashPassword,
@@ -72,7 +72,11 @@ const createAccount = async (req: Request, res: Response, next: NextFunction) =>
 const getCurrentUser = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req;
-    const user = await User.findById(userId).select('-refreshToken -password -salt');
+    const user = await User.findById(userId)
+      .select('-refreshToken -password -salt -twoFactorSecret')
+      .populate('role', 'name permissions')
+      .populate('assignedWarehouses', 'name code')
+      .populate('defaultWarehouse', 'name code');
     return res.status(200).send(user);
   } catch (error) {
     return next(error);
@@ -88,11 +92,11 @@ const updateUser = async (req: IUserIdRequest, res: Response, next: NextFunction
       userId,
     } = req;
 
-    const body = {
+    const body: any = {
       profile_picture, fullname,
     };
 
-    let payload: { [key: string]: string };
+    let payload: { [key: string]: any };
 
     if (password) {
       const salt = await bcrypt.genSalt();
@@ -151,27 +155,72 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
-    if (!user) return res.sendStatus(404);
+    if (!user) {
+      await createAuditLog(req as any, {
+        action: 'login_failed',
+        resource: 'user',
+        details: `Failed login attempt for user: ${username}`,
+      });
+      return res.sendStatus(404);
+    }
+
+    if (user.status !== 'active') {
+      await createAuditLog(req as any, {
+        action: 'login_blocked',
+        resource: 'user',
+        resourceId: user._id.toString(),
+        details: `Blocked login attempt for ${username}: account ${user.status}`,
+      });
+      return res.status(403).send({ message: `Account is ${user.status}` });
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      return res.status(423).send({ message: 'Account is temporarily locked' });
+    }
+
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+      if (user.loginAttempts >= 5) {
+        user.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+      }
+      await user.save();
+
+      await createAuditLog(req as any, {
+        action: 'login_failed',
+        resource: 'user',
+        resourceId: user._id.toString(),
+        details: `Wrong password for ${username} (attempt ${user.loginAttempts})`,
+      });
       return res.status(400).send({ message: 'Wrong Password' });
     }
+
     const {
-      _id: userId, fullname, profilePicture, refreshToken: currentRefreshToken, permissions,
+      _id: userId, fullname, profilePicture, refreshToken: currentRefreshToken,
+      permissions, email, role, assignedWarehouses, warehouseAccessMode, defaultWarehouse,
     } = user;
+
+    let effectivePermissions = [...(permissions || [])];
+    if (role) {
+      const roleDoc = await Role.findById(role);
+      if (roleDoc) {
+        effectivePermissions = [...new Set([...effectivePermissions, ...roleDoc.permissions])];
+      }
+    }
+
     const accessToken = jwt.sign({
-      userId, fullname, profilePicture, username, permissions,
+      userId, fullname, profilePicture, username, permissions: effectivePermissions,
     }, ACCESS_TOKEN_SECRET, {
       expiresIn: '1d',
     });
-    /* Check if currentRefreshToken has Expired */
+
     let refreshToken;
     if (currentRefreshToken) {
       const { exp } = parseJwt(currentRefreshToken);
       const curTime = Math.ceil(Date.now() / 1000);
       if (curTime > exp) {
         refreshToken = jwt.sign({
-          userId, fullname, profilePicture, username, permissions,
+          userId, fullname, profilePicture, username, permissions: effectivePermissions,
         }, REFRESH_TOKEN_SECRET, {
           expiresIn: '90d',
         });
@@ -180,14 +229,34 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       }
     } else {
       refreshToken = jwt.sign({
-        userId, fullname, profilePicture, username, permissions,
+        userId, fullname, profilePicture, username, permissions: effectivePermissions,
       }, REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });
     }
-    /* End Check if currentRefreshToken has Expired */
-    await User.findByIdAndUpdate(userId, { refreshToken });
-    return res.status(200).send({ refreshToken, accessToken });
+
+    user.loginAttempts = 0;
+    user.lockedUntil = undefined;
+    user.lastLogin = new Date();
+    await User.findByIdAndUpdate(userId, { refreshToken, loginAttempts: 0, lockedUntil: undefined, lastLogin: new Date() });
+
+    await createAuditLog(req as any, {
+      action: 'login',
+      resource: 'user',
+      resourceId: userId?.toString(),
+      details: `User logged in: ${username}`,
+    });
+
+    return res.status(200).send({
+      refreshToken,
+      accessToken,
+      user: {
+        userId, fullname, profilePicture, username, email,
+        permissions: effectivePermissions,
+        assignedWarehouses, warehouseAccessMode, defaultWarehouse,
+        role,
+      },
+    });
   } catch (error) {
     return next(error);
   }
@@ -203,6 +272,14 @@ const logout = async (req: Request, res: Response) => {
   const userId = user[0].id;
   await User.findByIdAndUpdate(userId, { refresh_token: null });
   res.clearCookie('refreshToken');
+
+  await createAuditLog(req as any, {
+    action: 'logout',
+    resource: 'user',
+    resourceId: userId?.toString(),
+    details: 'User logged out',
+  });
+
   return res.sendStatus(200);
 };
 

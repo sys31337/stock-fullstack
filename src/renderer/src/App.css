@@ -86,6 +86,20 @@
   }
 }
 
+/* Global form element consistency */
+select {
+  @apply flex h-10 w-full rounded-lg border-2 border-border bg-background px-3 py-2 text-sm transition-all duration-150;
+  @apply hover:border-muted-foreground/30;
+  @apply focus-visible:outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/15;
+  @apply disabled:cursor-not-allowed disabled:opacity-50;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23909090' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 14px 10px;
+  padding-right: 2.5rem;
+}
+
 /* Hide spin buttons for Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {

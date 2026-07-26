@@ -3,12 +3,14 @@ import { Button } from '@web/shared/components/ui/button'
 import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { useFormik } from 'formik'
+import { BiSolidCheckCircle } from 'react-icons/bi';
 import { AiFillFilePdf } from 'react-icons/ai';
 import CustomForm from '@web/shared/components/CustomForm'
 import CustomInput from '@web/shared/components/CustomForm/Input'
 import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
+import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
@@ -37,6 +39,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
+  const { data: allWarehouses } = useGetAllWarehouses();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('DELIVERY');
   const { mutateAsync: createBill } = useCreateBill();
   const { holdReceipt, removeHeldReceipt } = useReceiptHold();
@@ -55,6 +58,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
     orderId: 0,
     description: '',
     customer: '',
+    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -125,6 +129,8 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
     }
   }, [isFetched, latestBillNumber]);
 
+  const setFullyPaid = () => updateState({ orderPaid: state.orderTotalTTC });
+
   const onSubmit = async (values: Payload) => {
     try {
       const { category: _category, ...valuesWithoutCategory } = values;
@@ -180,6 +186,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         orderTotalHT: ('0.00'),
         orderTotalTTC: ('0.00'),
       })
+      setFullyPaid();
       onClose();
     } catch (err) {
       const error = err as AxiosError;
@@ -344,6 +351,21 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                         <CustomerModal />
                       </div>
                     </div>
+                    <div>
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('warehouse')}</Label>
+                      <CustomInput
+                        name="warehouse"
+                        setFieldValue={setFieldValue}
+                        handleBlur={handleBlur}
+                        value={values.warehouse}
+                        selectOptions={
+                          allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
+                        }
+                        isSelect={true}
+                        inputSize="sm"
+                        className="[&_>div>div]:rounded-lg"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -372,6 +394,38 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                     <span className="text-base font-bold text-gray-900">{t('totalTTC')}</span>
                     <span className="text-xl font-bold text-primary">{state.orderTotalTTC} <small className="text-muted-foreground text-xs font-normal">DZD</small></span>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border bg-white shadow-sm">
+                <CardHeader className="pb-3 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    {t('paymentDetails')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-5 space-y-3">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('paidAmount')}</Label>
+                    <CustomInput
+                      name="orderPaid"
+                      type={'number'}
+                      handleChange={(e) => updateState({ orderPaid: e.target.value })}
+                      handleBlur={(e) => updateState({ orderPaid: e.target.value })}
+                      value={state.orderPaid}
+                      errorMessage={errors.orderPaid && touched.orderPaid && errors.orderPaid}
+                      currency='DZD'
+                      className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:text-base [&_input]:font-semibold"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700 font-medium"
+                    onClick={(e) => { e.preventDefault(); setFullyPaid(); }}
+                  >
+                    <BiSolidCheckCircle className="h-4 w-4 mr-2" />
+                    {t('fully_paid')}
+                  </Button>
                 </CardContent>
               </Card>
 

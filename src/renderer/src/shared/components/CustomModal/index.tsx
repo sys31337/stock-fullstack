@@ -9,7 +9,7 @@ import {
 } from '@web/shared/components/ui/dialog'
 import { Button } from '@web/shared/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip'
-import { AiOutlineMinus, AiOutlineClose } from 'react-icons/ai'
+import { AiOutlineMinus } from 'react-icons/ai'
 import { cn } from '@web/shared/utils/cn'
 
 interface props {
@@ -73,16 +73,16 @@ const CustomModal = ({
   }, [showConfirm, onMinimize]);
 
   const handleEscapeKeyDown = (e: Event) => {
-    if (!showConfirm && confirmOnClose) {
+    if (confirmOnClose) {
       e.preventDefault();
-      setShowConfirm(true);
+      if (!showConfirm) setShowConfirm(true);
     }
   };
 
   const handleInteractOutside = (e: Event) => {
-    if (!showConfirm && confirmOnClose) {
+    if (confirmOnClose) {
       e.preventDefault();
-      setShowConfirm(true);
+      if (!showConfirm) setShowConfirm(true);
     }
   };
 
@@ -113,7 +113,7 @@ const CustomModal = ({
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent
           className={cn(
-            isFull ? "w-[98vw] h-[96vh] max-w-[98vw] p-0 rounded-lg border-none flex flex-col gap-0 [&>button]:hidden" : "",
+            isFull ? "w-[98vw] h-[96vh] max-w-[98vw] p-0 rounded-lg border-none flex flex-col gap-0 [&>button]:hidden" : "[&>button]:hidden p-6",
             contentClassName
           )}
           style={contentStyle}
@@ -122,22 +122,25 @@ const CustomModal = ({
           {...restContentProps}
         >
           <DialogHeader className="px-6 pt-6 flex-shrink-0 flex flex-row items-center justify-between space-y-0">
-            {title && <DialogTitle>{title}</DialogTitle>}
             <div className="flex items-center gap-2">
+              {title && <DialogTitle>{title}</DialogTitle>}
+            </div>
+            <div className="flex items-center gap-1.5">
               {headerActions}
               {isFull && onMinimize && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-                        onClick={onMinimize}
+                        onClick={() => { if (confirmOnClose) setShowConfirm(true); else onMinimize(); }}
+                        className="w-3 h-3 rounded-full bg-yellow-500 hover:brightness-110 transition-all focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1"
+                        aria-label={minimizeTooltip || 'Minimize'}
                       >
-                        <AiOutlineMinus className="w-4 h-4" />
-                      </Button>
+                        <span className="flex items-center justify-center h-full opacity-0 hover:opacity-100 transition-opacity">
+                          <span className="w-2 h-0.5 bg-yellow-900 rounded-full" />
+                        </span>
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>{minimizeTooltip || 'Minimize'}</TooltipContent>
                   </Tooltip>
@@ -147,15 +150,17 @@ const CustomModal = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
                         onClick={handleXClick}
+                        className="w-3 h-3 rounded-full bg-red-500 hover:brightness-110 transition-all focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1"
+                        aria-label={closeTooltip || 'Close'}
                       >
-                        <AiOutlineClose className="w-4 h-4" />
-                      </Button>
+                        <span className="flex items-center justify-center h-full opacity-0 hover:opacity-100 transition-opacity">
+                          <span className="w-2 h-0.5 bg-red-900 rotate-45 absolute" />
+                          <span className="w-2 h-0.5 bg-red-900 -rotate-45 absolute" />
+                        </span>
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent>{closeTooltip || 'Close'}</TooltipContent>
                   </Tooltip>
@@ -163,7 +168,7 @@ const CustomModal = ({
               )}
             </div>
           </DialogHeader>
-          <div className={cn("relative overflow-y-auto flex-1", isFull ? "p-0" : "px-6 py-4")} style={bodyProps}>
+          <div className={cn("relative overflow-y-auto flex-1", isFull ? "p-0" : "")} style={bodyProps}>
             {children}
           </div>
           {footer && <DialogFooter className="px-6 pb-6 flex-shrink-0">{footer}</DialogFooter>}
@@ -172,7 +177,7 @@ const CustomModal = ({
 
       {showConfirm && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-auto"
           onClick={(e) => { if (e.target === e.currentTarget) handleConfirmCancel(); }}
         >
           <div className="bg-popover rounded-xl shadow-2xl border p-6 max-w-sm w-full mx-4">
