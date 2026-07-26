@@ -8,5 +8,9 @@ export interface IWarehouse {
   email?: string;
   isActive: boolean;
   manager?: ObjectId;
+  rc?: string;
+  nif?: string;
+  ai?: string;
+  nis?: string;
   metadata?: Map<string, string>;
 }

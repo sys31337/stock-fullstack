@@ -144,5 +144,10 @@
   "allowOutOfStockSalesDesc": "السماح بإنشاء إيصالات التسليم حتى عندما يكون المخزون غير كافٍ",
   "allowOutOfStockOrders": "السماح بالطلبات خارج المخزون",
   "allowOutOfStockOrdersDesc": "السماح بإنشاء الطلبات حتى عندما يكون المخزون غير كافٍ",
-  "stockTab": "المخزون"
+  "stockTab": "المخزون",
+  "companyTab": "الشركة",
+  "companyInfo": "معلومات الشركة",
+  "companyInfoDesc": "إدارة تفاصيل شركتك",
+  "companyName": "اسم الشركة",
+  "taxInfo": "معلومات ضريبية"
 }

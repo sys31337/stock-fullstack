@@ -9,6 +9,10 @@ const warehouseSchema = new Schema<IWarehouse>({
   email: String,
   isActive: { type: Boolean, default: true },
   manager: { type: Schema.Types.ObjectId, ref: 'User' },
+  rc: String,
+  nif: String,
+  ai: String,
+  nis: String,
   metadata: { type: Map, of: String },
 }, { timestamps: true });
 

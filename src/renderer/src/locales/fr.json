@@ -226,5 +226,10 @@
   "allowOutOfStockSalesDesc": "Permettre la création de bons de livraison même si le stock est insuffisant",
   "allowOutOfStockOrders": "Autoriser les commandes hors stock",
   "allowOutOfStockOrdersDesc": "Permettre la création de commandes même si le stock est insuffisant",
-  "stockTab": "Stock"
+  "stockTab": "Stock",
+  "companyTab": "Société",
+  "companyInfo": "Informations de la société",
+  "companyInfoDesc": "Gérer les détails de votre société",
+  "companyName": "Nom de la société",
+  "taxInfo": "Informations fiscales"
 }

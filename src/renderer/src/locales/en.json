@@ -226,5 +226,10 @@
   "allowOutOfStockSalesDesc": "Allow creating delivery notes even when stock is insufficient",
   "allowOutOfStockOrders": "Allow out-of-stock orders",
   "allowOutOfStockOrdersDesc": "Allow creating orders even when stock is insufficient",
-  "stockTab": "Stock"
+  "stockTab": "Stock",
+  "companyTab": "Company",
+  "companyInfo": "Company Information",
+  "companyInfoDesc": "Manage your company details",
+  "companyName": "Company Name",
+  "taxInfo": "Tax Information"
 }

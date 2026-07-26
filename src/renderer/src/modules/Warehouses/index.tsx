@@ -10,6 +10,7 @@ import { Search, Warehouse, Plus, Pencil, Trash2, Building2, Wand2 } from 'lucid
 import Pagination from '@web/shared/components/Pagination';
 import { useGetAllWarehouses, useCreateWarehouse, useUpdateWarehouse, useDeleteWarehouse } from '@web/shared/hooks/useWarehouses';
 import { Checkbox } from '@web/shared/components/ui/checkbox';
+import { Separator } from '@web/shared/components/ui/separator';
 import { useToast } from '@web/shared/components/ui/use-toast';
 
 interface WarehousesProps {
@@ -25,9 +26,13 @@ interface WarehouseForm {
   phone: string;
   email: string;
   isActive: boolean;
+  rc: string;
+  nif: string;
+  ai: string;
+  nis: string;
 }
 
-const emptyForm: WarehouseForm = { name: '', code: '', address: '', phone: '', email: '', isActive: true };
+const emptyForm: WarehouseForm = { name: '', code: '', address: '', phone: '', email: '', isActive: true, rc: '', nif: '', ai: '', nis: '' };
 
 const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen, onOpenChange }) => {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -61,7 +66,7 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
 
   const openEdit = (warehouse?: any) => {
     if (warehouse) {
-      setForm({ name: warehouse.name, code: warehouse.code, address: warehouse.address || '', phone: warehouse.phone || '', email: warehouse.email || '', isActive: warehouse.isActive });
+      setForm({ name: warehouse.name, code: warehouse.code, address: warehouse.address || '', phone: warehouse.phone || '', email: warehouse.email || '', isActive: warehouse.isActive, rc: warehouse.rc || '', nif: warehouse.nif || '', ai: warehouse.ai || '', nis: warehouse.nis || '' });
       setEditingId(warehouse._id);
     } else {
       setForm(emptyForm);
@@ -259,11 +264,31 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
               <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={t('email')} />
             </div>
             <div className='flex flex-col'>
-              <label className="text-sm font-medium mb-1 block">{t('email')}</label>
+              <label className="text-sm font-medium mb-1 block">{t('active')}</label>
               <div className="flex flex-1 items-center gap-2">
                 <Checkbox id="isActive" checked={form.isActive} onCheckedChange={(c) => setForm({ ...form, isActive: c })} />
                 <label htmlFor="isActive" className="text-sm font-medium">{t('active')}</label>
               </div>
+            </div>
+          </div>
+          <Separator className="my-1" />
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{t('taxInfo')}</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">RC</label>
+              <Input value={form.rc} onChange={(e) => setForm({ ...form, rc: e.target.value })} placeholder="RC" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">NIF</label>
+              <Input value={form.nif} onChange={(e) => setForm({ ...form, nif: e.target.value })} placeholder="NIF" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">AI</label>
+              <Input value={form.ai} onChange={(e) => setForm({ ...form, ai: e.target.value })} placeholder="AI" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">NIS</label>
+              <Input value={form.nis} onChange={(e) => setForm({ ...form, nis: e.target.value })} placeholder="NIS" />
             </div>
           </div>
           <div className="flex justify-end gap-2 border-t border-border/60 pt-4">

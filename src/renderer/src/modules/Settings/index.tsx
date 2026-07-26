@@ -3,15 +3,17 @@ import { Switch } from '@web/shared/components/ui/switch';
 import { Label } from '@web/shared/components/ui/label';
 import { Separator } from '@web/shared/components/ui/separator';
 import { Button } from '@web/shared/components/ui/button';
+import { Input } from '@web/shared/components/ui/input';
 import { useToast } from '@web/shared/components/ui/use-toast';
 import showToast from '@web/shared/functions/showToast';
 import { useGetSettings, useUpdateSettings } from '@web/shared/hooks/useSettings';
 import { t } from 'i18next';
-import { Save, Loader2, Package, X } from 'lucide-react';
+import { Save, Loader2, Package, Building2, X } from 'lucide-react';
 import { cn } from '@web/shared/utils/cn';
 
 const TABS = [
   { id: 'stock', label: 'stockTab', icon: Package },
+  { id: 'company', label: 'companyTab', icon: Building2 },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -30,22 +32,43 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
 
   const [allowOutOfStockSales, setAllowOutOfStockSales] = useState(false);
   const [allowOutOfStockOrders, setAllowOutOfStockOrders] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [rc, setRc] = useState('');
+  const [nif, setNif] = useState('');
+  const [ai, setAi] = useState('');
+  const [nis, setNis] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     if (isFetched && settings) {
       setAllowOutOfStockSales(settings.allowOutOfStockSales ?? false);
       setAllowOutOfStockOrders(settings.allowOutOfStockOrders ?? false);
+      setCompanyName(settings.companyName ?? '');
+      setRc(settings.rc ?? '');
+      setNif(settings.nif ?? '');
+      setAi(settings.ai ?? '');
+      setNis(settings.nis ?? '');
+      setCompanyAddress(settings.companyAddress ?? '');
+      setCompanyPhone(settings.companyPhone ?? '');
       setDirty(false);
     }
   }, [isFetched, settings]);
 
+  const buildPayload = () => {
+    if (activeTab === 'stock') {
+      return { allowOutOfStockSales, allowOutOfStockOrders };
+    }
+    if (activeTab === 'company') {
+      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone };
+    }
+    return {};
+  };
+
   const handleSave = async () => {
     try {
-      await updateSettings({
-        allowOutOfStockSales,
-        allowOutOfStockOrders,
-      });
+      await updateSettings(buildPayload());
       setDirty(false);
       showToast(toast, { title: t('actionPerformed'), description: t('settingsSaved'), status: 'success' });
     } catch {
@@ -129,6 +152,52 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                       checked={allowOutOfStockOrders}
                       onCheckedChange={(v) => { setAllowOutOfStockOrders(v); setDirty(true); }}
                     />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-3">
+                  <Button onClick={handleSave} disabled={!dirty || isPending} className="gap-2">
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {t('save')}
+                  </Button>
+                </div>
+              </div>
+            ) : activeTab === 'company' ? (
+              <div className="max-w-md space-y-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">{t('companyInfo')}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('companyInfoDesc')}</p>
+                </div>
+                <Separator />
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">{t('companyName')}</Label>
+                    <Input value={companyName} onChange={(e) => { setCompanyName(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-sm font-medium">RC</Label>
+                      <Input value={rc} onChange={(e) => { setRc(e.target.value); setDirty(true); }} className="mt-1" placeholder="RC" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">NIF</Label>
+                      <Input value={nif} onChange={(e) => { setNif(e.target.value); setDirty(true); }} className="mt-1" placeholder="NIF" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">AI</Label>
+                      <Input value={ai} onChange={(e) => { setAi(e.target.value); setDirty(true); }} className="mt-1" placeholder="AI" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">NIS</Label>
+                      <Input value={nis} onChange={(e) => { setNis(e.target.value); setDirty(true); }} className="mt-1" placeholder="NIS" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('address')}</Label>
+                    <Input value={companyAddress} onChange={(e) => { setCompanyAddress(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('phone')}</Label>
+                    <Input value={companyPhone} onChange={(e) => { setCompanyPhone(e.target.value); setDirty(true); }} className="mt-1" />
                   </div>
                 </div>
                 <div className="flex justify-end pt-3">
