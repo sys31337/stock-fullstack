@@ -218,5 +218,13 @@
   "role": "Rôle",
   "details": "Détails",
   "generateFromName": "Générer depuis le nom",
-  "saveChanges": "Enregistrer les modifications"
+  "saveChanges": "Enregistrer les modifications",
+  "settingsSaved": "Paramètres enregistrés",
+  "stockManagement": "Gestion de stock",
+  "stockManagementDesc": "Configurer le comportement du stock pour les commandes et les livraisons",
+  "allowOutOfStockSales": "Autoriser les ventes hors stock",
+  "allowOutOfStockSalesDesc": "Permettre la création de bons de livraison même si le stock est insuffisant",
+  "allowOutOfStockOrders": "Autoriser les commandes hors stock",
+  "allowOutOfStockOrdersDesc": "Permettre la création de commandes même si le stock est insuffisant",
+  "stockTab": "Stock"
 }

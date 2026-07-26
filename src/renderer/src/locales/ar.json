@@ -135,5 +135,14 @@
   "unsavedChanges": "تغييرات غير محفوظة",
   "unsavedChangesMessage": "لديك بيانات غير محفوظة. ماذا تريد أن تفعل؟",
   "saveAndMinimize": "حفظ وتصغير",
-  "discard": "تجاهل"
+  "discard": "تجاهل",
+  "settings": "الإعدادات",
+  "settingsSaved": "تم حفظ الإعدادات",
+  "stockManagement": "إدارة المخزون",
+  "stockManagementDesc": "تكوين سلوك المخزون للطلبات والتسليمات",
+  "allowOutOfStockSales": "السماح بالمبيعات خارج المخزون",
+  "allowOutOfStockSalesDesc": "السماح بإنشاء إيصالات التسليم حتى عندما يكون المخزون غير كافٍ",
+  "allowOutOfStockOrders": "السماح بالطلبات خارج المخزون",
+  "allowOutOfStockOrdersDesc": "السماح بإنشاء الطلبات حتى عندما يكون المخزون غير كافٍ",
+  "stockTab": "المخزون"
 }

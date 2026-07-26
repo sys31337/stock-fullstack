@@ -116,7 +116,7 @@ export const buyBillproductUpdateHandler = async (oldProducts: IProduct[], newPr
   await buyBillProductHandler(added);
 };
 
-export const orderReserveProducts = async (products: IProduct[]) => {
+export const orderReserveProducts = async (products: IProduct[], skipStockCheck = false) => {
   for (const product of products) {
     const { barCode, quantity } = product;
     const existingProduct = await Product.findOne({ barCode });
@@ -125,9 +125,11 @@ export const orderReserveProducts = async (products: IProduct[]) => {
       throw new Error(`Product with barcode ${barCode} not found`);
     }
 
-    const available = Number(existingProduct.quantity) - Number(existingProduct.reserved || 0);
-    if (available < Number(quantity)) {
-      throw new Error(`Insufficient stock for product ${existingProduct.productName}. Available: ${available}, requested: ${quantity}`);
+    if (!skipStockCheck) {
+      const available = Number(existingProduct.quantity) - Number(existingProduct.reserved || 0);
+      if (available < Number(quantity)) {
+        throw new Error(`Insufficient stock for product ${existingProduct.productName}. Available: ${available}, requested: ${quantity}`);
+      }
     }
 
     await Product.findOneAndUpdate(
@@ -160,7 +162,7 @@ export const orderReleaseProducts = async (products: IProduct[]) => {
   }
 };
 
-export const deliveryDecrementProducts = async (products: IProduct[]) => {
+export const deliveryDecrementProducts = async (products: IProduct[], skipStockCheck = false) => {
   for (const product of products) {
     const { barCode, quantity } = product;
     const existing = await Product.findOne({ barCode });
@@ -169,9 +171,11 @@ export const deliveryDecrementProducts = async (products: IProduct[]) => {
       throw new Error(`Product with barcode ${barCode} not found`);
     }
 
-    const currentQty = Number(existing.quantity);
-    if (currentQty < Number(quantity)) {
-      throw new Error(`Insufficient stock for product ${existing.productName}. Available: ${currentQty}, requested: ${quantity}`);
+    if (!skipStockCheck) {
+      const currentQty = Number(existing.quantity);
+      if (currentQty < Number(quantity)) {
+        throw new Error(`Insufficient stock for product ${existing.productName}. Available: ${currentQty}, requested: ${quantity}`);
+      }
     }
 
     await Product.findOneAndUpdate(
@@ -182,7 +186,7 @@ export const deliveryDecrementProducts = async (products: IProduct[]) => {
   }
 };
 
-export const deliveryProductUpdateHandler = async (oldProducts: IProduct[], newProducts: IProduct[]) => {
+export const deliveryProductUpdateHandler = async (oldProducts: IProduct[], newProducts: IProduct[], skipStockCheck = false) => {
   // First revert old delivery: add back all old product quantities
   for (const product of oldProducts) {
     const { barCode, quantity } = product;
@@ -200,9 +204,11 @@ export const deliveryProductUpdateHandler = async (oldProducts: IProduct[], newP
     if (!existing) {
       throw new Error(`Product with barcode ${barCode} not found`);
     }
-    const currentQty = Number(existing.quantity);
-    if (currentQty < Number(quantity)) {
-      throw new Error(`Insufficient stock for product ${existing.productName}. Available: ${currentQty}, requested: ${quantity}`);
+    if (!skipStockCheck) {
+      const currentQty = Number(existing.quantity);
+      if (currentQty < Number(quantity)) {
+        throw new Error(`Insufficient stock for product ${existing.productName}. Available: ${currentQty}, requested: ${quantity}`);
+      }
     }
     await Product.findOneAndUpdate(
       { barCode },

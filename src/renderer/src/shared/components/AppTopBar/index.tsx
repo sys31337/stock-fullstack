@@ -11,6 +11,7 @@ import Warehouses from '@web/modules/Warehouses'
 import Roles from '@web/modules/Roles'
 import UsersModule from '@web/modules/Users'
 import AuditLogs from '@web/modules/AuditLogs'
+import SettingsDrawer from '@web/modules/Settings'
 import WarehouseSelector from '@web/shared/components/WarehouseSelector'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
@@ -21,6 +22,7 @@ import {
   AiOutlineMore,
   AiOutlineDown,
   AiOutlinePoweroff,
+  AiOutlineSetting,
 } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@web/shared/utils/cn'
@@ -251,6 +253,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [openRoles, setOpenRoles] = useState(false)
   const [openUsers, setOpenUsers] = useState(false)
   const [openAuditLogs, setOpenAuditLogs] = useState(false)
+  const [openSettings, setOpenSettings] = useState(false)
 
   const modalActions: ModalActions = {
     openProducts: () => setOpenProducts(true),
@@ -322,10 +325,18 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
           </nav>
 
           <div className="flex items-center gap-1 ml-auto">
-            <div className="hidden md:block">
+            {/* <div className="hidden md:block">
               <WarehouseSelector size="sm" />
-            </div>
+            </div> */}
             <Languages />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOpenSettings(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-accent gap-1.5 h-8 px-2.5"
+            >
+              <AiOutlineSetting className="h-3.5 w-3.5" />
+            </Button>
             <div className="w-px h-5 bg-border mx-1" />
             <Button
               variant="ghost"
@@ -361,6 +372,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openRoles && <Roles isTopBar open={openRoles} onOpenChange={setOpenRoles} />}
         {openUsers && <UsersModule isTopBar open={openUsers} onOpenChange={setOpenUsers} />}
         {openAuditLogs && <AuditLogs isTopBar open={openAuditLogs} onOpenChange={setOpenAuditLogs} />}
+        <SettingsDrawer isOpen={openSettings} onClose={() => setOpenSettings(false)} />
       </div>
     </ModalContext.Provider>
   )

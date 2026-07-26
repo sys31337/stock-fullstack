@@ -68,10 +68,10 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
 
   useEffect(() => {
     if (orderFetched && orderToConvert) {
-      const { orderId, description, customer, warehouse, orderTotalHT, orderTotalTTC, products, billDate } = orderToConvert;
+      const { description, customer, warehouse, orderTotalHT, orderTotalTTC, products, billDate } = orderToConvert;
       setDeliveryInitialData({
         values: {
-          orderId,
+          orderId: 0,
           description: description || '',
           customer: customer?._id || '',
           warehouse: warehouse?._id || warehouse || '',

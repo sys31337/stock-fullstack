@@ -129,7 +129,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
     if (isFetched) {
       setFieldValue('orderId', latestBillNumber + 1)
     }
-  }, [isFetched, latestBillNumber]);
+  }, [isFetched, latestBillNumber, initialHeldData]);
 
   const setFullyPaid = () => updateState({ orderPaid: state.orderTotalTTC });
 

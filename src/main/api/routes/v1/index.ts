@@ -13,6 +13,7 @@ import stockMovementsRouter from './helpers/stockMovements';
 import warehouseTransfersRouter from './helpers/warehouseTransfers';
 import permissionsRouter from './helpers/permissions';
 import dashboardRouter from './helpers/dashboard';
+import settingsRouter from './helpers/settings';
 
 const router = express.Router();
 
@@ -29,5 +30,6 @@ router.use('/stock-movements', stockMovementsRouter);
 router.use('/warehouse-transfers', warehouseTransfersRouter);
 router.use('/permissions', permissionsRouter);
 router.use('/dashboard', dashboardRouter);
+router.use('/settings', settingsRouter);
 
 export default router;

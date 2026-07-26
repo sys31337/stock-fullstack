@@ -218,5 +218,13 @@
   "role": "Role",
   "details": "Details",
   "generateFromName": "Generate from name",
-  "saveChanges": "Save Changes"
+  "saveChanges": "Save Changes",
+  "settingsSaved": "Settings saved",
+  "stockManagement": "Stock Management",
+  "stockManagementDesc": "Configure stock behavior for orders and deliveries",
+  "allowOutOfStockSales": "Allow out-of-stock sales",
+  "allowOutOfStockSalesDesc": "Allow creating delivery notes even when stock is insufficient",
+  "allowOutOfStockOrders": "Allow out-of-stock orders",
+  "allowOutOfStockOrdersDesc": "Allow creating orders even when stock is insufficient",
+  "stockTab": "Stock"
 }

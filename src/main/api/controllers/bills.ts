@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import Bill from '@api/models/bills';
 import StockMovement from '@api/models/stockMovement';
 import Product from '@api/models/products';
+import Settings from '@api/models/settings';
 import { orderReleaseProducts } from '@api/functions/products';
 import { IUserIdRequest } from '@api/types/common';
 import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts, deliveryProductUpdateHandler } from '@api/functions/products';
@@ -37,6 +38,8 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ...(type === 'ORDER' && { status: 'pending' }),
     };
 
+    const settings = await Settings.findOne();
+
     if (type === 'BUY') {
       await buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })));
       for (const product of products) {
@@ -58,7 +61,8 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     }
 
     if (type === 'ORDER') {
-      await orderReserveProducts(products);
+      const skipStockCheck = settings?.allowOutOfStockOrders ?? false;
+      await orderReserveProducts(products, skipStockCheck);
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
@@ -75,7 +79,8 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     }
 
     if (type === 'DELIVERY' && !body.convertFromOrder) {
-      await deliveryDecrementProducts(products);
+      const skipStockCheck = settings?.allowOutOfStockSales ?? false;
+      await deliveryDecrementProducts(products, skipStockCheck);
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
@@ -152,7 +157,9 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const newProductsArr = newProducts.map((product: IProduct) => ({ ...product, category, customer }));
 
     if (oldBill.type === 'DELIVERY') {
-      await deliveryProductUpdateHandler(oldProductsArr, newProductsArr);
+      const settings = await Settings.findOne();
+      const skipStockCheck = settings?.allowOutOfStockSales ?? false;
+      await deliveryProductUpdateHandler(oldProductsArr, newProductsArr, skipStockCheck);
 
       for (const product of oldProducts) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
