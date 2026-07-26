@@ -9,6 +9,7 @@ import { Image as ImageExtension } from '@tiptap/extension-image'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { Underline } from '@tiptap/extension-underline'
 import { TextAlign } from '@tiptap/extension-text-align'
+import { Link } from '@tiptap/extension-link'
 import { t } from 'i18next'
 
 interface WysiwygEditorProps {
@@ -43,8 +44,9 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ content, onChange, placeh
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: { levels: [1, 2, 3, 4, 5] },
+        heading: { levels: [1, 2, 3] },
         underline: false,
+        link: false,
       }),
       Table.configure({
         resizable: true,
@@ -57,6 +59,10 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ content, onChange, placeh
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { target: '_blank' },
+      }),
       Placeholder.configure({
         placeholder: placeholder || t('startTyping') || 'Start typing...',
       }),
@@ -67,7 +73,7 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ content, onChange, placeh
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none',
+        class: 'focus:outline-none p-4',
       },
     },
   })
@@ -161,6 +167,29 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ content, onChange, placeh
         <Divider />
 
         <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          active={editor.isActive('blockquote')}
+          title="Blockquote"
+        >
+          &ldquo;
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          active={editor.isActive('codeBlock')}
+          title="Code block"
+        >
+          &lt;/&gt;
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="Horizontal rule"
+        >
+          &mdash;
+        </ToolbarButton>
+
+        <Divider />
+
+        <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           active={editor.isActive({ textAlign: 'left' })}
           title={t('alignLeft') || 'Align left'}
@@ -184,6 +213,13 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ content, onChange, placeh
 
         <Divider />
 
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleLink({ href: '' }).run()}
+          active={editor.isActive('link')}
+          title="Link"
+        >
+          &#x1F517;
+        </ToolbarButton>
         <ToolbarButton onClick={insertTable} title={t('insertTable') || 'Insert table'}>
           &#x25A6;
         </ToolbarButton>

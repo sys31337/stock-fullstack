@@ -125,7 +125,11 @@ const ReceiptBill: React.FC = () => {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { margin: 0; }
   table { border-collapse: collapse; }
-  @media print { body { zoom: 1.5; } }
+  tr, th, td { break-inside: avoid; page-break-inside: avoid; }
+  h1, h2, h3, h4 { break-after: avoid; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  @media print { body { zoom: 1.3; } }
 </style>
 </head>
 <body>${content}</body>

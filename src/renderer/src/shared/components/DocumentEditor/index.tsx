@@ -159,30 +159,18 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;margin-top:12px">
-          <div style="display:flex;flex-direction:row">
-            <div style="width:60%;padding-right:8px">
-              <div style="font-size:14px;font-weight:bold">${settings?.companyName || ''}</div>
-              <div style="font-size:9px;margin-top:4px">${settings?.companyAddress ? `${settings.companyAddress} - ${settings.wilaya || ''}` : settings?.wilaya || ''}</div>
-            </div>
-            <div style="width:12%;border-top:0.3px solid #000;border-left:0.3px solid #000;padding:2px 4px 2px 0;text-align:right"><span style="font-size:9px;font-weight:bold">T\u00E9l:</span></div>
-            <div style="width:28%;border-top:0.3px solid #000;padding:2px 0 2px 4px"><span style="font-size:9px">${settings?.companyPhone || ''}</span></div>
+        <div style="display:flex;flex-direction:row;margin-top:12px">
+          <div style="width:40%;padding-right:8px">
+            <div style="font-size:14px;font-weight:bold">${settings?.companyName || ''}</div>
+            <div style="font-size:9px;margin-top:4px">${settings?.companyAddress ? `${settings.companyAddress} - ${settings.wilaya || ''}` : settings?.wilaya || ''}</div>
           </div>
-          <div style="display:flex;flex-direction:row">
-            <div style="width:60%"></div>
-            <div style="width:12%;border-left:0.3px solid #000;padding:2px 4px 2px 0;text-align:right"><span style="font-size:9px;font-weight:bold">Mobile:</span></div>
-            <div style="width:28%;padding:2px 0 2px 4px"><span style="font-size:9px">${settings?.mobile || ''}</span></div>
-          </div>
-          <div style="display:flex;flex-direction:row">
-            <div style="width:60%"></div>
-            <div style="width:12%;border-left:0.3px solid #000;padding:2px 4px 2px 0;text-align:right"><span style="font-size:9px;font-weight:bold">Site:</span></div>
-            <div style="width:28%;padding:2px 0 2px 4px"><span style="font-size:9px">${settings?.website || ''}</span></div>
-          </div>
-          <div style="display:flex;flex-direction:row">
-            <div style="width:60%"></div>
-            <div style="width:12%;border-left:0.3px solid #000;padding:2px 4px 2px 0;text-align:right"><span style="font-size:9px;font-weight:bold">Email:</span></div>
-            <div style="width:28%;padding:2px 0 2px 4px"><span style="font-size:9px">${settings?.email || ''}</span></div>
-          </div>
+          <div style="width:30%;border-top:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">T\u00E9l: </span><span style="font-size:9px">${settings?.companyPhone || ''}</span></div>
+          <div style="width:30%;border-top:0.3px solid #000;border-left:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">Mobile: </span><span style="font-size:9px">${settings?.mobile || ''}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:row">
+          <div style="width:40%"></div>
+          <div style="width:30%;border-top:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">Site: </span><span style="font-size:9px">${settings?.website || ''}</span></div>
+          <div style="width:30%;border-top:0.3px solid #000;border-left:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">Email: </span><span style="font-size:9px">${settings?.email || ''}</span></div>
         </div>
 
         ${bill.description ? `<div style="margin-top:8px;font-size:9px"><b>Notes:</b> ${bill.description}</div>` : ''}
@@ -323,6 +311,7 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
           <ToolbarButton onClick={() => exec('bold')} active={selectionState.bold} title="Bold"><strong>B</strong></ToolbarButton>
           <ToolbarButton onClick={() => exec('italic')} active={selectionState.italic} title="Italic"><em>I</em></ToolbarButton>
           <ToolbarButton onClick={() => exec('underline')} title="Underline"><span className="underline">U</span></ToolbarButton>
+          <ToolbarButton onClick={() => exec('strikeThrough')} title="Strikethrough"><span className="line-through">S</span></ToolbarButton>
           <div className="w-px h-5 bg-gray-300 mx-1" />
           <ToolbarButton onClick={() => exec('justifyLeft')} title="Left"><span>&#x2190;</span></ToolbarButton>
           <ToolbarButton onClick={() => exec('justifyCenter')} title="Center"><span>&#x2194;</span></ToolbarButton>
