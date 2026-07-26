@@ -47,7 +47,7 @@ const HeldReceipts: React.FC = () => {
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-[1000]">
+      <div className="fixed bottom-5 right-5 z-[50]">
         <div className="flex flex-col items-end gap-2">
           {heldReceipts.map((receipt) => (
             <div

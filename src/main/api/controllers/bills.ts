@@ -40,17 +40,20 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     if (type === 'BUY') {
       await buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })));
       for (const product of products) {
-        await StockMovement.create({
-          product: product._id,
-          warehouse: payload.warehouse,
-          type: 'IN',
-          quantity: product.quantity,
-          unitPrice: product.buyPrice,
-          totalPrice: Number(product.buyPrice) * Number(product.quantity),
-          reference: `BUY-${finalOrderId}`,
-          relatedBill: undefined,
-          createdBy: userId,
-        });
+        const dbProduct = await Product.findOne({ barCode: product.barCode });
+        if (dbProduct) {
+          await StockMovement.create({
+            product: dbProduct._id,
+            warehouse: payload.warehouse,
+            type: 'IN',
+            quantity: product.quantity,
+            unitPrice: product.buyPrice,
+            totalPrice: Number(product.buyPrice) * Number(product.quantity),
+            reference: `BUY-${finalOrderId}`,
+            relatedBill: undefined,
+            createdBy: userId,
+          });
+        }
       }
     }
 

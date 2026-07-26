@@ -197,7 +197,7 @@ const CustomModal = ({
                 <Button variant="outline" onClick={handleConfirmDiscard} className="flex-1">
                   {confirmDiscardLabel}
                 </Button>
-                <Button variant="ghost" onClick={handleConfirmCancel} className="flex-1">
+                <Button variant="ghost" onClick={(e) => { e.stopPropagation(); handleConfirmCancel(); }} className="flex-1">
                   {confirmCancelLabel}
                 </Button>
               </div>

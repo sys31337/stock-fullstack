@@ -155,7 +155,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
         orderPaid: state.orderPaid,
         orderDebts: state.orderDebts,
         products: productsValues.map((product) => {
-          const { _id, __v, createdAt, updatedAt, notify, id, reserved, category, customer, sellPrice_1, sellPrice_2, sellPrice_3, ...rest } = product as any;
+          const { _id, __v, createdAt, updatedAt, notify, id, reserved, category, customer, sellPrice_1, sellPrice_2, sellPrice_3, warehouseStock, ...rest } = product as any;
           return {
             ...rest,
             id: _id || id,

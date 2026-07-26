@@ -34,6 +34,7 @@ const createBillSchema = Joi.object({
     then: Joi.forbidden(),
     otherwise: number.required(),
   }),
+  warehouse: mongooseId,
   description: string.optional().allow(''),
   reservedUntil: date.optional(),
   status: string.optional().valid('pending', 'cancelled', 'completed'),

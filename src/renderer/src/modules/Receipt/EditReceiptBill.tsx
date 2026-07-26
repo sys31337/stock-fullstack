@@ -195,7 +195,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         orderPaid: state.orderPaid,
         orderDebts: state.orderDebts,
         products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => {
-          const { _id, __v, createdAt, updatedAt, notify, id, ...cleanProduct } = rest as any;
+          const { _id, __v, createdAt, updatedAt, notify, id, reserved, warehouseStock, ...cleanProduct } = rest as any;
           return {
             ...cleanProduct,
             id: _id || id,
