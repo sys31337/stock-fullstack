@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 interface LinkDialogProps {
   open: boolean
@@ -27,8 +28,11 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, initialUrl, onConfirm, on
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30" onMouseDown={onCancel}>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30"
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onCancel() }}
+    >
       <div
         className="bg-white border border-gray-200 shadow-xl rounded-lg p-4 w-[380px]"
         onMouseDown={e => e.stopPropagation()}
@@ -46,7 +50,7 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, initialUrl, onConfirm, on
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={onCancel}
+              onClick={(e) => { e.stopPropagation(); onCancel() }}
               className="px-3 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
             >
               Cancel
@@ -60,7 +64,8 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, initialUrl, onConfirm, on
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

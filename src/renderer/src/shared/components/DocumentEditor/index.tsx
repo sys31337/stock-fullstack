@@ -635,14 +635,14 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
           </div>
         </div>
 
-        <FindReplace editorElement={editorContainerRef.current} open={showFindReplace} onClose={() => setShowFindReplace(false)} />
+        <FindReplace editor={editor} open={showFindReplace} onClose={() => setShowFindReplace(false)} />
 
         <div className="tiptap-editor print:!p-0" style={{ backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0, transparent calc(297mm - 1px), #c0c0c0 calc(297mm - 1px), #c0c0c0 297mm)', backgroundSize: '100% 297mm' }}>
           <EditorContent editor={editor} />
         </div>
 
-        <LinkDialog open={linkDialogOpen} initialUrl={editor.getAttributes('link').href || ''} onConfirm={handleLinkInsert} onCancel={() => setLinkDialogOpen(false)} />
-        <TableOfContents editor={editor} open={showToc} onClose={() => setShowToc(false)} />
+        {linkDialogOpen && <LinkDialog open={linkDialogOpen} initialUrl={editor.getAttributes('link').href || ''} onConfirm={handleLinkInsert} onCancel={() => setLinkDialogOpen(false)} />}
+        {showToc && <TableOfContents editor={editor} open={showToc} onClose={() => setShowToc(false)} />}
       </div>
     )
   }

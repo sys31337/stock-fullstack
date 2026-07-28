@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { Editor } from '@tiptap/react'
 
 interface TocItem {
@@ -31,12 +32,15 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ editor, open, onClose
   }, [editor])
 
   useEffect(() => {
+    if (!open) return
     buildToc()
     editor.on('update', buildToc)
     return () => {
       editor.off('update', buildToc)
     }
-  }, [editor, buildToc])
+  }, [open, editor, buildToc])
+
+  if (!open) return null
 
   const scrollToHeading = (pos: number) => {
     editor.commands.focus()
@@ -44,17 +48,18 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ editor, open, onClose
     onClose()
   }
 
-  if (!open) return null
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30" onMouseDown={onClose}>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30"
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClose() }}
+    >
       <div
         className="bg-white border border-gray-200 shadow-xl rounded-lg p-4 w-[320px] max-h-[400px] flex flex-col"
         onMouseDown={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-gray-700">Table of Contents</span>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-sm">&#x2715;</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onClose() }} className="text-gray-400 hover:text-gray-600 text-sm">&#x2715;</button>
         </div>
         <div className="overflow-y-auto flex-1">
           {items.length === 0 ? (
@@ -78,7 +83,8 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ editor, open, onClose
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
