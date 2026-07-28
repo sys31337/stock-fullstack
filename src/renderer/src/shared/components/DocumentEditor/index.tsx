@@ -265,28 +265,44 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
   </div>`
 }
 
-const ToolbarButton = ({ onClick, active, children, title }: {
+const ToolbarButton = ({ onClick, active, children, title, disabled }: {
   onClick: () => void
   active?: boolean
   children: React.ReactNode
   title?: string
+  disabled?: boolean
 }) => (
   <button
     type="button"
     onClick={onClick}
+    disabled={disabled}
     title={title}
     className={`p-1.5 rounded hover:bg-gray-200 transition-colors text-sm leading-none
       ${active ? 'bg-gray-200 text-blue-600' : 'text-gray-700'}
+      ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
     `}
   >
     {children}
   </button>
 )
 
+const Divider = () => (
+  <div className="w-px h-5 bg-gray-300 mx-1" />
+)
+
+const FONT_SIZES = ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '32', '36', '48']
+const FONT_FAMILIES = ['sans-serif', 'serif', 'monospace', 'Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Roboto Condensed']
+const COLORS = ['#000000', '#333333', '#555555', '#888888', '#ffffff', '#ff0000', '#ff6600', '#ffcc00', '#00cc00', '#0066ff', '#9933ff', '#ff69b4']
+const BG_COLORS = ['transparent', '#ffffff', '#ffffcc', '#ccffcc', '#ccffff', '#ccccff', '#ffcccc', '#ddd', '#d6dfe0']
+
 const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
   ({ bill, initialContent, settings }, ref) => {
     const editorRef = useRef<HTMLDivElement>(null)
-    const [selectionState, setSelectionState] = useState({ bold: false, italic: false })
+    const [selectionState, setSelectionState] = useState({
+      bold: false, italic: false, underline: false, strike: false,
+      alignLeft: false, alignCenter: false, alignRight: false,
+      bulletList: false, orderedList: false,
+    })
 
     useImperativeHandle(ref, () => ({
       getContent: () => editorRef.current?.innerHTML || ''
@@ -301,52 +317,304 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
     const exec = useCallback((cmd: string, val?: string) => {
       document.execCommand(cmd, false, val)
       editorRef.current?.focus()
+      updateSelectionState()
     }, [])
 
-    const handleMouseUp = useCallback(() => {
+    const applyStyle = useCallback((property: string, value: string) => {
       const sel = window.getSelection()
-      if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
-        setSelectionState({
-          bold: document.queryCommandState('bold'),
-          italic: document.queryCommandState('italic'),
-        })
-      }
+      if (!sel || sel.rangeCount === 0) return
+      const range = sel.getRangeAt(0)
+      const parent = range.startContainer.nodeType === Node.TEXT_NODE
+        ? range.startContainer.parentElement
+        : range.startContainer as HTMLElement
+      if (!parent || !editorRef.current?.contains(parent)) return
+      ;(parent.style as any)[property] = value
+      editorRef.current?.focus()
+    }, [])
+
+    const updateSelectionState = useCallback(() => {
+      setSelectionState({
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline'),
+        strike: document.queryCommandState('strikeThrough'),
+        alignLeft: document.queryCommandState('justifyLeft'),
+        alignCenter: document.queryCommandState('justifyCenter'),
+        alignRight: document.queryCommandState('justifyRight'),
+        bulletList: document.queryCommandState('insertUnorderedList'),
+        orderedList: document.queryCommandState('insertOrderedList'),
+      })
     }, [])
 
     useEffect(() => {
-      document.addEventListener('selectionchange', handleMouseUp)
-      return () => document.removeEventListener('selectionchange', handleMouseUp)
-    }, [handleMouseUp])
+      const handler = () => {
+        const sel = window.getSelection()
+        if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+          updateSelectionState()
+        }
+      }
+      document.addEventListener('selectionchange', handler)
+      return () => document.removeEventListener('selectionchange', handler)
+    }, [updateSelectionState])
+
+    const getSelectedTableCell = useCallback((): HTMLTableCellElement | null => {
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0) return null
+      let node = sel.anchorNode as HTMLElement
+      while (node && editorRef.current?.contains(node)) {
+        if (node.tagName === 'TD' || node.tagName === 'TH') return node as HTMLTableCellElement
+        node = node.parentElement as HTMLElement
+      }
+      return null
+    }, [])
+
+    const setTableCellStyle = useCallback((property: string, value: string) => {
+      const cell = getSelectedTableCell()
+      if (cell) {
+        ;(cell.style as any)[property] = value
+        editorRef.current?.focus()
+      }
+    }, [getSelectedTableCell])
+
+    const insertRow = useCallback(() => {
+      const cell = getSelectedTableCell()
+      if (!cell) return
+      const row = cell.parentElement as HTMLTableRowElement
+      const table = row.parentElement as HTMLTableSectionElement
+      const newRow = row.cloneNode(true) as HTMLTableRowElement
+      Array.from(newRow.cells).forEach(c => { (c as HTMLTableCellElement).textContent = '' })
+      table.insertBefore(newRow, row.nextSibling)
+      editorRef.current?.focus()
+    }, [getSelectedTableCell])
+
+    const insertCol = useCallback(() => {
+      const cell = getSelectedTableCell()
+      if (!cell) return
+      const table = cell.closest('table')
+      if (!table) return
+      const colIdx = Array.from(cell.parentElement!.cells).indexOf(cell)
+      Array.from(table.rows).forEach(row => {
+        const newCell = (row.tagName === 'THEAD' ? document.createElement('th') : document.createElement('td')) as HTMLTableCellElement
+        newCell.style.cssText = cell.style.cssText
+        newCell.textContent = ''
+        row.cells[colIdx]?.parentElement?.insertBefore(newCell, row.cells[colIdx])
+      })
+      editorRef.current?.focus()
+    }, [getSelectedTableCell])
+
+    const deleteRow = useCallback(() => {
+      const cell = getSelectedTableCell()
+      if (!cell) return
+      const row = cell.parentElement as HTMLTableRowElement
+      const table = row.parentElement
+      if (table && table.children.length > 1) {
+        row.remove()
+      }
+      editorRef.current?.focus()
+    }, [getSelectedTableCell])
+
+    const deleteCol = useCallback(() => {
+      const cell = getSelectedTableCell()
+      if (!cell) return
+      const table = cell.closest('table')
+      if (!table) return
+      const colIdx = Array.from(cell.parentElement!.cells).indexOf(cell)
+      if (Array.from(table.rows[0].cells).length <= 1) return
+      Array.from(table.rows).forEach(row => {
+        if (row.cells[colIdx]) row.cells[colIdx].remove()
+      })
+      editorRef.current?.focus()
+    }, [getSelectedTableCell])
+
+    const deleteTable = useCallback(() => {
+      const cell = getSelectedTableCell()
+      if (!cell) return
+      const table = cell.closest('table')
+      if (table) table.remove()
+      editorRef.current?.focus()
+    }, [getSelectedTableCell])
+
+    const insertTable = useCallback(() => {
+      let html = '<table style="width:100%;border-collapse:collapse;border:1px solid #000;border-right-width:0;border-bottom-width:0"><thead><tr style="background:#ddd">'
+      for (let i = 0; i < 4; i++) {
+        html += `<th style="border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px;font-size:10px;text-align:center"></th>`
+      }
+      html += '</tr></thead><tbody>'
+      for (let r = 0; r < 3; r++) {
+        html += '<tr>'
+        for (let c = 0; c < 4; c++) {
+          html += `<td style="border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px;font-size:10px;text-align:center"></td>`
+        }
+        html += '</tr>'
+      }
+      html += '</tbody></table>'
+      document.execCommand('insertHTML', false, html)
+      editorRef.current?.focus()
+    }, [])
+
+    const insertImage = useCallback(() => {
+      const url = window.prompt('Image URL:')
+      if (url) document.execCommand('insertImage', false, url)
+    }, [])
+
+    const selectedCell = getSelectedTableCell()
 
     return (
       <div className="max-w-[210mm] mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:max-w-none print:mx-0">
         <div className="flex flex-wrap items-center gap-px px-2 py-1.5 border-b border-gray-300 bg-gray-50 print:hidden">
-          <ToolbarButton onClick={() => exec('bold')} active={selectionState.bold} title="Bold"><strong>B</strong></ToolbarButton>
-          <ToolbarButton onClick={() => exec('italic')} active={selectionState.italic} title="Italic"><em>I</em></ToolbarButton>
-          <ToolbarButton onClick={() => exec('underline')} title="Underline"><span className="underline">U</span></ToolbarButton>
-          <ToolbarButton onClick={() => exec('strikeThrough')} title="Strikethrough"><span className="line-through">S</span></ToolbarButton>
-          <div className="w-px h-5 bg-gray-300 mx-1" />
-          <ToolbarButton onClick={() => exec('justifyLeft')} title="Left"><span>&#x2190;</span></ToolbarButton>
-          <ToolbarButton onClick={() => exec('justifyCenter')} title="Center"><span>&#x2194;</span></ToolbarButton>
-          <ToolbarButton onClick={() => exec('justifyRight')} title="Right"><span>&#x2192;</span></ToolbarButton>
-          <div className="w-px h-5 bg-gray-300 mx-1" />
-          <ToolbarButton onClick={() => exec('insertUnorderedList')} title="Bullets"><span>&#8226;</span></ToolbarButton>
-          <ToolbarButton onClick={() => exec('insertOrderedList')} title="Numbers"><span>1.</span></ToolbarButton>
-          <div className="w-px h-5 bg-gray-300 mx-1" />
-          <ToolbarButton onClick={() => exec('undo')} title="Undo"><span>&#x21B6;</span></ToolbarButton>
-          <ToolbarButton onClick={() => exec('redo')} title="Redo"><span>&#x21B7;</span></ToolbarButton>
+          <ToolbarButton onClick={() => exec('bold')} active={selectionState.bold} title="Bold (Ctrl+B)"><strong>B</strong></ToolbarButton>
+          <ToolbarButton onClick={() => exec('italic')} active={selectionState.italic} title="Italic (Ctrl+I)"><em>I</em></ToolbarButton>
+          <ToolbarButton onClick={() => exec('underline')} active={selectionState.underline} title="Underline (Ctrl+U)"><span className="underline">U</span></ToolbarButton>
+          <ToolbarButton onClick={() => exec('strikeThrough')} active={selectionState.strike} title="Strikethrough"><span className="line-through">S</span></ToolbarButton>
+
+          <Divider />
+
+          <div className="relative">
+            <select
+              onChange={(e) => { exec('fontSize', e.target.value); e.target.value = '' }}
+              defaultValue=""
+              className="h-7 text-xs border border-gray-300 rounded px-1 bg-white cursor-pointer"
+              title="Font size"
+            >
+              <option value="" disabled>Size</option>
+              {FONT_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div className="relative">
+            <select
+              onChange={(e) => {
+                exec('fontName', e.target.value)
+                e.target.value = ''
+              }}
+              defaultValue=""
+              className="h-7 text-xs border border-gray-300 rounded px-1 bg-white cursor-pointer max-w-[100px]"
+              title="Font family"
+            >
+              <option value="" disabled>Font</option>
+              {FONT_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+
+          <Divider />
+
+          <div className="relative group">
+            <button type="button" title="Text color" className="p-1.5 rounded hover:bg-gray-200 transition-colors text-sm leading-none">
+              <span className="font-bold">A</span>
+              <div className="h-0.5 w-3 mx-auto bg-current" style={{ backgroundColor: 'var(--text-color, #000)' }} />
+            </button>
+            <div className="hidden group-hover:flex absolute top-full left-0 z-50 bg-white border border-gray-200 shadow-lg rounded p-1.5 gap-1 flex-wrap max-w-[140px]">
+              {COLORS.map(c => (
+                <button key={c} type="button"
+                  className="w-5 h-5 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform"
+                  style={{ backgroundColor: c }}
+                  onClick={() => exec('foreColor', c)}
+                  title={c}
+                />
+              ))}
+              <button type="button" className="w-5 h-5 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform text-xs flex items-center justify-center"
+                onClick={() => exec('removeFormat')} title="Reset color">R</button>
+            </div>
+          </div>
+
+          <div className="relative group">
+            <button type="button" title="Background color" className="p-1.5 rounded hover:bg-gray-200 transition-colors text-sm leading-none">
+              <span className="font-bold px-0.5" style={{ background: '#ffcc00' }}>H</span>
+            </button>
+            <div className="hidden group-hover:flex absolute top-full left-0 z-50 bg-white border border-gray-200 shadow-lg rounded p-1.5 gap-1 flex-wrap max-w-[140px]">
+              {BG_COLORS.map(c => (
+                <button key={c} type="button"
+                  className="w-5 h-5 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform"
+                  style={{ backgroundColor: c === 'transparent' ? 'white' : c }}
+                  onClick={() => exec('hiliteColor', c)}
+                  title={c}
+                />
+              ))}
+            </div>
+          </div>
+
+          <Divider />
+
+          <ToolbarButton onClick={() => exec('justifyLeft')} active={selectionState.alignLeft} title="Align left">&#x2190;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('justifyCenter')} active={selectionState.alignCenter} title="Center">&#x8596;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('justifyRight')} active={selectionState.alignRight} title="Align right">&#x2192;</ToolbarButton>
+
+          <Divider />
+
+          <ToolbarButton onClick={() => exec('insertUnorderedList')} active={selectionState.bulletList} title="Bullet list">&#8226;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('insertOrderedList')} active={selectionState.orderedList} title="Numbered list">1.</ToolbarButton>
+          <ToolbarButton onClick={() => exec('indent')} title="Increase indent">&#x21E5;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('outdent')} title="Decrease indent">&#x21E4;</ToolbarButton>
+
+          <Divider />
+
+          <ToolbarButton onClick={() => exec('subscript')} title="Subscript">X&#x2082;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('superscript')} title="Superscript">X&#x2070;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('removeFormat')} title="Clear formatting">&#x2718;</ToolbarButton>
+
+          <Divider />
+
+          <ToolbarButton onClick={insertTable} title="Insert table">&#x25A6;</ToolbarButton>
+          <ToolbarButton onClick={insertImage} title="Insert image">&#x1F5BC;</ToolbarButton>
+
+          {selectedCell && (
+            <>
+              <Divider />
+              <div className="flex items-center gap-px">
+                <ToolbarButton onClick={insertRow} title="Insert row above">&#x2191;R</ToolbarButton>
+                <ToolbarButton onClick={insertCol} title="Insert column">&#x2192;C</ToolbarButton>
+                <ToolbarButton onClick={deleteRow} title="Delete row">&#x2193;R</ToolbarButton>
+                <ToolbarButton onClick={deleteCol} title="Delete column">&#x2190;C</ToolbarButton>
+                <ToolbarButton onClick={deleteTable} title="Delete table">&#x2715;</ToolbarButton>
+              </div>
+
+              <Divider />
+
+              <div className="relative group">
+                <button type="button" title="Cell background" className="p-1.5 rounded hover:bg-gray-200 transition-colors text-sm leading-none">
+                  <span>&#x25A3;</span>
+                </button>
+                <div className="hidden group-hover:flex absolute top-full left-0 z-50 bg-white border border-gray-200 shadow-lg rounded p-1.5 gap-1 flex-wrap max-w-[140px]">
+                  {BG_COLORS.map(c => (
+                    <button key={c} type="button"
+                      className="w-5 h-5 rounded border border-gray-300 cursor-pointer hover:scale-110 transition-transform"
+                      style={{ backgroundColor: c === 'transparent' ? 'white' : c }}
+                      onClick={() => setTableCellStyle('backgroundColor', c === 'transparent' ? '' : c)}
+                      title={c}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative">
+                <select
+                  onChange={(e) => { setTableCellStyle('borderWidth', e.target.value); e.target.value = '' }}
+                  defaultValue=""
+                  className="h-7 text-xs border border-gray-300 rounded px-1 bg-white cursor-pointer"
+                  title="Border width"
+                >
+                  <option value="" disabled>Border</option>
+                  <option value="0">None</option>
+                  <option value="0.5px">0.5px</option>
+                  <option value="1px">1px</option>
+                  <option value="1.5px">1.5px</option>
+                  <option value="2px">2px</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          <Divider />
+
+          <ToolbarButton onClick={() => exec('undo')} title="Undo (Ctrl+Z)">&#x21B6;</ToolbarButton>
+          <ToolbarButton onClick={() => exec('redo')} title="Redo (Ctrl+Y)">&#x21B7;</ToolbarButton>
         </div>
         <div
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
-          onMouseUp={handleMouseUp}
-          onKeyUp={handleMouseUp}
           className="print:!p-0"
-          style={{
-            minHeight: '297mm',
-            outline: 'none',
-          }}
+          style={{ minHeight: '297mm', outline: 'none' }}
         />
       </div>
     )
