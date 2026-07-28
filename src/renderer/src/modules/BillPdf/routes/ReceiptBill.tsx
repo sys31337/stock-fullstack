@@ -53,6 +53,9 @@ const ReceiptBill: React.FC = () => {
         },
       })
       console.log('Save response:', response.status, response.data?._id)
+      await refetch()
+      setInitialContent(content)
+      setEditorKey(k => k + 1)
       showToast(toast, {
         title: t('saved') || 'Saved',
         description: t('contentSaved') || 'Document content saved successfully',
@@ -60,7 +63,6 @@ const ReceiptBill: React.FC = () => {
       })
       setSaveDescription('')
       setIsSaving(false)
-      refetch()
     } catch (error: any) {
       console.error('Save failed:', error)
       const status = error?.response?.status
