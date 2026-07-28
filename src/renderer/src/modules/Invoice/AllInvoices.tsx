@@ -197,7 +197,6 @@ const AllInvoices: React.FC<AllInvoicesProps> = ({ isTopBar, open: controlledOpe
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
                                   <DropdownMenuItem onClick={() => setEditBillId(_id)}>
                                      <AiFillEdit className="mr-2 h-4 w-4" />
                                      {t('edit')}

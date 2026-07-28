@@ -315,7 +315,6 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
                                   <DropdownMenuItem asChild>
                                      <a href={`/billpdf/${_id}`} className="flex items-center">
                                         <AiFillFilePdf className="mr-2 h-4 w-4" />
