@@ -298,6 +298,7 @@ const BG_COLORS = ['transparent', '#ffffff', '#ffffcc', '#ccffcc', '#ccffff', '#
 const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
   ({ bill, initialContent, settings }, ref) => {
     const editorRef = useRef<HTMLDivElement>(null)
+    const [pageCount, setPageCount] = useState(1)
     const [selectionState, setSelectionState] = useState({
       bold: false, italic: false, underline: false, strike: false,
       alignLeft: false, alignCenter: false, alignRight: false,
@@ -314,22 +315,27 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
       }
     }, [])
 
+    const updatePageCount = useCallback(() => {
+      if (!editorRef.current) return
+      const height = editorRef.current.scrollHeight
+      const a4Height = editorRef.current.clientHeight
+      const count = Math.max(1, Math.ceil(height / a4Height))
+      setPageCount(count)
+    }, [])
+
+    useEffect(() => {
+      updatePageCount()
+      const observer = new MutationObserver(updatePageCount)
+      if (editorRef.current) {
+        observer.observe(editorRef.current, { childList: true, subtree: true, characterData: true })
+      }
+      return () => observer.disconnect()
+    }, [updatePageCount])
+
     const exec = useCallback((cmd: string, val?: string) => {
       document.execCommand(cmd, false, val)
       editorRef.current?.focus()
       updateSelectionState()
-    }, [])
-
-    const applyStyle = useCallback((property: string, value: string) => {
-      const sel = window.getSelection()
-      if (!sel || sel.rangeCount === 0) return
-      const range = sel.getRangeAt(0)
-      const parent = range.startContainer.nodeType === Node.TEXT_NODE
-        ? range.startContainer.parentElement
-        : range.startContainer as HTMLElement
-      if (!parent || !editorRef.current?.contains(parent)) return
-      ;(parent.style as any)[property] = value
-      editorRef.current?.focus()
     }, [])
 
     const updateSelectionState = useCallback(() => {
@@ -460,8 +466,8 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
     const selectedCell = getSelectedTableCell()
 
     return (
-      <div className="max-w-[210mm] mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:max-w-none print:mx-0">
-        <div className="flex flex-wrap items-center gap-px px-2 py-1.5 border-b border-gray-300 bg-gray-50 print:hidden">
+      <div className="max-w-[210mm] mx-auto bg-white shadow-lg rounded-lg print:shadow-none print:rounded-none print:max-w-none print:mx-0">
+        <div className="flex flex-wrap items-center gap-px px-2 py-1.5 border-b border-gray-300 bg-gray-50 print:hidden sticky top-0 z-10">
           <ToolbarButton onClick={() => exec('bold')} active={selectionState.bold} title="Bold (Ctrl+B)"><strong>B</strong></ToolbarButton>
           <ToolbarButton onClick={() => exec('italic')} active={selectionState.italic} title="Italic (Ctrl+I)"><em>I</em></ToolbarButton>
           <ToolbarButton onClick={() => exec('underline')} active={selectionState.underline} title="Underline (Ctrl+U)"><span className="underline">U</span></ToolbarButton>
@@ -608,13 +614,22 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
 
           <ToolbarButton onClick={() => exec('undo')} title="Undo (Ctrl+Z)">&#x21B6;</ToolbarButton>
           <ToolbarButton onClick={() => exec('redo')} title="Redo (Ctrl+Y)">&#x21B7;</ToolbarButton>
+
+          <div className="ml-auto text-xs text-gray-500 select-none">
+            {pageCount} {pageCount === 1 ? 'page' : 'pages'}
+          </div>
         </div>
         <div
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
           className="print:!p-0"
-          style={{ minHeight: '297mm', outline: 'none' }}
+          style={{
+            minHeight: '297mm',
+            outline: 'none',
+            backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0, transparent calc(297mm - 1px), #c0c0c0 calc(297mm - 1px), #c0c0c0 297mm)',
+            backgroundSize: '100% 297mm',
+          }}
         />
       </div>
     )
