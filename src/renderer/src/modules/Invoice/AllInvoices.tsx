@@ -105,7 +105,7 @@ const AllInvoices: React.FC<AllInvoicesProps> = ({ isTopBar, open: controlledOpe
                 </span>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-cyan-50">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
                   <img src="/assets/icons/allsales.gif" width={40} alt="Invoices" />
                 </div>
                 <div className="flex-1 min-w-0">
