@@ -120,15 +120,16 @@ const ReceiptBill: React.FC = () => {
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: A4; margin: 0; }
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { margin: 0; }
+  @page { size: 210mm 297mm; margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 210mm; height: 297mm; }
+  body { display: flex; flex-direction: column; }
   table { border-collapse: collapse; }
   tr, th, td { break-inside: avoid; page-break-inside: avoid; }
   h1, h2, h3, h4 { break-after: avoid; }
   thead { display: table-header-group; }
   tfoot { display: table-footer-group; }
-  @media print { body { zoom: 1.3; } }
+  img { max-width: 100%; }
 </style>
 </head>
 <body>${content}</body>
@@ -144,8 +145,8 @@ const ReceiptBill: React.FC = () => {
   if (isFetching) return <Loading />
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-gray-950">
-      <header className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm z-10 print:hidden">
+    <div className="h-screen relative w-screen flex flex-col bg-gray-100 dark:bg-gray-950">
+      <header className="flex items-center absolute left-0 right-0 justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm z-50 print:hidden shrink-0">
         <div className="flex items-center gap-2">
           <Button
             onClick={() => navigate(-1)}
@@ -214,14 +215,16 @@ const ReceiptBill: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto relative print:overflow-visible">
-        <div className={mode === 'view' ? 'absolute inset-0 print:static print:inset-auto' : 'hidden'}>
-          <div
-            className="max-w-[210mm] mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0 print:max-w-none"
-            style={{ minHeight: '297mm' }}
-            dangerouslySetInnerHTML={{ __html: data?.content || fullHtml(data!, settings || undefined) }}
-          />
-        </div>
+      <main className="flex-1 min-h-0 my-16 overflow-y-auto print:overflow-visible">
+        {mode === 'view' && (
+          <div className="p-6 print:p-0 mb-4 print:mb-0">
+            <div
+              className="mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0"
+              style={{ width: '210mm', maxWidth: '100%', minHeight: '297mm' }}
+              dangerouslySetInnerHTML={{ __html: data?.content || fullHtml(data!, settings || undefined) }}
+            />
+          </div>
+        )}
 
         {mode === 'edit' && (
           <div className="p-6 print:p-0">
@@ -232,7 +235,7 @@ const ReceiptBill: React.FC = () => {
               initialContent={initialContent}
               settings={settings || undefined}
             />
-            <div className="max-w-[210mm] mx-auto mt-4 print:hidden">
+            <div className="max-w-[210mm] mx-auto my-4 print:hidden">
               <label className="block text-xs font-medium text-gray-500 mb-1">
                 {t('changeDescription') || 'Change description (optional)'}
               </label>
