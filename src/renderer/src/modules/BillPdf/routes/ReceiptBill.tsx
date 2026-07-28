@@ -1,12 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react'
-import ReceiptBillPdf from '@web/modules/BillPdf/helpers/ReceiptBillPdf'
-import InvoicePdf from '@web/modules/BillPdf/helpers/InvoicePdf'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useGetBillInfo } from '@web/shared/hooks/useBill'
 import { useGetSettings } from '@web/shared/hooks/useSettings'
 import axiosInstance from '@web/shared/services/api'
 import Loading from '@web/shared/components/Loading'
-import { PDFViewer } from '@react-pdf/renderer'
 import { Button } from '@web/shared/components/ui/button'
 import { AiOutlineClose, AiOutlineEdit, AiOutlineFilePdf, AiOutlineHistory, AiOutlineSave } from 'react-icons/ai'
 import { t } from 'i18next'
@@ -218,20 +215,10 @@ const ReceiptBill: React.FC = () => {
       <main className="flex-1 overflow-y-auto relative print:overflow-visible">
         <div className={mode === 'view' ? 'absolute inset-0 print:static print:inset-auto' : 'hidden'}>
           <div
-            className="max-w-[210mm] xx mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0 print:max-w-none"
-            style={{ padding: '20px', fontFamily: 'sans-serif', fontSize: '10px', minHeight: '297mm' }}
-            dangerouslySetInnerHTML={{ __html: data?.content || '' }}
-            hidden={!data?.content}
+            className="max-w-[210mm] mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0 print:max-w-none"
+            style={{ minHeight: '297mm' }}
+            dangerouslySetInnerHTML={{ __html: data?.content || fullHtml(data!, settings || undefined) }}
           />
-          <div hidden={!!data?.content} className="absolute inset-0">
-            <PDFViewer width="100%" height="100%" style={{ margin: 0, padding: 0, border: 'none' }} showToolbar={true}>
-              {data?.type === 'SALE' ? (
-                <InvoicePdf data={data!} settings={settings || {}} />
-              ) : (
-                <ReceiptBillPdf data={data!} />
-              )}
-            </PDFViewer>
-          </div>
         </div>
 
         {mode === 'edit' && (

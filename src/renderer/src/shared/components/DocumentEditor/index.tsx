@@ -223,7 +223,7 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
         ${billTypeLabel}${bill.orderId}
       </div>
     </div>
-    <table style="width:auto;border-collapse:collapse;border:1px solid #000;border-right-width:0;border-bottom-width:0">
+    <table style="width:100%;border-collapse:collapse;border:1px solid #000;border-right-width:0;border-bottom-width:0">
       <thead>
         <tr style="background:#ddd;font-weight:bold">
           <th style="width:5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">#</th>
