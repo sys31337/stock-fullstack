@@ -197,7 +197,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
         orderPaid: state.orderPaid,
         orderDebts: state.orderDebts,
         products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => {
-          const { _id, __v, createdAt, updatedAt, notify, id, reserved, warehouseStock, ...cleanProduct } = rest as any;
+          const { _id, __v, createdAt, updatedAt, notify, id, reserved, warehouseStock, category, customer, ...cleanProduct } = rest as any;
           return {
             ...cleanProduct,
             id: _id || id,
@@ -451,7 +451,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
               {t('close')}
             </Button>
             <a href={`/billpdf/${state.receiptBillId || billId}`}>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 <AiFillFilePdf className="mr-2" /> {t('print')}
               </Button>
             </a>

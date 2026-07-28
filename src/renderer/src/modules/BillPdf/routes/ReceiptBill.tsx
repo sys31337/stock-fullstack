@@ -216,25 +216,23 @@ const ReceiptBill: React.FC = () => {
       </header>
 
       <main className="flex-1 overflow-y-auto relative print:overflow-visible">
-        {mode === 'view' && (
-          <div className="absolute inset-0 print:static print:inset-auto">
-            {data?.content ? (
-              <div
-                className="max-w-[210mm] xx mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0 print:max-w-none"
-                style={{ padding: '20px', fontFamily: 'sans-serif', fontSize: '10px', minHeight: '297mm' }}
-                dangerouslySetInnerHTML={{ __html: data.content }}
-              />
-            ) : (
-              <PDFViewer width="100%" height="100%" style={{ margin: 0, padding: 0, border: 'none' }} showToolbar={true}>
-                {data?.type === 'SALE' ? (
-                  <InvoicePdf data={data} settings={settings || {}} />
-                ) : (
-                  <ReceiptBillPdf data={data} />
-                )}
-              </PDFViewer>
-            )}
+        <div className={mode === 'view' ? 'absolute inset-0 print:static print:inset-auto' : 'hidden'}>
+          <div
+            className="max-w-[210mm] xx mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0 print:max-w-none"
+            style={{ padding: '20px', fontFamily: 'sans-serif', fontSize: '10px', minHeight: '297mm' }}
+            dangerouslySetInnerHTML={{ __html: data?.content || '' }}
+            hidden={!data?.content}
+          />
+          <div hidden={!!data?.content} className="absolute inset-0">
+            <PDFViewer width="100%" height="100%" style={{ margin: 0, padding: 0, border: 'none' }} showToolbar={true}>
+              {data?.type === 'SALE' ? (
+                <InvoicePdf data={data!} settings={settings || {}} />
+              ) : (
+                <ReceiptBillPdf data={data!} />
+              )}
+            </PDFViewer>
           </div>
-        )}
+        </div>
 
         {mode === 'edit' && (
           <div className="p-6 print:p-0">

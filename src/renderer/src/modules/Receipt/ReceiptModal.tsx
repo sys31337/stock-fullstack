@@ -144,7 +144,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         orderDebts: state.orderDebts,
         products: productsValues.map(({ buyPrice, quantity, sellPrice_1, sellPrice_2, sellPrice_3, stack, ...rest }) => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { _id, __v, createdAt, updatedAt, notify, id, reserved, warehouseStock, ...cleanProduct } = rest as any;
+          const { _id, __v, createdAt, updatedAt, notify, id, reserved, warehouseStock, category, customer, ...cleanProduct } = rest as any;
           return {
             ...cleanProduct,
             id: _id || id,

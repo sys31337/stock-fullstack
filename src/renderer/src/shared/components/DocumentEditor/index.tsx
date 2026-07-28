@@ -68,6 +68,26 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
       </tr>`
     }).join('')
 
+    const contactItems: {l:string;v:string}[] = []
+    if (settings?.companyPhone) contactItems.push({ l:'T\u00E9l:', v: settings.companyPhone })
+    if (settings?.mobile) contactItems.push({ l:'Mobile:', v: settings.mobile })
+    if (settings?.website) contactItems.push({ l:'Site:', v: settings.website })
+    if (settings?.email) contactItems.push({ l:'Email:', v: settings.email })
+
+    let contactFooter = ''
+    if (contactItems.length > 0) {
+      const perRow = 2
+      const rows: string[] = []
+      for (let i = 0; i < contactItems.length; i += perRow) {
+        const rowItems = contactItems.slice(i, i + perRow)
+        const cols = rowItems.map((item, ri) =>
+          `<div style="${ri > 0 ? 'border-left:0.3px solid #000;' : ''}padding:2px 6px;width:${100 / perRow}%"><span style="font-size:9px;font-weight:bold">${item.l} </span><span style="font-size:9px">${item.v}</span></div>`
+        ).join('')
+        rows.push(`<div style="display:flex;flex-direction:row;border-top:0.3px solid #000;font-size:9px">${cols}</div>`)
+      }
+      contactFooter = `<div style="margin-top:4px">${rows.join('')}</div>`
+    }
+
     return `<div style="padding:20px;font-family:'Roboto Condensed',sans-serif;font-size:9px;line-height:1.4;color:#111">
       <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:18px">
         <div style="font-size:11px;font-weight:bold">${settings?.companyName || ''}</div>
@@ -159,19 +179,12 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:row;margin-top:12px">
-          <div style="width:40%;padding-right:8px">
-            <div style="font-size:14px;font-weight:bold">${settings?.companyName || ''}</div>
-            <div style="font-size:9px;margin-top:4px">${settings?.companyAddress ? `${settings.companyAddress} - ${settings.wilaya || ''}` : settings?.wilaya || ''}</div>
-          </div>
-          <div style="width:30%;border-top:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">T\u00E9l: </span><span style="font-size:9px">${settings?.companyPhone || ''}</span></div>
-          <div style="width:30%;border-top:0.3px solid #000;border-left:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">Mobile: </span><span style="font-size:9px">${settings?.mobile || ''}</span></div>
+        <div style="margin-top:12px">
+          <div style="font-size:14px;font-weight:bold">${settings?.companyName || ''}</div>
+          <div style="font-size:9px;margin-top:4px">${settings?.companyAddress ? `${settings.companyAddress} - ${settings.wilaya || ''}` : settings?.wilaya || ''}</div>
         </div>
-        <div style="display:flex;flex-direction:row">
-          <div style="width:40%"></div>
-          <div style="width:30%;border-top:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">Site: </span><span style="font-size:9px">${settings?.website || ''}</span></div>
-          <div style="width:30%;border-top:0.3px solid #000;border-left:0.3px solid #000;padding:2px 4px"><span style="font-size:9px;font-weight:bold">Email: </span><span style="font-size:9px">${settings?.email || ''}</span></div>
-        </div>
+
+        ${contactFooter}
 
         ${bill.description ? `<div style="margin-top:8px;font-size:9px"><b>Notes:</b> ${bill.description}</div>` : ''}
       </div>
@@ -329,12 +342,8 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
           suppressContentEditableWarning
           onMouseUp={handleMouseUp}
           onKeyUp={handleMouseUp}
-          className="p-8 print:!p-0"
+          className="print:!p-0"
           style={{
-            fontFamily: 'sans-serif',
-            fontSize: '10px',
-            lineHeight: '1.5',
-            color: '#111',
             minHeight: '297mm',
             outline: 'none',
           }}

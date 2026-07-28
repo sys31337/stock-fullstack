@@ -37,7 +37,7 @@ export const checkWarehouseAccess = (warehouseId: string | undefined, userId: st
       if (!warehouseId) return resolve(false);
       const user = await User.findById(userId);
       if (!user) return resolve(false);
-      if (user.isMainAccount) return resolve(true);
+      if (user.isMainAccount || user.permissions?.includes('*')) return resolve(true);
       if (user.warehouseAccessMode === 'all') return resolve(true);
       const warehouseIds = user.assignedWarehouses.map((w: any) => w.toString());
       return resolve(warehouseIds.includes(warehouseId));
