@@ -1,15 +1,20 @@
 import {
   app, shell, BrowserWindow, dialog, ipcMain, screen,
 } from 'electron';
-import electronReloader from 'electron-reloader';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-// import server from './api/main';
-// import { log } from './api/utils';
+import server from './api/main';
 import config from './api/config';
+import { startMongoDB, stopMongoDB } from './api/config/mongodb';
+
+if (is.dev) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('electron-reloader')(module, { watchRenderer: false });
+  } catch { }
+}
 
 const { ELECTRON_RENDERER_URL } = config
-const dg = dialog;
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -87,11 +92,19 @@ function createWindow(): void {
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron');
 
-  // server.listen(4031, () => {
-    createWindow();
-  // });
+  server.listen(4031, () => {
+    console.error('[server] API server listening on port 4031');
+  });
 
-  // server.on('error', (e) => log(e));
+  startMongoDB().then(() => {
+    createWindow();
+  }).catch((err) => {
+    console.error('Failed to start MongoDB:', err);
+    dialog.showErrorBox('Database Error', `Failed to start MongoDB.\n\n${err.message}`);
+    app.quit();
+  });
+
+  server.on('error', (e) => console.error('[server] Error:', e));
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
@@ -100,8 +113,6 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
-
-  dg.showErrorBox = (title, content) => ({ title, content });
 });
 
 app.on('window-all-closed', () => {
@@ -110,6 +121,6 @@ app.on('window-all-closed', () => {
   }
 });
 
-electronReloader(module, {
-  watchRenderer: false // Disable reloader for renderer process, as Vite handles it
+app.on('will-quit', () => {
+  stopMongoDB();
 });

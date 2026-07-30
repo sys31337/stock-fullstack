@@ -1,13 +1,17 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import { log, logError } from '@api/utils';
-import config from '@api/config';
+import { startMongoDB } from '@api/config/mongodb';
 import Customer from '@api/models/customers';
 import Category from '@api/models/categories';
+import User from '@api/models/user';
+import Role from '@api/models/role';
+import { ALL_PERMISSIONS } from '@api/constants/permissions';
 
 const connectDB = async (): Promise<boolean> => {
-  const { DATABASEURI } = config;
+  const uri = await startMongoDB();
   mongoose.set('strictQuery', true);
-  mongoose.connect(DATABASEURI);
+  mongoose.connect(uri);
 
   const db: mongoose.Connection = mongoose.connection;
 
@@ -21,6 +25,43 @@ const connectDB = async (): Promise<boolean> => {
     if (!defaultCategory) {
       await new Category({ name: 'Uncategorized', description: 'Default Category', ...defaultInfo }).save();
     }
+
+    const adminExists = await User.findOne({ username: 'admin' });
+    if (!adminExists) {
+      let adminRole = await Role.findOne({ name: 'Admin' });
+      if (!adminRole) {
+        adminRole = await new Role({
+          name: 'Admin',
+          description: 'Full system access',
+          permissions: ALL_PERMISSIONS,
+          isDefault: false,
+        }).save();
+      }
+
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash('admin', salt);
+
+      await new User({
+        username: 'admin',
+        password: hashedPassword,
+        salt,
+        fullname: 'Administrator',
+        email: 'admin@solustock.local',
+        isMainAccount: true,
+        type: 'USER',
+        status: 'active',
+        role: adminRole._id,
+        permissions: ALL_PERMISSIONS,
+        userPermissions: [],
+        assignedWarehouses: [],
+        warehouseAccessMode: 'all',
+        preferredLanguage: 'en',
+        profilePicture: 'default.png',
+      }).save();
+
+      log('Default admin user created (admin / admin)');
+    }
+
     log('Database Connected');
   });
 
