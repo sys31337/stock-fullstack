@@ -27,6 +27,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
   },
   renderer: {
+    base: './',
     server: {
       port: 5174,
     },

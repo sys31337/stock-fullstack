@@ -17,6 +17,7 @@ import SettingsDrawer from '@web/modules/Settings'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
+import { assetsBase } from '@web/config'
 import { useState, useRef, useEffect, createContext, useContext } from 'react'
 import {
   AiOutlineClose,
@@ -169,7 +170,7 @@ const Languages = () => (
       <button className="inline-flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
         <img
           className="w-5 h-5 rounded-full ring-1 ring-border"
-          src={`/assets/${i18next.language || 'fr'}.svg`}
+          src={`${assetsBase}assets/${i18next.language || 'fr'}.svg`}
           alt=""
         />
         <AiOutlineDown className="h-3 w-3 opacity-50" />
@@ -189,7 +190,7 @@ const Languages = () => (
         >
           <img
             className="w-5 h-5 rounded-full ring-1 ring-border"
-            src={`/assets/${code}.svg`}
+            src={`${assetsBase}assets/${code}.svg`}
             alt={label}
           />
           <span className="text-sm font-medium text-foreground">{label}</span>
@@ -324,7 +325,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
 
           <div className="flex items-center mr-6">
             <img
-              src="/assets/logo-h.png"
+              src={`${assetsBase}assets/logo-h.png`}
               alt="SoluStock"
               className="h-10 rounded-lg object-contain"
             />

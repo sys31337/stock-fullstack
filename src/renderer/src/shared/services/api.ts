@@ -5,8 +5,6 @@ import axios from 'axios';
 import authService from '@web/shared/services/auth';
 import parseJwt from '@web/shared/utils/parseJWT';
 import Any from '@web/shared/types/any';
-import { logoutUser } from '@web/shared/hooks/useAuthentication';
-
 const noTokenUrls = ['challenge-progress', 'users/login', 'embeds/fetch', 'challenges/fetch'];
 
 const addLocalizationHeaders = (request: Any) => {
@@ -65,8 +63,7 @@ axiosInstance.interceptors.request.use(
           config.headers.Authorization = `Bearer ${at}`;
         } catch (error) {
           authService.resetUserInfo();
-          // eslint-disable-next-line no-restricted-globals
-          location.replace('/connexion');
+          window.location.hash = '#/connexion';
         }
       }
     }
@@ -74,12 +71,16 @@ axiosInstance.interceptors.request.use(
     addLocalizationHeaders(config);
     return config;
   },
-  async (error) => {
-    const isUnauthorized = error.status === 401 || error.status === 403;
-    if (isUnauthorized) {
-      await logoutUser();
-    }
+);
 
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const isUnauthorized = error.response?.status === 401 || error.response?.status === 403;
+    if (isUnauthorized) {
+      authService.resetUserInfo();
+      window.location.hash = '#/connexion';
+    }
     return Promise.reject(error);
   },
 );

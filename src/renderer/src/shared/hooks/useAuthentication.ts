@@ -1,10 +1,29 @@
 import axiosInstance from '@web/shared/services/api';
 import authService from '@web/shared/services/auth';
+import parseJwt from '@web/shared/utils/parseJWT';
 import Any from '@web/shared/types/any';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 export function useAuthenticated(): boolean {
-  return authService.isAuthenticated();
+  const userInfo = authService.loadUserInfo();
+  if (!userInfo?.user_id) return false;
+
+  const token = userInfo.token || userInfo.accessToken;
+  if (token) {
+    try {
+      const decoded = parseJwt(token);
+      const now = Math.ceil(Date.now() / 1000);
+      if (decoded.exp < now) {
+        authService.resetUserInfo();
+        return false;
+      }
+    } catch {
+      authService.resetUserInfo();
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export const useLogout = () => useMutation((token) => axiosInstance.request({
@@ -23,9 +42,7 @@ export const useGetUserInfo = () => useQuery(['Get user Info'], () => axiosInsta
   .then(({ data }) => data), { retry: false });
 
 export function logoutUser() {
-  return axiosInstance.get('/logout').then(() => {
-    authService.resetUserInfo();
-    // eslint-disable-next-line no-restricted-globals
-    location.replace('/connexion');
-  });
+  authService.resetUserInfo();
+  window.location.hash = '#/connexion';
+  return axiosInstance.get('/logout').catch(() => {});
 }

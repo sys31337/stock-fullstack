@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { config } from '@web/config';
+import { HashRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import queryClient from '@web/shared/services/queryClient';
 import Loading from '@web/shared/components/Loading';
@@ -14,9 +13,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <>
     <Suspense fallback={<Loading />}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter basename={config.appBaseUrl}>
+        <HashRouter>
           <App />
-        </BrowserRouter>
+        </HashRouter>
       </QueryClientProvider>
     </Suspense>
 

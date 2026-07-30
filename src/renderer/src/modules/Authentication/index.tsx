@@ -13,11 +13,12 @@ import authService from '@web/shared/services/auth';
 import i18next from 'i18next';
 import { Lock, Loader2, ArrowLeft, Check } from 'lucide-react';
 import { useState } from 'react';
+import { assetsBase } from '@web/config';
 
 const LANGUAGES = [
-  { code: 'en', flag: '/assets/en.svg' },
-  { code: 'fr', flag: '/assets/fr.svg' },
-  { code: 'ar', flag: '/assets/ar.svg' },
+  { code: 'en', flag: `${assetsBase}assets/en.svg` },
+  { code: 'fr', flag: `${assetsBase}assets/fr.svg` },
+  { code: 'ar', flag: `${assetsBase}assets/ar.svg` },
 ];
 
 const UserAvatar = ({ user, size = 'lg' }: { user: PublicUser; size?: 'sm' | 'lg' }) => {
@@ -26,7 +27,7 @@ const UserAvatar = ({ user, size = 'lg' }: { user: PublicUser; size?: 'sm' | 'lg
   return (
     <div className={`${sizeClasses} rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center overflow-hidden shadow-lg shadow-blue-500/20 ring-4 ring-white/20`}>
       {hasImage ? (
-        <img src={`/assets/${user.profilePicture}`} alt={user.fullname || user.username} className="w-full h-full object-cover" />
+        <img src={`${assetsBase}assets/${user.profilePicture}`} alt={user.fullname || user.username} className="w-full h-full object-cover" />
       ) : (
         <span className="text-white font-bold tracking-wide">
           {(user.fullname || user.username || '?')[0].toUpperCase()}
@@ -90,7 +91,7 @@ const Authentication = () => {
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
           <div className="w-24 h-24 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-8 ring-1 ring-white/20 overflow-hidden">
-            <img src="/assets/logo.png" alt="SoluStock" className="w-16 h-16 object-contain" />
+            <img src={`${assetsBase}assets/logo.png`} alt="SoluStock" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">SoluStock 2.0</h1>
           <p className="text-blue-100 text-lg text-center max-w-sm leading-relaxed">
@@ -119,7 +120,7 @@ const Authentication = () => {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
-              <img src="/assets/logo-h.png" alt="SoluStock" className="w-full h-full object-contain" />
+              <img src={`${assetsBase}assets/logo-h.png`} alt="SoluStock" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-bold tracking-tight">SoluStock</span>
           </div>
