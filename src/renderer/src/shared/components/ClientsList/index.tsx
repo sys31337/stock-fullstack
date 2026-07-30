@@ -20,6 +20,7 @@ import Pagination from '@web/shared/components/Pagination'
 import { ICustomer } from '@web/shared/types/customer'
 import { AxiosError } from 'axios'
 import showToast from '@web/shared/functions/showToast'
+import { defaultId } from '@web/config'
 
 interface ClientsListProps {
   open: boolean
@@ -126,6 +127,7 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
                           {client.fullname?.[0]?.toUpperCase() || 'C'}
                         </div>
                         <span className="group-hover:text-primary transition-colors">{client.fullname}</span>
+                        {client._id === defaultId && <span className="text-xs text-muted-foreground italic">({t('default')})</span>}
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{client.phoneNumber || '-'}</TableCell>
@@ -134,6 +136,7 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
                     <TableCell className="text-muted-foreground font-mono text-xs">{client.nif || '-'}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{client.rc || '-'}</TableCell>
                     <TableCell>
+                      {client._id !== defaultId && (
                       <div className="flex gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
                         <CustomerModal
                           customer={client}
@@ -152,6 +155,7 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
                           <AiFillDelete className="h-3.5 w-3.5" />
                         </Button>
                       </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

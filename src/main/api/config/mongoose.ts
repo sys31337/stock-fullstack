@@ -4,6 +4,7 @@ import { log, logError } from '@api/utils';
 import { startMongoDB } from '@api/config/mongodb';
 import Customer from '@api/models/customers';
 import Category from '@api/models/categories';
+import Warehouse from '@api/models/warehouse';
 import User from '@api/models/user';
 import Role from '@api/models/role';
 import { ALL_PERMISSIONS } from '@api/constants/permissions';
@@ -24,6 +25,19 @@ const connectDB = async (): Promise<boolean> => {
     const defaultCategory = await Category.findById('0a0aaa0a0aa00000aaaaaa0a');
     if (!defaultCategory) {
       await new Category({ name: 'Uncategorized', description: 'Default Category', ...defaultInfo }).save();
+    }
+
+    const defaultWarehouse = await Warehouse.findById('0a0aaa0a0aa00000aaaaaa0b');
+    if (!defaultWarehouse) {
+      await new Warehouse({
+        name: 'Main Warehouse',
+        code: 'main',
+        address: 'Default Address',
+        isActive: true,
+        _id: '0a0aaa0a0aa00000aaaaaa0b',
+        createdAt: new Date('1970'),
+        updatedAt: new Date('1970'),
+      }).save();
     }
 
     const adminExists = await User.findOne({ username: 'admin' });

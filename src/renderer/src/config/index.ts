@@ -18,3 +18,4 @@ export const config = {
   ...configOverride,
 };
 export const defaultId = '0a0aaa0a0aa00000aaaaaa0a';
+export const defaultWarehouseId = '0a0aaa0a0aa00000aaaaaa0b';

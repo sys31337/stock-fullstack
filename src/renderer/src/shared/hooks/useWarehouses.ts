@@ -1,9 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@web/shared/services/api';
+import { defaultWarehouseId } from '@web/config';
+import Any from '@web/shared/types/any';
 
 export const useGetAllWarehouses = () => useQuery({
   queryKey: ['warehouses'],
-  queryFn: () => api.get('warehouses').then((r) => r.data),
+  queryFn: () => api.get('warehouses').then((r) => {
+    const data = r.data;
+    const defaultWarehouse = data.find((w: Any) => w._id === defaultWarehouseId);
+    const rest = data.filter((w: Any) => w._id !== defaultWarehouseId);
+    return [defaultWarehouse, ...rest];
+  }),
 });
 
 export const useGetWarehouse = (id: string) => useQuery({

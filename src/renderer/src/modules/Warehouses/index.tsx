@@ -9,6 +9,7 @@ import { t } from 'i18next';
 import { Search, Warehouse, Plus, Pencil, Trash2, Building2, Wand2 } from 'lucide-react';
 import Pagination from '@web/shared/components/Pagination';
 import { useGetAllWarehouses, useCreateWarehouse, useUpdateWarehouse, useDeleteWarehouse } from '@web/shared/hooks/useWarehouses';
+import { defaultWarehouseId } from '@web/config';
 import { Checkbox } from '@web/shared/components/ui/checkbox';
 import { Separator } from '@web/shared/components/ui/separator';
 import { useToast } from '@web/shared/components/ui/use-toast';
@@ -195,7 +196,10 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
                 ) : (
                   filtered.slice(startIndex, endIndex).map((warehouse: any) => (
                     <TableRow key={warehouse._id} className="hover:bg-muted/20">
-                      <TableCell className="font-medium">{warehouse.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {warehouse.name}
+                        {warehouse._id === defaultWarehouseId && <span className="ml-2 text-xs text-muted-foreground italic">({t('default')})</span>}
+                      </TableCell>
                       <TableCell>
                         <span className="inline-flex px-2 py-0.5 bg-primary/5 text-primary rounded text-xs font-mono">{warehouse.code}</span>
                       </TableCell>
@@ -207,6 +211,7 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
+                        {warehouse._id !== defaultWarehouseId && (
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(warehouse)}>
                             <Pencil className="h-4 w-4" />
@@ -215,6 +220,7 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

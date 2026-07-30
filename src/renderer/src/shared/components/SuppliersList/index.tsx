@@ -20,6 +20,7 @@ import Pagination from '@web/shared/components/Pagination'
 import { ICustomer } from '@web/shared/types/customer'
 import { AxiosError } from 'axios'
 import showToast from '@web/shared/functions/showToast'
+import { defaultId } from '@web/config'
 
 interface SuppliersListProps {
   open: boolean
@@ -126,6 +127,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({ open, onOpenChange }) => 
                           {supplier.fullname?.[0]?.toUpperCase() || 'S'}
                         </div>
                         <span className="group-hover:text-primary transition-colors">{supplier.fullname}</span>
+                        {supplier._id === defaultId && <span className="text-xs text-muted-foreground italic">({t('default')})</span>}
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{supplier.phoneNumber || '-'}</TableCell>
@@ -134,6 +136,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({ open, onOpenChange }) => 
                     <TableCell className="text-muted-foreground font-mono text-xs">{supplier.nif || '-'}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{supplier.rc || '-'}</TableCell>
                     <TableCell>
+                      {supplier._id !== defaultId && (
                       <div className="flex gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
                         <CustomerModal
                           customer={supplier}
@@ -152,6 +155,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({ open, onOpenChange }) => 
                           <AiFillDelete className="h-3.5 w-3.5" />
                         </Button>
                       </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
