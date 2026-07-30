@@ -3,9 +3,9 @@
   <head>
     <script>
       (function() {
-        var href = document.location.href;
+        var href = document.location.href.split('#')[0];
         var base = document.createElement('base');
-        base.href = href.substring(0, href.lastIndexOf('/') + 1);
+        base.href = href;
         document.head.appendChild(base);
       })();
     </script>

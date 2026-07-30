@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { t } from 'i18next'
 import { AiFillRightCircle } from 'react-icons/ai';
 import DeliveryModal from '@web/modules/Delivery/DeliveryModal';
+import { assetsBase } from '@web/config';
 import { cn } from '@web/shared/utils/cn';
 
 interface DeliveryProps {
@@ -56,7 +57,7 @@ const Delivery: React.FC<DeliveryProps> = ({ isTopBar, open: controlledOpen, onO
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-                  <img src="/assets/icons/sale.gif" width={40} alt="Delivery" />
+                  <img src={`${assetsBase}assets/icons/sale.gif`} width={40} alt="Delivery" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">

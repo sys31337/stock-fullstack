@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { t } from 'i18next'
 import { AiFillRightCircle } from 'react-icons/ai';
 import OrderModal from '@web/modules/Order/OrderModal';
+import { assetsBase } from '@web/config';
 import { cn } from '@web/shared/utils/cn';
 
 interface OrderProps {
@@ -56,7 +57,7 @@ const Order: React.FC<OrderProps> = ({ isTopBar, open: controlledOpen, onOpenCha
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-                  <img src="/assets/icons/boxing.gif" width={40} alt="Order" />
+                  <img src={`${assetsBase}assets/icons/boxing.gif`} width={40} alt="Order" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">

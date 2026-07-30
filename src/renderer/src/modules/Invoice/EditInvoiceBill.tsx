@@ -395,7 +395,7 @@ const EditInvoiceBill: React.FC<EditInvoiceBillProps> = ({ billId, isOpen: propI
               {t('close')}
             </Button>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
-              <a href={`/billpdf/${state.receiptBillId || billId}`}>
+              <a href={`#/billpdf/${state.receiptBillId || billId}`}>
                 <AiFillFilePdf className="mr-2" /> {t('print')}
               </a>
             </Button>

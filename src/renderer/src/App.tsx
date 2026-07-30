@@ -20,13 +20,6 @@ const Home = React.lazy(() => import('@web/modules/Home'));
 const BillPdf = React.lazy(() => import('@web/modules/BillPdf'));
 
 const App = () => {
-  shortcuts.add([
-    { shortcut: 'F1', handler: (e) => { console.log(e) } },
-    { shortcut: 'F2', handler: (e) => { console.log(e) } },
-    { shortcut: 'F3', handler: (e) => { console.log(e) } },
-    { shortcut: 'F4', handler: (e) => { console.log(e) } },
-    { shortcut: 'F5', handler: (e) => { console.log(e) } },
-  ])
   React.useEffect(() => {
     shortcuts.start();
   }, []);

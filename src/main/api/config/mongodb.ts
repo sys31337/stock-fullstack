@@ -10,10 +10,12 @@ let currentUri: string | null = null;
 let startingPromise: Promise<string> | null = null;
 
 function getMongodPath(): string {
-  const dir = process.resourcesPath
-    ? path.join(process.resourcesPath, 'mongodb')
-    : path.join(process.cwd(), 'src', 'mongodb');
-  return path.join(dir, 'mongod.exe');
+  const resourcesPath = (process as any).resourcesPath as string | undefined;
+  if (resourcesPath) {
+    const p = path.join(resourcesPath, 'mongodb', 'mongod.exe');
+    if (fs.existsSync(p)) return p;
+  }
+  return path.join(process.cwd(), 'src', 'mongodb', 'mongod.exe');
 }
 
 function getAppDataPath(): string {

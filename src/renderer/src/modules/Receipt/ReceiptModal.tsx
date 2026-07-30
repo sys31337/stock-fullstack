@@ -485,7 +485,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
               {t('close')}
             </Button>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
-              <a href={`/billpdf/${state.receiptBillId}`}>
+              <a href={`#/billpdf/${state.receiptBillId}`}>
                 <AiFillFilePdf className="mr-2" /> {t('print')}
               </a>
             </Button>

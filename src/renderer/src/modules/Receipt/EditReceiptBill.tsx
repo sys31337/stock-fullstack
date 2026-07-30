@@ -450,7 +450,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
             <Button variant="outline" onClick={onAlertClose}>
               {t('close')}
             </Button>
-            <a href={`/billpdf/${state.receiptBillId || billId}`}>
+            <a href={`#/billpdf/${state.receiptBillId || billId}`}>
               <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 <AiFillFilePdf className="mr-2" /> {t('print')}
               </Button>

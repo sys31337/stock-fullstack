@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { t } from 'i18next'
 import { AiFillRightCircle } from 'react-icons/ai';
 import ReceiptModal from '@web/modules/Receipt/ReceiptModal';
+import { assetsBase } from '@web/config';
 import { cn } from '@web/shared/utils/cn';
 
 interface ReceiptProps {
@@ -56,7 +57,7 @@ const Receipt: React.FC<ReceiptProps> = ({ isTopBar, open: controlledOpen, onOpe
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-                  <img src="/assets/icons/buy.gif" width={40} alt="Buy" />
+                  <img src={`${assetsBase}assets/icons/buy.gif`} width={40} alt="Buy" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">

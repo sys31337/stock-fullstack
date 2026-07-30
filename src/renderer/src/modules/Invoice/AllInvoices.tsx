@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@web/shared/components/ui/dropdown-menu"
+import { assetsBase } from '@web/config'
 import { Button } from "@web/shared/components/ui/button"
 import { Input } from "@web/shared/components/ui/input"
 import CustomModal from '@web/shared/components/CustomModal';
@@ -105,7 +106,7 @@ const AllInvoices: React.FC<AllInvoicesProps> = ({ isTopBar, open: controlledOpe
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-                  <img src="/assets/icons/allsales.gif" width={40} alt="Invoices" />
+                  <img src={`${assetsBase}assets/icons/allsales.gif`} width={40} alt="Invoices" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">
@@ -201,7 +202,7 @@ const AllInvoices: React.FC<AllInvoicesProps> = ({ isTopBar, open: controlledOpe
                                      {t('edit')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem asChild>
-                                     <a href={`/billpdf/${_id}`} className="flex items-center">
+                                     <a href={`#/billpdf/${_id}`} className="flex items-center">
                                         <AiFillFilePdf className="mr-2 h-4 w-4" />
                                         {t('print')}
                                      </a>

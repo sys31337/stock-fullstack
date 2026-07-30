@@ -18,8 +18,12 @@ type ViewMode = 'view' | 'edit' | 'history'
 const ReceiptBill: React.FC = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { data, isFetching, refetch } = useGetBillInfo(id as string)
-  const { data: settings } = useGetSettings()
+  const { data, isFetching, refetch, error } = useGetBillInfo(id as string)
+  const { data: settings, isFetching: settingsLoading } = useGetSettings()
+
+  React.useEffect(() => {
+    console.log('[ReceiptBill] id:', id, 'isFetching:', isFetching, 'data:', data, 'error:', error)
+  }, [id, isFetching, data, error])
 
   const [mode, setMode] = useState<ViewMode>('view')
   const [saveDescription, setSaveDescription] = useState('')
@@ -142,7 +146,20 @@ const ReceiptBill: React.FC = () => {
     }, 200)
   }, [mode, data, settings])
 
-  if (isFetching) return <Loading />
+  if (isFetching || settingsLoading) return <Loading />
+
+  if (!data) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gray-100 dark:bg-gray-950">
+        <div className="text-center p-8">
+          <p className="text-red-500 text-lg font-semibold">Bill data not found</p>
+          <Button onClick={() => navigate(-1)} variant="outline" className="mt-4">
+            <AiOutlineClose className="w-4 h-4 mr-2" /> Go back
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen relative w-screen flex flex-col bg-gray-100 dark:bg-gray-950">

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { t } from 'i18next'
 import { AiFillRightCircle } from 'react-icons/ai';
 import InvoiceModal from '@web/modules/Invoice/InvoiceModal';
+import { assetsBase } from '@web/config';
 import { cn } from '@web/shared/utils/cn';
 
 interface InvoiceProps {
@@ -56,7 +57,7 @@ const Invoice: React.FC<InvoiceProps> = ({ isTopBar, open: controlledOpen, onOpe
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg">
-                  <img src="/assets/icons/files.gif" width={40} alt="Invoice" />
+                  <img src={`${assetsBase}assets/icons/files.gif`} width={40} alt="Invoice" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">
