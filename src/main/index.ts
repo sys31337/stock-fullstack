@@ -16,7 +16,7 @@ function createWindow(): void {
     width: 900,
     height: 670,
     show: false,
-    icon: join(__dirname, './assets/logo.ico'),
+    icon: join(app.getAppPath(), 'resources', 'icon.png'),
     webPreferences: {
       allowRunningInsecureContent: true,
       preload: join(__dirname, '../preload/index.js'),

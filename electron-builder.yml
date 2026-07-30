@@ -1,7 +1,8 @@
 appId: com.electron.app
 productName: solustock-20-desktop
 directories:
-  buildResources: build
+  buildResources: resources
+icon: resources/icon.png
 files:
   - '!**/.vscode/*'
   - '!src/*'
