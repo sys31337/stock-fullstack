@@ -21,6 +21,7 @@ import { useReceiptHold, HeldReceipt } from '@web/shared/contexts/ReceiptHoldCon
 import { Card, CardContent, CardHeader, CardTitle } from '@web/shared/components/ui/card';
 import { Label } from '@web/shared/components/ui/label';
 import { DatePicker } from '@web/shared/components/ui/date-picker';
+import { DateTimePicker } from '@web/shared/components/ui/date-time-picker';
 import { FileText, ShoppingCart, StickyNote, CalendarClock } from 'lucide-react';
 import { cn } from '@web/shared/utils/cn';
 
@@ -63,7 +64,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     orderPaid: state.orderPaid,
     orderDebts: state.orderDebts,
     billDate: new Date() as unknown as string,
-    reservedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as unknown as string,
+    reservedUntil: (() => { const d = new Date(); d.setHours(23, 59, 0, 0); return d; })() as unknown as string,
   });
 
   useEffect(() => {
@@ -129,25 +130,20 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     }
   }, [isFetched, latestBillNumber]);
 
-  const formatReservedUntil = (date: Date, time: string): string => {
-    const [hours, minutes] = time.split(':').map(Number);
-    const d = new Date(date);
-    d.setHours(hours || 0, minutes || 0, 0, 0);
-    return d.toISOString();
+  const formatReservedUntil = (date: Date): string => {
+    return date.toISOString();
   };
-
-  const [reservedTime, setReservedTime] = useState('23:59');
 
   const onSubmit = async (values: Payload) => {
     try {
       const reservedUntilDate = values.reservedUntil
         ? new Date(values.reservedUntil as unknown as string)
-        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        : (() => { const d = new Date(); d.setHours(23, 59, 0, 0); return d; })();
       const { category: _category, ...valuesWithoutCategory } = values;
       const payload = {
         ...valuesWithoutCategory,
         pricingCategory: 0,
-        reservedUntil: formatReservedUntil(reservedUntilDate, reservedTime),
+        reservedUntil: formatReservedUntil(reservedUntilDate),
         paymentMethod: 'CASH',
         type: 'ORDER',
         orderTotalHT: state.orderTotalHT,
@@ -190,9 +186,8 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
         orderPaid: state.orderPaid,
         orderDebts: state.orderDebts,
         billDate: new Date() as unknown as string,
-        reservedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as unknown as string,
+        reservedUntil: (() => { const d = new Date(); d.setHours(23, 59, 0, 0); return d; })() as unknown as string,
       });
-      setReservedTime('23:59');
       setProductsValues([{
         id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
       }]);
@@ -421,22 +416,10 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                 <CardContent className="px-5 pb-5 space-y-3">
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('reservedUntil')}</Label>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <DatePicker
-                          value={values.reservedUntil ? new Date(values.reservedUntil) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
-                          onSelect={(date) => setFieldValue('reservedUntil', date)}
-                        />
-                      </div>
-                      <div className="w-24 shrink-0">
-                        <input
-                          type="time"
-                          value={reservedTime}
-                          onChange={(e) => setReservedTime(e.target.value)}
-                          className="flex h-8 w-full rounded-lg border border-input bg-gray-50 px-2 text-xs font-mono focus:ring-1 focus:ring-ring outline-none"
-                        />
-                      </div>
-                    </div>
+                    <DateTimePicker
+                      value={values.reservedUntil ? new Date(values.reservedUntil) : (() => { const d = new Date(); d.setHours(23, 59, 0, 0); return d; })()}
+                      onSelect={(date) => setFieldValue('reservedUntil', date)}
+                    />
                   </div>
                 </CardContent>
               </Card>
