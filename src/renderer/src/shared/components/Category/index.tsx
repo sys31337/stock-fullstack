@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@web/shared/components/ui/button';
 import { useToast } from '@web/shared/components/ui/use-toast';
 import { BiSolidCategory } from 'react-icons/bi';

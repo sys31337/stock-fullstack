@@ -293,7 +293,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
                       setFieldValue={setFieldValue}
                       onFocus={() => refetch()}
                       handleBlur={handleBlur}
-                      value={values.customer}
+                      value={values.customer as string}
                       errorMessage={errors.customer && touched.customer && errors.customer}
                       selectOptions={
                         allCustomers && allCustomers.map((customer) => ({ label: customer?.fullname, value: customer?._id }))
@@ -310,7 +310,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
                       setFieldValue={setFieldValue}
                       onFocus={() => refetchCategories()}
                       handleBlur={handleBlur}
-                      value={values.category}
+                      value={values.category as string}
                       errorMessage={errors.category && touched.category && errors.category}
                       selectOptions={
                         allCategories && allCategories.map((category) => ({ label: category?.name, value: category?._id }))

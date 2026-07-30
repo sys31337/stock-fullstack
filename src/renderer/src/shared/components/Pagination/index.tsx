@@ -1,15 +1,23 @@
-import React from 'react';
+import { cn } from '@web/shared/utils/cn';
 import { Button } from '@web/shared/components/ui/button';
 import { usePagination, DOTS } from '@web/shared/components/Pagination/usePagination';
 import { AiOutlineArrowLeft, AiOutlineArrowRight, AiOutlineSmallDash } from 'react-icons/ai';
 
-const Pagination = (props) => {
+const Pagination = (props: {
+  onPageChange: (page: number) => void;
+  totalCount: number;
+  siblingCount?: number;
+  currentPage: number;
+  pageSize: number;
+  className?: string;
+}) => {
   const {
     onPageChange,
     totalCount,
     siblingCount = 1,
     currentPage,
     pageSize,
+    className,
   } = props;
 
   const paginationRange = usePagination({
@@ -34,7 +42,7 @@ const Pagination = (props) => {
   const lastPage = paginationRange && paginationRange[paginationRange.length - 1];
 
   return (
-    <div className="flex items-center gap-1.5 justify-center py-4">
+    <div className={cn("flex items-center gap-1.5 justify-center py-4", className)}>
       <Button
         size="icon"
         variant="outline"
@@ -66,7 +74,7 @@ const Pagination = (props) => {
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
-            onClick={() => onPageChange(pageNumber)}
+            onClick={() => onPageChange(pageNumber as number)}
           >
             {pageNumber}
           </Button>

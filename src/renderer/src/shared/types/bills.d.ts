@@ -26,6 +26,7 @@ export interface IBill {
   paymentMethod: 'Cash';
   pricingCategory: number;
   description: string;
+  warehouse?: string;
   content?: string;
   contentHistory?: IContentHistoryEntry[];
 }

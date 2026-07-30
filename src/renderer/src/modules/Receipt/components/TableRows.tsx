@@ -53,7 +53,7 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
 
   const matchedProduct = useMemo(() => {
     if (!barCode || !allProducts) return null;
-    return allProducts.find((p) => p.barCode === barCode) || null;
+    return allProducts.find((p: any) => p.barCode === barCode) || null;
   }, [barCode, allProducts]);
 
   const isLocked = matchedProduct !== null;
@@ -61,7 +61,7 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
   const handleBarcodeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const barcode = e.target.value.trim();
     if (!barcode || !allProducts) return;
-    const match = allProducts.find((p) => p.barCode === barcode);
+    const match = allProducts.find((p: any) => p.barCode === barcode);
     if (match) {
       if (isDuplicate(match)) {
         showToast(toast, { title: t('productExists'), description: t('productAlreadyInList'), status: 'warning' });

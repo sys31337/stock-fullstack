@@ -180,6 +180,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         orderId: latestBillNumber + 2,
         description: '',
         customer: '',
+        warehouse: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,

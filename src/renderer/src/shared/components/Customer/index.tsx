@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@web/shared/components/ui/button';
 import { useToast } from '@web/shared/components/ui/use-toast';
 import { FaUserPlus } from 'react-icons/fa';
@@ -31,7 +31,7 @@ const CustomerModal = ({ customer, type, trigger }: CustomerModalProps) => {
   const { mutateAsync: updateCustomer } = useUpdateCustomer(isEdit ? customer._id : '');
   const { toast } = useToast();
 
-  const initialValues = {
+  const initialValues: { [key: string]: string } = {
     fullname: customer?.fullname || '',
     address: customer?.address || '',
     phoneNumber: customer?.phoneNumber || '',

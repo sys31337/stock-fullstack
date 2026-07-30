@@ -184,6 +184,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
         orderId: latestBillNumber + 2,
         description: '',
         customer: '',
+        warehouse: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,

@@ -393,10 +393,12 @@ const UsersModule: React.FC<UsersProps> = ({ isTopBar, open: controlledOpen, onO
                     <Combobox
                       options={[
                         { value: '', label: t('none') },
-                        ...form.assignedWarehouses.map((wid) => {
-                          const w = (warehouses || []).find((x: any) => x._id === wid);
-                          return w ? { value: w._id, label: w.name } : null;
-                        }).filter(Boolean),
+                        ...form.assignedWarehouses
+                          .map((wid) => {
+                            const w = (warehouses || []).find((x: any) => x._id === wid);
+                            return w ? { value: w._id, label: w.name } : null;
+                          })
+                          .filter((x): x is { value: string; label: string } => x !== null),
                       ]}
                       value={form.defaultWarehouse}
                       onChange={(val) => setForm({ ...form, defaultWarehouse: val })}

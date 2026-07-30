@@ -39,7 +39,7 @@ interface CustomModalProps {
 }
 
 const CustomModal = ({
-  modalProps, overlayProps, contentProps, bodyProps,
+  modalProps, contentProps, bodyProps,
   isOpen, onClose, title, children, footer, headerActions,
   onMinimize, minimizeTooltip, closeTooltip,
   confirmOnClose = false,

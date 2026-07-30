@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@web/shared/components/ui/button';
 import { BsBack } from 'react-icons/bs';
 

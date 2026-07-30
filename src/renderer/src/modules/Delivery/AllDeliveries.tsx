@@ -12,7 +12,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@web/shared/components/ui/dropdown-menu"
 import { Button } from "@web/shared/components/ui/button"

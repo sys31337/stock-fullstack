@@ -1,7 +1,6 @@
 import { useGetPermissions } from '@web/shared/hooks/usePermissions';
 import { Checkbox } from '@web/shared/components/ui/checkbox';
 import { Label } from '@web/shared/components/ui/label';
-import { Separator } from '@web/shared/components/ui/separator';
 import { Input } from '@web/shared/components/ui/input';
 import { Search } from 'lucide-react';
 import { useState, useMemo } from 'react';

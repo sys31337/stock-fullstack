@@ -1,5 +1,3 @@
-import { t } from 'i18next';
-
 export const modules: {
   label: string;
   icon: JSX.Element;

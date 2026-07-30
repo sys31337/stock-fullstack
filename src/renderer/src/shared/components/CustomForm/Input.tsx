@@ -5,7 +5,6 @@ import { Label } from '@web/shared/components/ui/label';
 import { Combobox } from '@web/shared/components/ui/combobox';
 import { cn } from '@web/shared/utils/cn';
 import Any from '@web/shared/types/any';
-import { LucideIcon } from 'lucide-react';
 
 // Define a type for the Icon that can be either a LucideIcon or a Chakra Icon (As)
 // We will try to render it if it's a component.
@@ -22,7 +21,7 @@ type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   type?: string;
   handleChange?: (e: React.ChangeEvent<Any>) => void;
   setFieldValue?: (fieldName: string, value: Date | string) => void;
-  handleBlur?: (e: React.ChangeEvent<Any>) => void;
+  handleBlur?: (e: React.FocusEvent<Any>) => void;
   defaultValue?: string | Date | number;
   value?: string | Date | number;
   errorMessage?: ReactNode;
