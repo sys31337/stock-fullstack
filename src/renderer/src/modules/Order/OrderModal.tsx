@@ -10,7 +10,7 @@ import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
-import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
+import { useCreateBill } from '@web/shared/hooks/useBill';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -40,7 +40,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allWarehouses } = useGetAllWarehouses();
-  const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('ORDER');
   const { mutateAsync: createBill } = useCreateBill();
   const { holdReceipt, removeHeldReceipt } = useReceiptHold();
 
@@ -55,7 +54,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
   });
 
   const [initialValues, setInitialValues] = useState({
-    orderId: 0,
+    orderId: '',
     description: '',
     customer: '',
     warehouse: '',
@@ -124,12 +123,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     });
   }, [productsValues, state.orderPaid, priceTier])
 
-  useEffect(() => {
-    if (isFetched) {
-      setFieldValue('orderId', latestBillNumber + 1)
-    }
-  }, [isFetched, latestBillNumber]);
-
   const formatReservedUntil = (date: Date): string => {
     return date.toISOString();
   };
@@ -177,7 +170,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
       );
       setInitialValues({
-        orderId: latestBillNumber + 2,
+        orderId: '',
         description: '',
         customer: '',
         warehouse: '',
@@ -206,22 +199,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     }
   }
 
-  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue, setFieldError } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
-  const { mutateAsync: checkOrderId } = useCheckBillOrderId();
-
-  const handleOrderIdBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    handleBlur(e);
-    const id = Number(e.target.value);
-    if (!id) return;
-    try {
-      const exists = await checkOrderId({ type: 'ORDER', orderId: id });
-      if (exists) {
-        setFieldError('orderId', 'orderIdExists');
-      }
-    } catch {
-      // ignore network errors on blur check
-    }
-  };
+  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
 
   const handleMinimize = () => {
     holdReceipt({
@@ -318,8 +296,9 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                         <CustomInput
                           name="orderId"
                           handleChange={handleChange}
-                          handleBlur={handleOrderIdBlur}
+                          handleBlur={handleBlur}
                           value={values.orderId}
+                          placeholder={t('optional')}
                           className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:font-semibold [&_input]:h-8 [&_input]:text-xs"
                         />
                       </div>

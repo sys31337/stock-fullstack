@@ -6,7 +6,7 @@ const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createBillSchema = Joi.object({
   billDate: date.required(),
-  orderId: number.required(),
+  orderId: string.optional().allow(''),
   category: mongooseId,
   customer: mongooseId,
   type: string.required().valid('BUY', 'SALE', 'ORDER', 'DELIVERY'),
@@ -45,7 +45,7 @@ const createBillValidator = validator.body(createBillSchema);
 
 const updateBillSchema = Joi.object({
   billDate: date,
-  orderId: number,
+  orderId: string.optional().allow(''),
   category: mongooseId,
   customer: mongooseId,
   type: string.valid('BUY', 'SALE', 'ORDER', 'DELIVERY'),

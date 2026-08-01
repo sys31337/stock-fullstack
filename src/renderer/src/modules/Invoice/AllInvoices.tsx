@@ -61,7 +61,7 @@ const AllInvoices: React.FC<AllInvoicesProps> = ({ isTopBar, open: controlledOpe
       || (customer as ICustomer)?.fullname?.toLowerCase().includes(filter.toLowerCase())
       || price(orderTotalTTC) === price(filter)
       || price(orderTotalHT) === price(filter)
-      || orderId === Number(filter)
+      || String(orderId).toLowerCase().includes(filter.toLowerCase())
       || description?.toLowerCase().includes(filter.toLowerCase())
     ))
     : bills;

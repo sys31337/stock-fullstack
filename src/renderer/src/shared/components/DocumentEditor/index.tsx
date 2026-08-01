@@ -51,7 +51,8 @@ export interface DocumentEditorHandle {
   getContent: () => string
 }
 
-function formatInvoiceNumber(num: number, year: string): string {
+function formatInvoiceNumber(num: number | string, year: string): string {
+  num = Number(num);
   if (num < 10) return `0000${num}/${year}`
   if (num < 100) return `000${num}/${year}`
   if (num < 1000) return `00${num}/${year}`

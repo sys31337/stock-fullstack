@@ -145,7 +145,7 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
       || (customer as ICustomer)?.fullname?.toLowerCase().includes(filter.toLowerCase())
       || price(orderTotalTTC) === price(filter)
       || price(orderTotalHT) === price(filter)
-      || orderId === Number(filter)
+      || String(orderId).toLowerCase().includes(filter.toLowerCase())
       || description?.toLowerCase().includes(filter.toLowerCase())
       || status?.toLowerCase().includes(filter.toLowerCase())
     ))

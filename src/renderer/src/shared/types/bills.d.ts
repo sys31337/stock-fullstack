@@ -12,7 +12,7 @@ export interface IContentHistoryEntry {
 export interface IBill {
   _id: string;
   billDate: string;
-  orderId: number;
+  orderId: string;
   category: string | ICategory;
   customer: string | ICustomer;
   type: 'BUY' | 'SALE' | 'ORDER' | 'DELIVERY';

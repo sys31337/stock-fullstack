@@ -57,7 +57,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
   });
 
   const [initialValues, setInitialValues] = useState({
-    orderId: 0,
+    orderId: '',
     description: '',
     customer: '',
     warehouse: '',
@@ -127,7 +127,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
 
   useEffect(() => {
     if (isFetched) {
-      setFieldValue('orderId', latestBillNumber + 1)
+      setFieldValue('orderId', String((latestBillNumber ?? 0) + 1))
     }
   }, [isFetched, latestBillNumber, initialHeldData]);
 
@@ -177,7 +177,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
       );
       setInitialValues({
-        orderId: latestBillNumber + 2,
+        orderId: String((latestBillNumber ?? 0) + 2),
         description: '',
         customer: '',
         warehouse: '',
@@ -211,7 +211,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
 
   const handleOrderIdBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     handleBlur(e);
-    const id = Number(e.target.value);
+    const id = e.target.value.trim();
     if (!id) return;
     try {
       const exists = await checkOrderId({ type: 'DELIVERY', orderId: id });

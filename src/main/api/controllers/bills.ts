@@ -24,7 +24,9 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
-    const finalOrderId = orderId > 0 ? orderId : parseInt(await getLatestBill(type), 10) + 1;
+    const finalOrderId = orderId && String(orderId).trim()
+      ? String(orderId).trim()
+      : String(parseInt(await getLatestBill(type), 10) + 1);
 
     const existing = await Bill.findOne({ type, orderId: finalOrderId });
     if (existing) {
@@ -328,7 +330,7 @@ const updateContent = async (req: IUserIdRequest, res: Response, next: NextFunct
 const checkOrderIdExists = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { type, orderId } = req.params;
-    const existing = await Bill.findOne({ type, orderId: Number(orderId) });
+    const existing = await Bill.findOne({ type, orderId });
     return res.status(200).send({ exists: !!existing });
   } catch (error) {
     return next(error);

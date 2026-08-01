@@ -4,7 +4,7 @@ import { productsSchema } from '@api/models/products';
 
 const billsSchema = new Schema({
   billDate: requiredString,
-  orderId: requiredNumber,
+  orderId: { type: String, required: true },
   category: { type: Schema.Types.ObjectId, ref: 'Category' },
   customer: { type: Schema.Types.ObjectId, ref: 'Customer' },
   warehouse: { type: Schema.Types.ObjectId, ref: 'Warehouse', index: true },

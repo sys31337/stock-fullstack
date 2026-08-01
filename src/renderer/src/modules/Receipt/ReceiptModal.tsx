@@ -55,7 +55,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
   });
 
   const [initialValues, setInitialValues] = useState({
-    orderId: 0,
+    orderId: '',
     category: '',
     description: '',
     customer: '',
@@ -125,7 +125,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
 
   useEffect(() => {
     if (isFetched && !initialHeldData) {
-      setInitialValues((prev) => ({ ...prev, orderId: latestBillNumber + 1 }))
+      setInitialValues((prev) => ({ ...prev, orderId: String((latestBillNumber ?? 0) + 1) }))
     }
   }, [isFetched, latestBillNumber, initialHeldData]);
 
@@ -170,7 +170,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         { title: t('actionPerformed'), description: t('actionPerformedSuccessfully'), status: 'success' },
       );
       setInitialValues({
-        orderId: latestBillNumber + 2,
+        orderId: String((latestBillNumber ?? 0) + 2),
         category: '',
         description: '',
         customer: '',
@@ -204,7 +204,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
 
   const handleOrderIdBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     handleBlur(e);
-    const id = Number(e.target.value);
+    const id = e.target.value.trim();
     if (!id) return;
     try {
       const exists = await checkOrderId({ type: 'BUY', orderId: id });

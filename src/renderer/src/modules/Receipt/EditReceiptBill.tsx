@@ -84,7 +84,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
   });
 
   const [initialValues, setInitialValues] = useState<Partial<IBill>>({
-    orderId: 0,
+    orderId: '',
     category: '',
     description: '',
     customer: '',

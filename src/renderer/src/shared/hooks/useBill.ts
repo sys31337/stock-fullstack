@@ -27,7 +27,7 @@ const useGetLatestBillNumber = (type: string) => useQuery(
     .request({
       url: `bills/${type}`,
     })
-    .then(({ data }) => data.shift()?.orderId || 0),
+    .then(({ data }) => Number(data.shift()?.orderId) || 0),
 );
 
 const useGetBillInfo = (id: string, options?: any) => useQuery(
@@ -100,7 +100,7 @@ const useUpdateBillContent = (id?: string) => useMutation((data: { content: stri
   }
 });
 
-const useCheckBillOrderId = () => useMutation(({ type, orderId }: { type: string, orderId: number }) => axiosInstance.request({
+const useCheckBillOrderId = () => useMutation(({ type, orderId }: { type: string, orderId: string }) => axiosInstance.request({
   url: `bills/${type}/check-id/${orderId}`,
 }).then(({ data }) => data.exists));
 
