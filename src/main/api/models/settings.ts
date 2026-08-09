@@ -3,6 +3,8 @@ import { model, Schema } from 'mongoose';
 const settingsSchema = new Schema({
   allowOutOfStockSales: { type: Boolean, default: false },
   allowOutOfStockOrders: { type: Boolean, default: false },
+  dashboardStatsEnabled: { type: Boolean, default: true },
+  dashboardStatsBlurred: { type: Boolean, default: false },
   companyName: String,
   rc: String,
   nif: String,

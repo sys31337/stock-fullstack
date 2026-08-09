@@ -5,6 +5,8 @@ const validator = expressJoiValidation.createValidator({ passError: true });
 const updateSettingsSchema = Joi.object({
   allowOutOfStockSales: Joi.boolean().optional(),
   allowOutOfStockOrders: Joi.boolean().optional(),
+  dashboardStatsEnabled: Joi.boolean().optional(),
+  dashboardStatsBlurred: Joi.boolean().optional(),
   companyName: Joi.string().allow('').optional(),
   rc: Joi.string().allow('').optional(),
   nif: Joi.string().allow('').optional(),

@@ -8,12 +8,13 @@ import { useToast } from '@web/shared/components/ui/use-toast';
 import showToast from '@web/shared/functions/showToast';
 import { useGetSettings, useUpdateSettings } from '@web/shared/hooks/useSettings';
 import { t } from 'i18next';
-import { Save, Loader2, Package, Building2, X } from 'lucide-react';
+import { Save, Loader2, Package, Building2, LayoutDashboard, X } from 'lucide-react';
 import { cn } from '@web/shared/utils/cn';
 
 const TABS = [
   { id: 'stock', label: 'stockTab', icon: Package },
   { id: 'company', label: 'companyTab', icon: Building2 },
+  { id: 'dashboard', label: 'dashboardTab', icon: LayoutDashboard },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -32,6 +33,8 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
 
   const [allowOutOfStockSales, setAllowOutOfStockSales] = useState(false);
   const [allowOutOfStockOrders, setAllowOutOfStockOrders] = useState(false);
+  const [dashboardStatsEnabled, setDashboardStatsEnabled] = useState(true);
+  const [dashboardStatsBlurred, setDashboardStatsBlurred] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [rc, setRc] = useState('');
   const [nif, setNif] = useState('');
@@ -54,6 +57,8 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
     if (isFetched && settings) {
       setAllowOutOfStockSales(settings.allowOutOfStockSales ?? false);
       setAllowOutOfStockOrders(settings.allowOutOfStockOrders ?? false);
+      setDashboardStatsEnabled(settings.dashboardStatsEnabled ?? true);
+      setDashboardStatsBlurred(settings.dashboardStatsBlurred ?? false);
       setCompanyName(settings.companyName ?? '');
       setRc(settings.rc ?? '');
       setNif(settings.nif ?? '');
@@ -77,6 +82,9 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const buildPayload = () => {
     if (activeTab === 'stock') {
       return { allowOutOfStockSales, allowOutOfStockOrders };
+    }
+    if (activeTab === 'dashboard') {
+      return { dashboardStatsEnabled, dashboardStatsBlurred };
     }
     if (activeTab === 'company') {
       return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, accountNumber, rib, articleNumber, stamp, tva };
@@ -169,6 +177,46 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                       id="out-of-stock-orders"
                       checked={allowOutOfStockOrders}
                       onCheckedChange={(v) => { setAllowOutOfStockOrders(v); setDirty(true); }}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-3">
+                  <Button onClick={handleSave} disabled={!dirty || isPending} className="gap-2">
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {t('save')}
+                  </Button>
+                </div>
+              </div>
+            ) : activeTab === 'dashboard' ? (
+              <div className="max-w-md space-y-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">{t('dashboardStatistics')}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('dashboardStatisticsDesc')}</p>
+                </div>
+                <Separator />
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="stats-enabled" className="text-sm font-medium">{t('showDashboardStats')}</Label>
+                      <p className="text-xs text-muted-foreground">{t('showDashboardStatsDesc')}</p>
+                    </div>
+                    <Switch
+                      id="stats-enabled"
+                      checked={dashboardStatsEnabled}
+                      onCheckedChange={(v) => { setDashboardStatsEnabled(v); setDirty(true); }}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="stats-blurred" className="text-sm font-medium">{t('blurDashboardStats')}</Label>
+                      <p className="text-xs text-muted-foreground">{t('blurDashboardStatsDesc')}</p>
+                    </div>
+                    <Switch
+                      id="stats-blurred"
+                      checked={dashboardStatsBlurred}
+                      disabled={!dashboardStatsEnabled}
+                      onCheckedChange={(v) => { setDashboardStatsBlurred(v); setDirty(true); }}
                     />
                   </div>
                 </div>
