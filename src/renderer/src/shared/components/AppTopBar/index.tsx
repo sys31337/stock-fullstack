@@ -28,6 +28,7 @@ import {
 } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@web/shared/utils/cn'
+import { Wifi } from 'lucide-react'
 
 interface ModalActions {
   openProducts: () => void
@@ -340,6 +341,16 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
               <WarehouseSelector size="sm" />
             </div> */}
             <Languages />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/connection')}
+              title="Remote connection"
+              aria-label="Remote connection"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent gap-1.5 h-8 px-2.5"
+            >
+              <Wifi className="h-3.5 w-3.5" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"

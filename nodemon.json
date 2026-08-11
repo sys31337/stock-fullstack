@@ -1,6 +1,7 @@
 {
   "watch": [
-    "./src/main/api"
+    "./src/main/api",
+    "./src/main/relay"
   ],
   "ext": "ts,json",
   "ignore": [

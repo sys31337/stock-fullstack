@@ -3,9 +3,10 @@ import {
 } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import server from './api/main';
 import config from './api/config';
 import { startMongoDB, stopMongoDB } from './api/config/mongodb';
+import { getRelayManager } from './relay/manager';
+import { registerRelayIpc } from './relay/ipc';
 
 if (is.dev) {
   try {
@@ -15,6 +16,7 @@ if (is.dev) {
 }
 
 const { ELECTRON_RENDERER_URL } = config
+const relayManager = getRelayManager();
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -32,6 +34,7 @@ function createWindow(): void {
       nodeIntegrationInSubFrames: true,
       webSecurity: false,
       contextIsolation: false,
+      additionalArguments: [`--relay-api=${relayManager.isHost() ? 'http://127.0.0.1:4031' : `http://127.0.0.1:${relayManager.getClientPort()}`}`],
     },
     frame: false,
     transparent: true,
@@ -89,22 +92,31 @@ function createWindow(): void {
   mainWindow.maximize();
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.electron');
 
-  server.listen(4031, () => {
-    console.error('[server] API server listening on port 4031');
-  });
+  registerRelayIpc();
+  relayManager.start();
 
-  startMongoDB().then(() => {
+  if (relayManager.isHost()) {
+    const { default: server } = await import('./api/main');
+
+    server.listen(4031, () => {
+      console.error('[server] API server listening on port 4031');
+    });
+
+    server.on('error', (e) => console.error('[server] Error:', e));
+
+    startMongoDB().then(() => {
+      createWindow();
+    }).catch((err) => {
+      console.error('Failed to start MongoDB:', err);
+      dialog.showErrorBox('Database Error', `Failed to start MongoDB.\n\n${err.message}`);
+      app.quit();
+    });
+  } else {
     createWindow();
-  }).catch((err) => {
-    console.error('Failed to start MongoDB:', err);
-    dialog.showErrorBox('Database Error', `Failed to start MongoDB.\n\n${err.message}`);
-    app.quit();
-  });
-
-  server.on('error', (e) => console.error('[server] Error:', e));
+  }
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
@@ -123,4 +135,5 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   stopMongoDB();
+  relayManager.shutdown();
 });
