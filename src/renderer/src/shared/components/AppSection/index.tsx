@@ -16,7 +16,7 @@ const AppSection: React.FC = () => {
         <ToastStateProvider>
           <div className="w-full h-full flex flex-col overflow-hidden">
             <AppTopBar>
-              <div className="flex-1 overflow-auto h-full">
+              <div className="flex-1 min-h-0 overflow-auto">
                 <Suspense fallback={<Loading />}>
                   <Outlet context={[currentPageTitle, setCurrentPageTitle, currentProfilePicture, setCurrentProfilePicture]} />
                 </Suspense>

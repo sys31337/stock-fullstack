@@ -1,7 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  ArrowLeftRight,
+  Check,
+  Copy,
+  Lock,
+  MonitorSmartphone,
+  QrCode,
+  RefreshCw,
+  Server,
+  Settings,
+  ShieldCheck,
+  Wifi,
+  WifiOff,
+  X,
+} from 'lucide-react';
 import { Button } from '@web/shared/components/ui/button';
 import { Input } from '@web/shared/components/ui/input';
 import { Label } from '@web/shared/components/ui/label';
+import { cn } from '@web/shared/utils/cn';
 import type { RelayConfigDto, RelayHostInfo, RelayStateSnapshot } from '../../../../preload/relay';
 
 const STATE_LABEL: Record<string, string> = {
@@ -14,14 +31,29 @@ const STATE_LABEL: Record<string, string> = {
   closed: 'Closed',
 };
 
-const Connection: React.FC = () => {
+type SectionId = 'status' | 'settings' | 'qr' | 'hosts' | 'mode';
+
+interface ConnectionDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+/**
+ * Slide-over drawer for the remote connection settings. Rendered at the app
+ * chrome level so the home screen stays visible behind the backdrop.
+ */
+const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) => {
   const [state, setState] = useState<RelayStateSnapshot | null>(null);
   const [hosts, setHosts] = useState<RelayHostInfo[]>([]);
   const [config, setConfig] = useState<RelayConfigDto | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [section, setSection] = useState<SectionId>('status');
 
   useEffect(() => {
+    if (!isOpen) return;
+    setSection('status');
     let mounted = true;
     const api = window.api.relay;
     api.getState().then((s) => mounted && setState(s));
@@ -34,7 +66,7 @@ const Connection: React.FC = () => {
       offState();
       offHosts();
     };
-  }, []);
+  }, [isOpen]);
 
   const form = useMemo(
     () => ({
@@ -61,9 +93,16 @@ const Connection: React.FC = () => {
     setHostPassword(form.hostPassword);
   }, [form]);
 
-  if (!state || !config) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading connection info…</div>;
-  }
+  const qrPayload = useMemo(() => {
+    if (state?.mode !== 'host') return null;
+    const params = new URLSearchParams();
+    params.set('url', url);
+    params.set('token', token);
+    params.set('hostId', state.hostId);
+    if (hostName) params.set('hostName', hostName);
+    if (hostPassword) params.set('password', hostPassword);
+    return `solustock://connect?${params.toString()}`;
+  }, [state, url, token, hostName, hostPassword]);
 
   const refreshHosts = async () => {
     setHosts(await window.api.relay.getHosts());
@@ -92,168 +131,404 @@ const Connection: React.FC = () => {
     setTimeout(() => window.api.relay.restart(), 600);
   };
 
-  const badge = state.connected ? (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600">
-      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-      Connected
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600">
-      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-      {STATE_LABEL[state.state] || state.state}
-    </span>
-  );
+  const copyQrPayload = async () => {
+    if (!qrPayload) return;
+    try {
+      await navigator.clipboard.writeText(qrPayload);
+      setCopied(true);
+      setMessage({ ok: true, text: 'Connection link copied to clipboard.' });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setMessage({ ok: false, text: 'Could not copy the link.' });
+    }
+  };
+
+  const isHost = state?.mode === 'host';
+  const connected = state?.state === 'connected' || state?.state === 'registered';
+  const loading = !state || !config;
+  const activeSection = section === 'qr' && !isHost ? 'status' : section;
+
+  const navItems: {
+    id: SectionId;
+    label: string;
+    icon: typeof Server;
+    hostOnly?: boolean;
+    badge?: number;
+  }[] = [
+    { id: 'status', label: 'Status', icon: Server },
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'qr', label: 'Mobile QR', icon: QrCode, hostOnly: true },
+    { id: 'hosts', label: 'Online hosts', icon: MonitorSmartphone, badge: hosts.length },
+    { id: 'mode', label: 'Mode', icon: ArrowLeftRight },
+  ];
+
+  const visibleNav = navItems.filter((item) => !item.hostOnly || isHost);
 
   return (
-    <div className="h-full overflow-auto p-8">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Remote connection</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Connects this computer to SoluStock devices through the relay service.
-          </p>
-        </div>
-
-        {message && (
-          <div className={`rounded-lg border px-4 py-3 text-sm ${message.ok ? 'border-emerald-500/40 bg-emerald-500/5 text-emerald-600' : 'border-destructive/50 bg-destructive/5 text-destructive'}`}>
-            {message.text}
-          </div>
+    <>
+      {isOpen && <div className="fixed inset-0 z-[200] bg-black/40" onClick={onClose} />}
+      <div
+        className={cn(
+          'fixed top-0 right-0 z-[201] h-full w-[720px] max-w-full bg-background border-l border-border shadow-2xl transition-transform duration-300 ease-in-out flex flex-col',
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
-
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
+      >
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-5">
+          <div className="flex items-center gap-2">
+            <Wifi className="h-5 w-5 text-primary" />
             <div>
-              <div className="text-sm font-semibold">Status</div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                Mode: <span className="font-medium">{state.mode === 'host' ? 'Host (serves its own data)' : 'Client (connects to a remote Host)'}</span>
+              <div className="text-sm font-bold leading-tight">Remote connection</div>
+              <div className="text-xs text-muted-foreground">
+                {loading ? '…' : isHost ? 'Host mode' : 'Client mode'}
               </div>
-            </div>
-            {badge}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div>
-              <div className="text-xs text-muted-foreground">Relay URL</div>
-              <div className="font-medium">{state.url}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Registered as</div>
-              <div className="font-medium">{state.registeredClientId || '—'}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Host ID</div>
-              <div className="font-medium">{state.hostId}</div>
-            </div>
-            {state.mode === 'host' && (
-              <div>
-                <div className="text-xs text-muted-foreground">Host name</div>
-                <div className="font-medium">{config.hostName || '—'}</div>
-              </div>
-            )}
-            <div>
-              <div className="text-xs text-muted-foreground">Client mode HTTP proxy</div>
-              <div className="font-medium">http://127.0.0.1:{state.clientPort}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold">Relay settings</div>
-              <div className="text-xs text-muted-foreground mt-0.5">These apply immediately.</div>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="relay-url">Relay URL</Label>
-              <Input id="relay-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="http://127.0.0.1:4050" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="relay-token">Relay token</Label>
-              <Input id="relay-token" type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="shared relay secret" />
-            </div>
-            {state.mode === 'host' && (
-              <div className="space-y-1.5">
-                <Label htmlFor="host-name">Host name</Label>
-                <Input id="host-name" value={hostName} onChange={(e) => setHostName(e.target.value)} placeholder="Name shown to clients" />
-                <p className="text-xs text-muted-foreground">
-                  The name mobile/desktop clients see when they connect to this host.
-                </p>
-              </div>
-            )}
-            {state.mode === 'host' && (
-              <div className="space-y-1.5">
-                <Label htmlFor="host-password">Host access password</Label>
-                <Input id="host-password" type="password" value={hostPassword} onChange={(e) => setHostPassword(e.target.value)} placeholder="optional" />
-                <p className="text-xs text-muted-foreground">
-                  Leave empty for open access. Clients must enter this password to link to this host.
-                </p>
-              </div>
-            )}
-            {state.mode === 'client' && (
-              <div className="space-y-1.5">
-                <Label htmlFor="target-host">Target Host ID</Label>
-                <Input id="target-host" value={targetHostId} onChange={(e) => setTargetHostId(e.target.value)} placeholder="host id" list="relay-hosts" />
-                <datalist id="relay-hosts">
-                  {hosts.map((h) => (
-                    <option key={h.clientId} value={h.clientId}>
-                      {h.name || h.clientId}
-                    </option>
-                  ))}
-                </datalist>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Button onClick={applyAndReconnect} disabled={saving}>
-                {saving ? 'Applying…' : 'Apply & reconnect'}
-              </Button>
-              <Button variant="outline" onClick={refreshHosts}>Refresh hosts</Button>
-            </div>
-          </div>
-        </div>
-
-        {hosts.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card p-5 space-y-2">
-            <div className="text-sm font-semibold">Online hosts ({hosts.length})</div>
-            {hosts.map((h) => (
-              <div key={h.clientId} className="flex items-center justify-between text-sm">
-                <div>
-                  <span className="font-medium">{h.name || h.clientId}</span>
-                  <span className="text-muted-foreground ml-2">({h.clientId})</span>
-                </div>
-                <span className="text-xs text-muted-foreground">{h.clients.length} client(s)</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
-          <div>
-            <div className="text-sm font-semibold">Mode</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              Switching modes restarts the application. In client mode the local backend & database are not started.
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant={state.mode === 'host' ? 'default' : 'outline'}
-              onClick={() => state.mode !== 'host' && saveAndRestart('host')}
-              disabled={saving}
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                connected
+                  ? 'bg-emerald-500/15 text-emerald-600'
+                  : 'bg-amber-500/15 text-amber-600'
+              }`}
             >
-              Host mode
-            </Button>
-            <Button
-              variant={state.mode === 'client' ? 'default' : 'outline'}
-              onClick={() => state.mode !== 'client' && saveAndRestart('client')}
-              disabled={saving}
+              {connected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+              {connected ? 'Connected' : loading ? '…' : STATE_LABEL[state.state] || state.state}
+            </span>
+            <button
+              onClick={onClose}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              Client mode
-            </Button>
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
+
+        <div className="flex min-h-0 flex-1">
+          {/* Sidebar */}
+          <aside className="flex w-52 shrink-0 flex-col border-r border-border bg-card">
+            <nav className="flex-1 space-y-1 overflow-y-auto p-2">
+              {visibleNav.map((item) => {
+                const Icon = item.icon;
+                const active = activeSection === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSection(item.id)}
+                    className={cn(
+                      'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      active
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {typeof item.badge === 'number' && item.badge > 0 ? (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="border-t border-border p-3">
+              <div className="flex items-center gap-2.5 rounded-lg bg-background px-3 py-2.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  {connected ? (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  ) : null}
+                  <span
+                    className={cn(
+                      'relative inline-flex h-2.5 w-2.5 rounded-full',
+                      connected ? 'bg-emerald-500' : 'bg-amber-500'
+                    )}
+                  />
+                </span>
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-semibold">
+                    {loading ? 'Loading…' : connected ? 'Connected' : STATE_LABEL[state.state] || state.state}
+                  </div>
+                  <div className="truncate text-[11px] text-muted-foreground">
+                    {loading ? '' : state.url}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="min-w-0 flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                  Loading connection info…
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto max-w-2xl p-6">
+                {message && (
+                  <div
+                    className={cn(
+                      'mb-5 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm',
+                      message.ok
+                        ? 'border-emerald-500/40 bg-emerald-500/5 text-emerald-600'
+                        : 'border-destructive/50 bg-destructive/5 text-destructive'
+                    )}
+                  >
+                    {message.ok ? (
+                      <Check className="mt-0.5 h-4 w-4 shrink-0" />
+                    ) : (
+                      <WifiOff className="mt-0.5 h-4 w-4 shrink-0" />
+                    )}
+                    <span>{message.text}</span>
+                  </div>
+                )}
+
+                {activeSection === 'status' && (
+                  <div className="space-y-6">
+                    <SectionHeading
+                      icon={<Server className="h-4 w-4" />}
+                      title="Status"
+                      description="Current relay registration and identity."
+                    />
+                    <dl className="grid grid-cols-1 gap-x-4 gap-y-4 text-sm sm:grid-cols-2">
+                      <Field label="Mode" value={isHost ? 'Host (serves its own data)' : 'Client (connects to a remote Host)'} />
+                      <Field label="Relay URL" value={state.url} mono />
+                      <Field label="Registered as" value={state.registeredClientId || '—'} mono />
+                      <Field label="Host ID" value={state.hostId} mono />
+                      {isHost && <Field label="Host name" value={config.hostName || '—'} />}
+                      <Field label="Client mode HTTP proxy" value={`http://127.0.0.1:${state.clientPort}`} mono />
+                    </dl>
+                  </div>
+                )}
+
+                {activeSection === 'settings' && (
+                  <div className="space-y-6">
+                    <SectionHeading
+                      icon={<Settings className="h-4 w-4" />}
+                      title="Settings"
+                      description="Relay credentials — applied immediately."
+                    />
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="relay-url">Relay URL</Label>
+                          <Input id="relay-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="http://127.0.0.1:4050" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="relay-token">Relay token</Label>
+                          <Input id="relay-token" type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="shared relay secret" />
+                        </div>
+                        {isHost ? (
+                          <>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="host-name">Host name</Label>
+                              <Input id="host-name" value={hostName} onChange={(e) => setHostName(e.target.value)} placeholder="Name shown to clients" />
+                              <p className="text-xs text-muted-foreground">
+                                The name mobile/desktop clients see when they connect to this host.
+                              </p>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="host-password">Host access password</Label>
+                              <Input id="host-password" type="password" value={hostPassword} onChange={(e) => setHostPassword(e.target.value)} placeholder="optional" />
+                              <p className="text-xs text-muted-foreground">
+                                Leave empty for open access. Clients must enter this password to link to this host.
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <Label htmlFor="target-host">Target Host ID</Label>
+                            <Input id="target-host" value={targetHostId} onChange={(e) => setTargetHostId(e.target.value)} placeholder="host id" list="relay-hosts" />
+                            <datalist id="relay-hosts">
+                              {hosts.map((h) => (
+                                <option key={h.clientId} value={h.clientId}>
+                                  {h.name || h.clientId}
+                                </option>
+                              ))}
+                            </datalist>
+                            <p className="text-xs text-muted-foreground">
+                              Pick a host in the "Online hosts" section to fill this in automatically.
+                            </p>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 pt-1">
+                          <Button onClick={applyAndReconnect} disabled={saving}>
+                            {saving ? 'Applying…' : 'Apply & reconnect'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'qr' && isHost && qrPayload && (
+                  <div className="space-y-6">
+                    <SectionHeading
+                      icon={<QrCode className="h-4 w-4" />}
+                      title="Mobile connection QR"
+                      description="Scan with the SoluStock mobile app to auto-fill the relay settings and link to this host. The link reflects the values typed in Settings."
+                    />
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+                          <QRCodeSVG value={qrPayload} size={220} level="M" />
+                        </div>
+                        <code className="max-w-full break-all rounded-lg bg-muted px-3 py-2 text-xs">
+                          {qrPayload}
+                        </code>
+                        <Button variant="outline" onClick={copyQrPayload}>
+                          {copied ? (
+                            <>
+                              <Check className="h-4 w-4 text-emerald-500" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4" />
+                              Copy link
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'hosts' && (
+                  <div className="space-y-6">
+                    <SectionHeading
+                      icon={<MonitorSmartphone className="h-4 w-4" />}
+                      title="Online hosts"
+                      description={isHost
+                        ? 'Other hosts registered on this relay. You are in host mode, so these are listed for reference only.'
+                        : 'Select a host to connect to. Password-protected hosts require the matching access password.'}
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" onClick={refreshHosts}>
+                        <RefreshCw className="h-4 w-4" />
+                        Refresh
+                      </Button>
+                    </div>
+                    {hosts.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                        No hosts online — make sure a SoluStock Host app is running and connected to
+                        this relay.
+                      </div>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {hosts.map((h) => {
+                          const selected = !isHost && targetHostId === h.clientId;
+                          return (
+                            <li key={h.clientId}>
+                              <button
+                                type="button"
+                                disabled={isHost}
+                                onClick={() => !isHost && setTargetHostId(h.clientId)}
+                                className={cn(
+                                  'flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors',
+                                  selected
+                                    ? 'border-primary/50 bg-primary/5'
+                                    : 'border-border bg-card hover:bg-accent',
+                                  isHost ? 'cursor-default' : 'cursor-pointer'
+                                )}
+                              >
+                                <span className="flex min-w-0 items-center gap-2.5">
+                                  {h.locked ? (
+                                    <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  ) : (
+                                    <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  )}
+                                  <span className="truncate">
+                                    <span className="font-medium">{h.name || h.clientId}</span>
+                                    <span className="ml-2 font-mono text-xs text-muted-foreground">
+                                      {h.clientId}
+                                    </span>
+                                  </span>
+                                </span>
+                                <span className="flex shrink-0 items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    {h.clients.length} client(s)
+                                    {h.locked ? ' • password protected' : ''}
+                                  </span>
+                                  {selected && <Check className="h-4 w-4 text-primary" />}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {activeSection === 'mode' && (
+                  <div className="space-y-6">
+                    <SectionHeading
+                      icon={<ArrowLeftRight className="h-4 w-4" />}
+                      title="Mode"
+                      description="Switching modes restarts the application. In client mode the local backend & database are not started."
+                    />
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant={isHost ? 'default' : 'outline'}
+                          onClick={() => !isHost && saveAndRestart('host')}
+                          disabled={saving}
+                        >
+                          Host mode
+                        </Button>
+                        <Button
+                          variant={!isHost ? 'default' : 'outline'}
+                          onClick={() => isHost && saveAndRestart('client')}
+                          disabled={saving}
+                        >
+                          Client mode
+                        </Button>
+                      </div>
+                      <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        {isHost
+                          ? 'This computer currently acts as a host and serves its own data.'
+                          : 'This computer currently acts as a client and proxies a remote host.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-export default Connection;
+const SectionHeading: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}> = ({ icon, title, description }) => (
+  <div className="flex items-start gap-3">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      {icon}
+    </div>
+    <div>
+      <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+      <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+    </div>
+  </div>
+);
+
+const Field: React.FC<{ label: string; value: string; mono?: boolean }> = ({ label, value, mono }) => (
+  <div>
+    <dt className="text-xs text-muted-foreground">{label}</dt>
+    <dd className={`mt-0.5 break-all font-medium ${mono ? 'font-mono text-xs' : ''}`}>{value}</dd>
+  </div>
+);
+
+export default ConnectionDrawer;

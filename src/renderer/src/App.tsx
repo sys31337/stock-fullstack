@@ -18,7 +18,6 @@ const shortcuts = new Shortcuts({
 const Authentication = React.lazy(() => import('@web/modules/Authentication'));
 const Home = React.lazy(() => import('@web/modules/Home'));
 const BillPdf = React.lazy(() => import('@web/modules/BillPdf'));
-const Connection = React.lazy(() => import('@web/modules/Connection'));
 
 const App = () => {
   React.useEffect(() => {
@@ -40,7 +39,6 @@ const App = () => {
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="billpdf/*" element={<BillPdf />} />
-                      <Route path="connection" element={<Connection />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </PrivateRoute>

@@ -30,16 +30,11 @@ const HeroCard: React.FC<HeroCardProps> = ({
   label, value, icon, tone, amount, footer, blurred, loading,
 }) => (
   <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-    <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-gradient-to-br from-transparent to-accent/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-    <div className="flex items-center justify-between gap-3">
+    <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full from-transparent to-accent/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+    <div className="flex items-center justify-between gap-3 absolute bottom-3 right-3">
       <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', tone)}>
         {icon}
       </span>
-      {amount && (
-        <span className="inline-flex items-center rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          DZD
-        </span>
-      )}
     </div>
     <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
       {t(label)}
@@ -54,7 +49,11 @@ const HeroCard: React.FC<HeroCardProps> = ({
             blurred && 'blur-[6px] select-none'
           )}
         >
-          {amount ? price(value) : value.toLocaleString()}
+          {amount ? price(value) : value.toLocaleString()} {amount && (
+        <span className="inline-flex items-center rounded-md text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          DZD
+        </span>
+      )}
         </span>
       )}
     </div>
@@ -156,6 +155,7 @@ const Statistics: React.FC<StatisticsProps> = ({ stats, isLoading, onViewAll }) 
           loading={isLoading}
         />
       </div>
+      <hr />
     </section>
   );
 };

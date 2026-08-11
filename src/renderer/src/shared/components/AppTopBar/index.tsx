@@ -14,6 +14,7 @@ import Roles from '@web/modules/Roles'
 import UsersModule from '@web/modules/Users'
 import AuditLogs from '@web/modules/AuditLogs'
 import SettingsDrawer from '@web/modules/Settings'
+import ConnectionDrawer from '@web/modules/Connection'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
@@ -262,6 +263,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [openUsers, setOpenUsers] = useState(false)
   const [openAuditLogs, setOpenAuditLogs] = useState(false)
   const [openSettings, setOpenSettings] = useState(false)
+  const [openConnection, setOpenConnection] = useState(false)
   const [openInvoice, setOpenInvoice] = useState(false)
   const [openAllInvoices, setOpenAllInvoices] = useState(false)
 
@@ -306,8 +308,8 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
 
   return (
     <ModalContext.Provider value={modalActions}>
-      <div className="w-full shrink-0">
-        <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50 flex items-center px-4 sm:px-6">
+      <div className="w-full h-full flex flex-col">
+        <header className="h-14 shrink-0 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50 flex items-center px-4 sm:px-6">
           <div className="flex items-center md:hidden mr-2">
             <Button
               onClick={onToggle}
@@ -344,7 +346,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/connection')}
+              onClick={() => setOpenConnection(true)}
               title="Remote connection"
               aria-label="Remote connection"
               className="text-muted-foreground hover:text-foreground hover:bg-accent gap-1.5 h-8 px-2.5"
@@ -397,6 +399,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openInvoice && <Invoice isTopBar open={openInvoice} onOpenChange={setOpenInvoice} />}
         {openAllInvoices && <AllInvoices isTopBar open={openAllInvoices} onOpenChange={setOpenAllInvoices} />}
         <SettingsDrawer isOpen={openSettings} onClose={() => setOpenSettings(false)} />
+        <ConnectionDrawer isOpen={openConnection} onClose={() => setOpenConnection(false)} />
       </div>
     </ModalContext.Provider>
   )

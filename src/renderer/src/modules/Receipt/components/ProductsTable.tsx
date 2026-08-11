@@ -54,6 +54,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
     rowsInput[index] = {
       ...rowsInput[index],
       ...productData,
+      quantity: 1,
       totalHT: 0,
       totalTTC: 0
     };
