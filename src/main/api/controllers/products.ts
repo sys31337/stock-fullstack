@@ -71,7 +71,10 @@ const getAllProducts = async (req: IUserIdRequest, res: Response, next: NextFunc
     const filter: any = {};
 
     if (warehouse) {
-      filter['warehouseStock.warehouse'] = warehouse;
+      const warehouses = String(warehouse).split(',').filter(Boolean);
+      filter['warehouseStock.warehouse'] = warehouses.length > 1 ? { $in: warehouses } : warehouses[0];
+    } else if (!req.isMainAccount && req.warehouseAccessMode !== 'all') {
+      filter['warehouseStock.warehouse'] = { $in: req.assignedWarehouses || [] };
     }
 
     const products = await Product.find(filter).populate('category customer');
