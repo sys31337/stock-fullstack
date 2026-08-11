@@ -13,7 +13,6 @@ export const filterByWarehouse = (paramName = 'warehouse') => {
       if (user.warehouseAccessMode === 'all') return next();
 
       const warehouseIds = user.assignedWarehouses.map((w: any) => w._id.toString());
-      if (!warehouseIds.length) return next();
 
       if (req.query[paramName]) {
         const requestedWarehouse = req.query[paramName] as string;
