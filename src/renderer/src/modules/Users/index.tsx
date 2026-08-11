@@ -12,6 +12,7 @@ import {
   Search, Users, Plus, Pencil, Trash2, UserCircle, Shield, Warehouse,
   Power, MoreHorizontal,
 } from 'lucide-react';
+import RefreshButton from '@web/shared/components/RefreshButton';
 import Pagination from '@web/shared/components/Pagination';
 import { useGetAllUsersEnhanced, useCreateUserEnhanced, useUpdateUserEnhanced, useDeleteUserEnhanced, useForceLogout } from '@web/shared/hooks/useUsersEnhanced';
 import { useGetAllRoles } from '@web/shared/hooks/useRoles';
@@ -61,7 +62,7 @@ const UsersModule: React.FC<UsersProps> = ({ isTopBar, open: controlledOpen, onO
   const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
   const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
-  const { data: usersData, isFetched } = useGetAllUsersEnhanced();
+  const { data: usersData, isFetched, refetch, isFetching } = useGetAllUsersEnhanced();
   const { data: roles } = useGetAllRoles();
   const { data: warehouses } = useGetAllWarehouses();
   const createUser = useCreateUserEnhanced();
@@ -190,6 +191,7 @@ const UsersModule: React.FC<UsersProps> = ({ isTopBar, open: controlledOpen, onO
               <Plus className="h-4 w-4" />
               {t('addUser')}
             </Button>
+            <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
           </div>
           <div className="rounded-xl border border-border/60 overflow-hidden flex-1">
             <Table>

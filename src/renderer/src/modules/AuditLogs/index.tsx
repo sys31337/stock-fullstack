@@ -40,7 +40,7 @@ const AuditLogs: React.FC<AuditLogsProps> = ({ isTopBar, open: controlledOpen, o
   const [filter, setFilter] = useState('');
   const [selectedLog, setSelectedLog] = useState<any>(null);
 
-  const { data, isFetched } = useGetAuditLogs({ page, limit: '25' });
+  const { data, isFetched, refetch, isFetching } = useGetAuditLogs({ page, limit: '25' });
   const logs = (data?.logs || []) as any[];
 
   const filtered = filter
@@ -72,8 +72,8 @@ const AuditLogs: React.FC<AuditLogsProps> = ({ isTopBar, open: controlledOpen, o
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input className="pl-9 bg-muted/40 border-border/50" placeholder={t('search')} onChange={(e) => setFilter(e.target.value)} />
             </div>
-            <Button variant="outline" onClick={() => setPage(1)} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="gap-2">
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
               {t('refresh')}
             </Button>
           </div>

@@ -12,6 +12,7 @@ import CustomModal from '@web/shared/components/CustomModal';
 import { t } from 'i18next';
 import { AiFillRightCircle } from 'react-icons/ai';
 import { Search, Package } from 'lucide-react';
+import RefreshButton from '@web/shared/components/RefreshButton';
 import Pagination from '@web/shared/components/Pagination';
 import { price } from '@web/shared/functions/words';
 import { useGetAllProducts } from '@web/shared/hooks/useProducts';
@@ -30,7 +31,7 @@ const Products: React.FC<ProductsProps> = ({ isTopBar, open: controlledOpen, onO
   const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
   const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
-  const { data: getProducts, isFetched } = useGetAllProducts();
+  const { data: getProducts, isFetched, refetch, isFetching } = useGetAllProducts();
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
 
@@ -99,6 +100,7 @@ const Products: React.FC<ProductsProps> = ({ isTopBar, open: controlledOpen, onO
             <div className="text-sm text-muted-foreground whitespace-nowrap">
               {filteredBills.length} {t('items')}
             </div>
+            <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
           </div>
 
           <div className="rounded-xl border border-border/60 overflow-hidden">

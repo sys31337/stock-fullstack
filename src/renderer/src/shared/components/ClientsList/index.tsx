@@ -16,6 +16,7 @@ import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
 import { Search, Users } from 'lucide-react'
+import RefreshButton from '@web/shared/components/RefreshButton'
 import Pagination from '@web/shared/components/Pagination'
 import { ICustomer } from '@web/shared/types/customer'
 import { AxiosError } from 'axios'
@@ -28,7 +29,7 @@ interface ClientsListProps {
 }
 
 const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
-  const { data: clients, isFetched } = useGetClients()
+  const { data: clients, isFetched, refetch, isFetching } = useGetClients()
   const { mutateAsync: deleteCustomer } = useDeleteCustomer()
   const { toast } = useToast()
   const [filter, setFilter] = useState('')
@@ -67,7 +68,7 @@ const ClientsList: React.FC<ClientsListProps> = ({ open, onOpenChange }) => {
       isOpen={open}
       onClose={() => onOpenChange(false)}
       title={t('clients')}
-      headerActions={<CustomerModal type="Client" />}
+      headerActions={<><CustomerModal type="Client" /><RefreshButton onRefresh={() => refetch()} loading={isFetching} /></>}
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-3 mb-4">

@@ -7,6 +7,7 @@ import CustomModal from '@web/shared/components/CustomModal';
 import { Button } from '@web/shared/components/ui/button';
 import { t } from 'i18next';
 import { Search, Shield, Plus, Pencil, Trash2, ShieldCheck } from 'lucide-react';
+import RefreshButton from '@web/shared/components/RefreshButton';
 import Pagination from '@web/shared/components/Pagination';
 import { useGetAllRoles, useCreateRole, useUpdateRole, useDeleteRole, useSeedRoles } from '@web/shared/hooks/useRoles';
 import PermissionMatrix from '@web/shared/components/PermissionMatrix';
@@ -24,7 +25,7 @@ const Roles: React.FC<RolesProps> = ({ isTopBar, open: controlledOpen, onOpenCha
   const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
   const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
-  const { data: roles, isFetched } = useGetAllRoles();
+  const { data: roles, isFetched, refetch, isFetching } = useGetAllRoles();
   const createRole = useCreateRole();
   const updateRole = useUpdateRole();
   const deleteRole = useDeleteRole();
@@ -115,6 +116,7 @@ const Roles: React.FC<RolesProps> = ({ isTopBar, open: controlledOpen, onOpenCha
                 <Plus className="h-4 w-4" />
                 {t('addRole')}
               </Button>
+              <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
             </div>
           </div>
           <div className="rounded-xl border border-border/60 overflow-hidden flex-1">

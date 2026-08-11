@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MoreHorizontal, XCircle, CheckCircle, Clock, Truck } from "lucide-react";
+import RefreshButton from "@web/shared/components/RefreshButton";
 import {
   Table,
   TableBody,
@@ -54,7 +55,7 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
   const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
   const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
-  const { data: getAllOrders, isFetched } = useGetAllBillsOfType('ORDER');
+  const { data: getAllOrders, isFetched, refetch, isFetching } = useGetAllBillsOfType('ORDER');
   const { mutateAsync: cancelOrder } = useCancelOrder();
   const { mutateAsync: completeOrder } = useCompleteOrder();
   const { toast } = useToast();
@@ -232,10 +233,11 @@ const AllOrders: React.FC<AllOrdersProps> = ({ isTopBar, open: controlledOpen, o
                     onChange={(e) => setFilter(e.target.value)}
                   />
                </div>
-               <div className="text-sm text-muted-foreground">
-                  {filteredBills.length} {t('records')}
-               </div>
-            </div>
+                <div className="text-sm text-muted-foreground">
+                   {filteredBills.length} {t('records')}
+                </div>
+                <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
+             </div>
 
             <Card className="flex-1 overflow-hidden border bg-card">
               <div className="h-full overflow-auto">

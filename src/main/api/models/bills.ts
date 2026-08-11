@@ -17,7 +17,7 @@ const billsSchema = new Schema({
   status: {
     type: String,
     enum: ['pending', 'cancelled', 'completed'],
-    default: 'pending',
+    default: 'completed',
   },
   reservedUntil: Date,
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },

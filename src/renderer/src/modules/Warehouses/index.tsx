@@ -7,6 +7,7 @@ import CustomModal from '@web/shared/components/CustomModal';
 import { Button } from '@web/shared/components/ui/button';
 import { t } from 'i18next';
 import { Search, Warehouse, Plus, Pencil, Trash2, Building2, Wand2 } from 'lucide-react';
+import RefreshButton from '@web/shared/components/RefreshButton';
 import Pagination from '@web/shared/components/Pagination';
 import { useGetAllWarehouses, useCreateWarehouse, useUpdateWarehouse, useDeleteWarehouse } from '@web/shared/hooks/useWarehouses';
 import { defaultWarehouseId } from '@web/config';
@@ -41,7 +42,7 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
   const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
   const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
-  const { data: warehouses, isFetched } = useGetAllWarehouses();
+  const { data: warehouses, isFetched, refetch, isFetching } = useGetAllWarehouses();
   const createWarehouse = useCreateWarehouse();
   const updateWarehouse = useUpdateWarehouse();
   const deleteWarehouse = useDeleteWarehouse();
@@ -160,6 +161,7 @@ const Warehouses: React.FC<WarehousesProps> = ({ isTopBar, open: controlledOpen,
               <Plus className="h-4 w-4" />
               {t('addWarehouse')}
             </Button>
+            <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
           </div>
 
           <div className="rounded-xl border border-border/60 overflow-hidden flex-1">

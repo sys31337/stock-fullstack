@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MoreHorizontal } from "lucide-react";
+import RefreshButton from "@web/shared/components/RefreshButton";
 import {
   Table,
   TableBody,
@@ -84,7 +85,7 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar, open: contr
   const onOpen = () => onOpenChange ? onOpenChange(true) : setInternalOpen(true);
   const onClose = () => onOpenChange ? onOpenChange(false) : setInternalOpen(false);
 
-  const { data: getAllReceiptBills, isFetched } = useGetAllBillsOfType('BUY');
+  const { data: getAllReceiptBills, isFetched, refetch, isFetching } = useGetAllBillsOfType('BUY');
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState('');
 
@@ -176,10 +177,11 @@ const AllReceiptBills: React.FC<AllReceiptBillsProps> = ({ isTopBar, open: contr
                     onChange={(e) => setFilter(e.target.value)}
                   />
                </div>
-               <div className="text-sm text-muted-foreground">
-                  {filteredBills.length} {t('records')}
-               </div>
-            </div>
+                <div className="text-sm text-muted-foreground">
+                   {filteredBills.length} {t('records')}
+                </div>
+                <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
+             </div>
 
             <Card className="flex-1 overflow-hidden border bg-card">
               <div className="h-full overflow-auto">

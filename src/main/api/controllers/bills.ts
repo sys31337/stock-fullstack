@@ -38,7 +38,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       orderId: finalOrderId,
       createBy: userId,
       ...(type !== 'SALE' && { warehouse: warehouse || req.defaultWarehouse }),
-      ...(type === 'ORDER' && { status: 'pending' }),
+      status: type === 'ORDER' ? 'pending' : 'completed',
     };
 
     if (type === 'SALE') {
@@ -264,7 +264,7 @@ const getAllBills = async (req: IUserIdRequest, res: Response, next: NextFunctio
     } else if (!req.isMainAccount && req.assignedWarehouses?.length) {
       filter.warehouse = { $in: req.assignedWarehouses };
     }
-    const bills = await Bill.find(filter);
+    const bills = await Bill.find(filter).populate('customer category warehouse');
     return res.status(200).send(bills);
   } catch (error) {
     return next(error);
