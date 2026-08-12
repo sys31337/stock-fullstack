@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Customer from '@api/models/customers';
+import { adjustCustomerCredit } from '@api/functions/transactions';
 
 const DEFAULT_ID = '0a0aaa0a0aa00000aaaaaa0a';
 
@@ -30,8 +31,20 @@ const getAllSuppliers = async (_req: Request, res: Response, next: NextFunction)
 
 const createNewCustomer = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const payload = req.body;
-    const newCustomer = await new Customer(payload).save();
+    const { credit, ...customerPayload } = req.body;
+    const initialCredit = Number(credit || 0);
+    const newCustomer = await new Customer(customerPayload).save();
+
+    if (initialCredit > 0) {
+      await adjustCustomerCredit({
+        customerId: String(newCustomer._id),
+        addedAmount: initialCredit,
+        type: 'FUND',
+        description: 'Initial credit',
+      });
+      newCustomer.credit = initialCredit;
+    }
+
     return res.status(200).send(newCustomer);
   } catch (error) {
     return next(error);

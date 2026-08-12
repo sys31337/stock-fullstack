@@ -8,12 +8,23 @@ const customersSchema = new Schema({
   address: String,
   phoneNumber: String,
   email: String,
+  wilaya: String,
+  hasWhatsapp: {
+    type: Boolean,
+    default: false
+  },
   rc: String,
   nif: String,
+  nis: String,
+  ai: String,
   nar: String,
   town: String,
   city: String,
   debts: {
+    type: Number,
+    default: 0
+  },
+  credit: {
     type: Number,
     default: 0
   },

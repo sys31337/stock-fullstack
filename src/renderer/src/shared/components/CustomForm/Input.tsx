@@ -32,6 +32,7 @@ type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   currency?: string;
   selectOptions?: SelectOptions[];
   inputSize?: 'default' | 'sm';
+  loading?: boolean;
 }
 
 const CustomInput = (props: CustomInputProps) => {
@@ -53,6 +54,7 @@ const CustomInput = (props: CustomInputProps) => {
     currency,
     className,
     inputSize,
+    loading,
     ...rest
   } = props;
 
@@ -105,6 +107,7 @@ const CustomInput = (props: CustomInputProps) => {
           placeholder={label}
           className="w-full"
           size={inputSize}
+          loading={loading}
         />
       ) : isDate ? (
         <Input

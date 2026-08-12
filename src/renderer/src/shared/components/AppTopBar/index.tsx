@@ -7,8 +7,9 @@ import Receipt from '@web/modules/Receipt'
 import AllReceiptBills from '@web/modules/Receipt/AllReceiptBills'
 import Invoice from '@web/modules/Invoice'
 import AllInvoices from '@web/modules/Invoice/AllInvoices'
-import ClientsList from '@web/shared/components/ClientsList'
-import SuppliersList from '@web/shared/components/SuppliersList'
+import CustomersList, { CustomerType } from '@web/shared/components/CustomersList'
+import TransactionModal from '@web/modules/Transactions/TransactionModal'
+import TransactionsList from '@web/modules/Transactions/TransactionsList'
 import Warehouses from '@web/modules/Warehouses'
 import Roles from '@web/modules/Roles'
 import UsersModule from '@web/modules/Users'
@@ -33,8 +34,9 @@ import { Wifi } from 'lucide-react'
 
 interface ModalActions {
   openProducts: () => void
-  openClients: () => void
-  openSuppliers: () => void
+  openCustomers: (type?: CustomerType) => void
+  openNewTransfer: () => void
+  openTransactions: () => void
   openReceipt: () => void
   openAllBills: () => void
   openInvoice: () => void
@@ -47,8 +49,9 @@ interface ModalActions {
 
 const ModalContext = createContext<ModalActions>({
   openProducts: () => {},
-  openClients: () => {},
-  openSuppliers: () => {},
+  openCustomers: () => {},
+  openNewTransfer: () => {},
+  openTransactions: () => {},
   openReceipt: () => {},
   openAllBills: () => {},
   openInvoice: () => {},
@@ -75,8 +78,9 @@ const NAV_ITEMS: NavItem[] = [
     label: 'tiers',
     children: [
       { label: 'products', action: (a) => a.openProducts() },
-      { label: 'clients', action: (a) => a.openClients() },
-      { label: 'suppliers', action: (a) => a.openSuppliers() },
+      { label: 'customersAndSuppliers', action: (a) => a.openCustomers() },
+      { label: 'newTransfer', action: (a) => a.openNewTransfer() },
+      { label: 'transactions', action: (a) => a.openTransactions() },
     ],
   },
   {
@@ -256,8 +260,10 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [openProducts, setOpenProducts] = useState(false)
   const [openReceipt, setOpenReceipt] = useState(false)
   const [openAllBills, setOpenAllBills] = useState(false)
-  const [openClients, setOpenClients] = useState(false)
-  const [openSuppliers, setOpenSuppliers] = useState(false)
+  const [openCustomers, setOpenCustomers] = useState(false)
+  const [customersType, setCustomersType] = useState<CustomerType>('All')
+  const [openNewTransfer, setOpenNewTransfer] = useState(false)
+  const [openTransactions, setOpenTransactions] = useState(false)
   const [openWarehouses, setOpenWarehouses] = useState(false)
   const [openRoles, setOpenRoles] = useState(false)
   const [openUsers, setOpenUsers] = useState(false)
@@ -269,8 +275,12 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
 
   const modalActions: ModalActions = {
     openProducts: () => setOpenProducts(true),
-    openClients: () => setOpenClients(true),
-    openSuppliers: () => setOpenSuppliers(true),
+    openCustomers: (type = 'All') => {
+      setCustomersType(type)
+      setOpenCustomers(true)
+    },
+    openNewTransfer: () => setOpenNewTransfer(true),
+    openTransactions: () => setOpenTransactions(true),
     openReceipt: () => setOpenReceipt(true),
     openAllBills: () => setOpenAllBills(true),
     openInvoice: () => setOpenInvoice(true),
@@ -390,8 +400,9 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openProducts && <Products isTopBar open={openProducts} onOpenChange={setOpenProducts} />}
         {openReceipt && <Receipt isTopBar open={openReceipt} onOpenChange={setOpenReceipt} />}
         {openAllBills && <AllReceiptBills isTopBar open={openAllBills} onOpenChange={setOpenAllBills} />}
-        {openClients && <ClientsList open={openClients} onOpenChange={setOpenClients} />}
-        {openSuppliers && <SuppliersList open={openSuppliers} onOpenChange={setOpenSuppliers} />}
+        {openCustomers && <CustomersList open={openCustomers} onOpenChange={setOpenCustomers} initialType={customersType} />}
+        {openNewTransfer && <TransactionModal isOpen={openNewTransfer} onClose={() => setOpenNewTransfer(false)} />}
+        {openTransactions && <TransactionsList open={openTransactions} onOpenChange={setOpenTransactions} />}
         {openWarehouses && <Warehouses isTopBar open={openWarehouses} onOpenChange={setOpenWarehouses} />}
         {openRoles && <Roles isTopBar open={openRoles} onOpenChange={setOpenRoles} />}
         {openUsers && <UsersModule isTopBar open={openUsers} onOpenChange={setOpenUsers} />}

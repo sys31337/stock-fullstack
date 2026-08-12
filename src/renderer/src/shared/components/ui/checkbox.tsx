@@ -16,6 +16,7 @@ const Checkbox = ({ id, checked, onCheckedChange, className, disabled, ...props 
   return (
     <button
       id={id}
+      type="button"
       role="checkbox"
       aria-checked={indeterminate ? 'mixed' : checked}
       disabled={disabled}

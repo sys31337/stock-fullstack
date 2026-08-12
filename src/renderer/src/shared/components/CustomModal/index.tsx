@@ -10,6 +10,7 @@ import {
 import { Button } from '@web/shared/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@web/shared/components/ui/tooltip'
 import { AiOutlineMinus } from 'react-icons/ai'
+import { X } from 'lucide-react'
 import { cn } from '@web/shared/utils/cn'
 
 interface props {
@@ -127,6 +128,24 @@ const CustomModal = ({
             </div>
             <div className="flex items-center gap-1.5">
               {headerActions}
+              {!isFull && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleXClick}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                        aria-label={closeTooltip || 'Close'}
+                        title={closeTooltip || 'Close'}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>{closeTooltip || 'Close'}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {isFull && onMinimize && (
                 <TooltipProvider>
                   <Tooltip>

@@ -8,6 +8,7 @@ import { orderReleaseProducts } from '@api/functions/products';
 import { IUserIdRequest } from '@api/types/common';
 import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts, deliveryProductUpdateHandler } from '@api/functions/products';
 import { getLatestBill } from '@api/functions/bills';
+import { adjustCustomerCredit } from '@api/functions/transactions';
 import { IProduct } from '@api/types/IProducts';
 import { createAuditLog } from '@api/utils/auditLog';
 import { checkWarehouseAccess } from '@api/middlewares/warehouseAccess';
@@ -122,6 +123,16 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     delete payload.convertFromOrder;
     const createBill = await new Bill(payload).save();
 
+    if ((type === 'SALE' || type === 'BUY') && customer) {
+      await adjustCustomerCredit({
+        customerId: String(customer),
+        addedAmount: -Number(createBill.orderTotalTTC || 0),
+        type,
+        billId: createBill._id.toString(),
+        description: `${type} bill #${finalOrderId}`,
+      });
+    }
+
     await createAuditLog(req, {
       action: 'create',
       resource: 'bill',
@@ -206,6 +217,27 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     }
 
     const updateBill = await Bill.findByIdAndUpdate(id, payload, { new: true });
+
+    if (oldBill.type === 'SALE' || oldBill.type === 'BUY') {
+      if (oldBill.customer) {
+        await adjustCustomerCredit({
+          customerId: String(oldBill.customer),
+          addedAmount: Number(oldBill.orderTotalTTC || 0),
+          type: oldBill.type,
+          billId: id,
+          description: `Reverted ${oldBill.type} bill #${oldBill.orderId}`,
+        });
+      }
+    }
+    if ((updateBill?.type === 'SALE' || updateBill?.type === 'BUY') && updateBill?.customer) {
+      await adjustCustomerCredit({
+        customerId: String(updateBill.customer),
+        addedAmount: -Number(updateBill.orderTotalTTC || 0),
+        type: updateBill.type,
+        billId: id,
+        description: `Updated ${updateBill.type} bill #${updateBill.orderId}`,
+      });
+    }
 
     await createAuditLog(req, {
       action: 'edit',

@@ -27,6 +27,7 @@ function DateTimePicker({ value, onSelect, className }: DateTimePickerProps) {
       merged.setHours(23, 59, 0, 0)
     }
     onSelect?.(merged)
+    setOpen(false)
   }
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {

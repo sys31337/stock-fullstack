@@ -87,7 +87,7 @@ const Products: React.FC<ProductsProps> = ({ isTopBar, open: controlledOpen, onO
         onClose={onClose}
         title={t('productsList')}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

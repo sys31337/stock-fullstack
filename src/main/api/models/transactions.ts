@@ -1,16 +1,22 @@
 import { model, Schema } from 'mongoose';
-import { requiredString } from './helpers/common';
 
+/**
+ * Ledger entry for a client / supplier credit movement.
+ *
+ * `addedAmount` is signed: positive movements (initial credit, virement) increase
+ * the customer's `credit`, negative movements (SALE / BUY bills) decrease it.
+ */
 const transactionsSchema = new Schema({
-  orderDate: requiredString,
-  client: {
+  customer: {
     type: Schema.Types.ObjectId,
-    refPath: 'clientModel',
+    ref: 'Customer',
+    required: true,
+    index: true,
   },
-  clientModel: {
+  type: {
     type: String,
     required: true,
-    enum: ['Supplier', 'Client']
+    enum: ['FUND', 'SALE', 'BUY'],
   },
   addedAmount: {
     type: Number,
@@ -24,20 +30,12 @@ const transactionsSchema = new Schema({
     type: Number,
     required: true,
   },
-  orderId: {
+  bill: {
     type: Schema.Types.ObjectId,
-    refPath: 'orderModel',
+    ref: 'Bill',
+    default: null,
   },
-  orderModel: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    enum: ['Payment', 'Receipt', 'Sale']
-  },
-  transactionDate: Date,
-  type: {
-    ...requiredString,
-    enum: ['SALE', 'RECEIPT', 'FUND'],
-  },
+  description: String,
 }, { timestamps: true });
 
 const Transaction = model('Transaction', transactionsSchema);

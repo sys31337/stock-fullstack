@@ -14,6 +14,7 @@ import warehouseTransfersRouter from './helpers/warehouseTransfers';
 import permissionsRouter from './helpers/permissions';
 import dashboardRouter from './helpers/dashboard';
 import settingsRouter from './helpers/settings';
+import transactionsRouter from './helpers/transactions';
 
 const router = express.Router();
 
@@ -31,5 +32,6 @@ router.use('/warehouse-transfers', warehouseTransfersRouter);
 router.use('/permissions', permissionsRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/settings', settingsRouter);
+router.use('/transactions', transactionsRouter);
 
 export default router;
