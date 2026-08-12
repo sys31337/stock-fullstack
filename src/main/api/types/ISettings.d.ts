@@ -3,6 +3,7 @@ export interface ISettings {
   allowOutOfStockOrders: boolean;
   dashboardStatsEnabled: boolean;
   dashboardStatsBlurred: boolean;
+  tvaEnabled: boolean;
   companyName?: string;
   rc?: string;
   nif?: string;

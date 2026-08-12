@@ -18,16 +18,17 @@ interface OrderTableRowsProps {
   handleChange: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   handleProductSelect: (index: number, product: IProduct) => void;
   priceTier: number;
+  showTva: boolean;
 }
 
-const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier }) => {
+const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva }) => {
   const { data: allProducts, isFetched } = useGetAllProducts();
   const { toast } = useToast();
 
   const sellPriceField = priceTier === 1 ? 'sellPrice_1' : priceTier === 2 ? 'sellPrice_2' : 'sellPrice_3';
   const currentPrice = data[sellPriceField as keyof IProduct] as number || 0;
   const totalHT = Number(data.quantity || 0) * Number(data.stack || 0) * Number(currentPrice || 0);
-  const productTva = totalHT * (data.tva || 0) / 100;
+  const productTva = showTva ? totalHT * (data.tva || 0) / 100 : 0;
   const totalTTC = totalHT + productTva;
 
   const isDuplicate = (product: IProduct) => {
@@ -208,16 +209,18 @@ const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, 
             readOnly
           />
 
-          <div className="relative shrink-0">
-            <Input
-              name="tva"
-              type="number"
-              className={cn(numCls, "w-[45px] pr-3 text-center", readonlyCls)}
-              value={tva}
-              readOnly
-            />
-            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] pointer-events-none">%</span>
-          </div>
+          {showTva && (
+            <div className="relative shrink-0">
+              <Input
+                name="tva"
+                type="number"
+                className={cn(numCls, "w-[45px] pr-3 text-center", readonlyCls)}
+                value={tva}
+                readOnly
+              />
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] pointer-events-none">%</span>
+            </div>
+          )}
 
           <Input
             name="price"

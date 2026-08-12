@@ -28,7 +28,7 @@ export interface RelayConfig {
 export const DEFAULT_RELAY_URL = 'http://127.0.0.1:4050';
 export const DEFAULT_RELAY_TOKEN = 'change-me';
 export const DEFAULT_CLIENT_PORT = 4032;
-export const LOCAL_API_URL = 'http://127.0.0.1:4031';
+export const LOCAL_API_URL = 'http://127.0.0.1:3500';
 
 function hostIdFromEnv(): string {
   return process.env.RELAY_HOST_ID || os.hostname() || 'solustock-host';

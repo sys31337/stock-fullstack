@@ -18,14 +18,15 @@ interface TableRowsProps {
   handleChange: (index: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   handleProductSelect: (index: number, product: IProduct) => void;
   handleBlur: (index: number, e: React.FocusEvent<HTMLInputElement, Element>) => void;
+  showTva: boolean;
 }
 
-const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, handleBlur }) => {
+const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, handleBlur, showTva }) => {
   const { data: allProducts, isFetched } = useGetAllProducts();
   const { toast } = useToast();
 
   const totalHT = Number(data.quantity || 0) * Number(data.stack || 0) * Number(data.buyPrice || 0);
-  const productTva = totalHT * (data.tva || 0) / 100;
+  const productTva = showTva ? totalHT * (data.tva || 0) / 100 : 0;
   const totalTTC = totalHT + productTva;
 
   const isDuplicate = (product: IProduct) => {
@@ -174,10 +175,12 @@ const TableRows: React.FC<TableRowsProps> = ({ index, data, products, deleteTabl
           <Input name="buyPrice" type="number" className={cn(numCls, "w-[70px] shrink-0 font-medium")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e)} value={buyPrice} />
 
           {/* TVA */}
-          <div className="relative shrink-0">
-            <Input name="tva" type="number" className={cn(numCls, "w-[45px] pr-3 text-center")} onChange={(e) => handleChange(index, e)} onKeyDown={(e) => handleKeyDown(e)} value={tva} />
-            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] pointer-events-none">%</span>
-          </div>
+          {showTva && (
+            <div className="relative shrink-0">
+              <Input name="tva" type="number" className={cn(numCls, "w-[45px] pr-3 text-center")} onChange={(e) => handleChange(index, e)} onKeyDown={(e) => handleKeyDown(e)} value={tva} />
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground text-[9px] pointer-events-none">%</span>
+            </div>
+          )}
 
           {/* Sell Prices */}
           <Input name="sellPrice_1" type="number" className={cn(numCls, "w-[65px] shrink-0 text-orange-600")} onChange={(e) => handleChange(index, e)} onBlur={(e) => handleBlur(index, e)} onKeyDown={(e) => handleKeyDown(e)} value={sellPrice_1} />

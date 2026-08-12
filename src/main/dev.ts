@@ -8,8 +8,8 @@ async function main(): Promise<void> {
   if (relayManager.isHost()) {
     const { default: server } = await import('@api/main');
     await startMongoDB();
-    server.listen(4031, () => {
-      console.log(`API server listening on port 4031`);
+    server.listen(3500, () => {
+      console.log(`API server listening on port 3500`);
     });
   }
 }

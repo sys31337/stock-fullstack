@@ -297,6 +297,8 @@
   "totalHT": "المجموع (بدون ضريبة)",
   "totalTTC": "المجموع (شامل الضريبة)",
   "tva": "TVA",
+  "tvaEnabled": "تفعيل TVA",
+  "tvaEnabledDesc": "تطبيق TVA على الفواتير والسندات والمستندات",
   "undefined": "غير محدد",
   "underline": "تحته خط",
   "undo": "تراجع",

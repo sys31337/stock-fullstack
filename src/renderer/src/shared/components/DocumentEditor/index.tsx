@@ -39,6 +39,7 @@ interface SettingsData {
   articleNumber?: string
   stamp?: number
   tva?: number
+  tvaEnabled?: boolean
 }
 
 interface DocumentEditorProps {
@@ -65,14 +66,21 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
   const clientName = customer && customer._id !== defaultId ? customer?.fullname : t('counter')
   const isInvoice = bill.type === 'SALE'
   const showTownCity = customer?.town || customer?.city
+  const tvaEnabled = settings?.tvaEnabled ?? true
 
   if (isInvoice) {
     const billYear = dayjs(bill.billDate).format('YYYY')
     const billDayFormatted = dayjs(bill.billDate).format('DD/MM/YYYY')
-    const tvaRate = settings?.tva ?? 19
+    const tvaRate = tvaEnabled ? (settings?.tva ?? 19) : 0
     const taxAmount = Number(bill.orderTotalHT) * tvaRate / 100
     const stampAmount = settings?.stamp ?? 0
     const totalTTC = Number(bill.orderTotalHT) + taxAmount - Number(bill.orderPaid || 0)
+    const tvaRow = tvaEnabled
+      ? `<div style="display:flex;flex-direction:row">
+        <div style="width:50%;border:0.3px solid #000;border-top:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">TVA:</span></div>
+        <div style="width:50%;border:0.3px solid #000;border-top:0;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${taxAmount}`)}</span></div>
+      </div>`
+      : ''
 
     const productRows = bill.products.map((p: any, k: number) => {
       const total = Number(p.buyPrice) * Number(p.quantity) * Number(p.stack)
@@ -173,10 +181,7 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
               <div style="width:50%;border:0.3px solid #000;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">Total HT:</span></div>
               <div style="width:50%;border:0.3px solid #000;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${bill.orderTotalHT}`)}</span></div>
             </div>
-            <div style="display:flex;flex-direction:row">
-              <div style="width:50%;border:0.3px solid #000;border-top:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">TVA:</span></div>
-              <div style="width:50%;border:0.3px solid #000;border-top:0;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${taxAmount}`)}</span></div>
-            </div>
+            ${tvaRow}
             <div style="display:flex;flex-direction:row">
               <div style="width:50%;border:0.3px solid #000;border-top:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">Timbre:</span></div>
               <div style="width:50%;border:0.3px solid #000;border-top:0;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${stampAmount}`)}</span></div>
@@ -199,7 +204,7 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
 
   const productRows = bill.products.map((p: any, k: number) => {
     const productTotal = Number(p.buyPrice) * Number(p.quantity) * Number(p.stack)
-    const productTva = Number(p.buyPrice) * Number(p.quantity) * Number(p.stack) * Number(p.tva || 0) / 100
+    const productTva = tvaEnabled ? Number(p.buyPrice) * Number(p.quantity) * Number(p.stack) * Number(p.tva || 0) / 100 : 0
     return `<tr style="flex-direction:row">
       <td style="width:5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${k + 1}</td>
       <td style="width:15%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${p.barCode}</td>

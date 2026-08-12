@@ -11,6 +11,7 @@ import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useCreateBill } from '@web/shared/hooks/useBill';
+import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -41,6 +42,8 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allWarehouses } = useGetAllWarehouses();
   const { mutateAsync: createBill } = useCreateBill();
+  const { data: settings } = useGetSettings();
+  const tvaEnabled = settings?.tvaEnabled ?? true;
   const { holdReceipt, removeHeldReceipt } = useReceiptHold();
 
   const [priceTier, setPriceTier] = useState(1);
@@ -104,7 +107,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
       (sum, product) => {
         const currentSellPrice = (product[sellPriceField as keyof typeof product] as number) || 0;
         const preTotal = (product.quantity || 0) * (product.stack || 0) * currentSellPrice;
-        const productTva = preTotal * (product.tva || 0) / 100;
+        const productTva = tvaEnabled ? preTotal * (product.tva || 0) / 100 : 0;
         return sum + preTotal + productTva;
       },
       0
@@ -121,7 +124,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
       orderTotalTTC: price(`${totalTTC}`),
       orderDebts: price(`${totalTTC - Number(state.orderPaid)}`),
     });
-  }, [productsValues, state.orderPaid, priceTier])
+  }, [productsValues, state.orderPaid, priceTier, tvaEnabled])
 
   const formatReservedUntil = (date: Date): string => {
     return date.toISOString();
@@ -369,10 +372,12 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                     <span className="text-sm text-muted-foreground">{t('totalHT')}</span>
                     <span className="text-sm font-semibold text-gray-600">{state.orderTotalHT} <small className="text-muted-foreground">DZD</small></span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">{t('tva')}</span>
-                    <span className="text-sm font-semibold text-purple-600">{price(String(Number(state.orderTotalTTC) - Number(state.orderTotalHT)))} <small className="text-muted-foreground">DZD</small></span>
-                  </div>
+                  {tvaEnabled && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">{t('tva')}</span>
+                      <span className="text-sm font-semibold text-purple-600">{price(String(Number(state.orderTotalTTC) - Number(state.orderTotalHT)))} <small className="text-muted-foreground">DZD</small></span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">{t('debts')}</span>
                     <span className="text-sm font-semibold text-orange-600">{state.orderDebts} <small className="text-muted-foreground">DZD</small></span>

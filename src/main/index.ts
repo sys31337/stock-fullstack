@@ -34,7 +34,7 @@ function createWindow(): void {
       nodeIntegrationInSubFrames: true,
       webSecurity: false,
       contextIsolation: false,
-      additionalArguments: [`--relay-api=${relayManager.isHost() ? 'http://127.0.0.1:4031' : `http://127.0.0.1:${relayManager.getClientPort()}`}`],
+      additionalArguments: [`--relay-api=${relayManager.isHost() ? 'http://127.0.0.1:3500' : `http://127.0.0.1:${relayManager.getClientPort()}`}`],
     },
     frame: false,
     transparent: true,
@@ -101,8 +101,8 @@ app.whenReady().then(async () => {
   if (relayManager.isHost()) {
     const { default: server } = await import('./api/main');
 
-    server.listen(4031, () => {
-      console.error('[server] API server listening on port 4031');
+    server.listen(3500, () => {
+      console.error('[server] API server listening on port 3500');
     });
 
     server.on('error', (e) => console.error('[server] Error:', e));

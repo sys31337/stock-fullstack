@@ -306,6 +306,8 @@
   "totalTTC": "Total TTC",
   "transfers": "Transferts",
   "tva": "TVA",
+  "tvaEnabled": "Activer la TVA",
+  "tvaEnabledDesc": "Appliquer la TVA sur les factures, bons et documents",
   "undefined": "Undefiné",
   "underline": "Souligné",
   "undo": "Annuler",

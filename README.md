@@ -56,7 +56,7 @@ Configuration (via env or the in-app **Connection** screen):
 | `RELAY_HOST_PASSWORD` | ``                       | Access password clients must enter to link to this host (empty = open). |
 | `RELAY_TARGET_HOST` | ``                         | Client mode: Host id to connect to.           |
 | `RELAY_CLIENT_PORT` | `4032`                     | Client mode: local HTTP proxy port.           |
-| `RELAY_LOCAL_API`   | `http://127.0.0.1:4031`    | Host mode: local API the relay forwards to.   |
+| `RELAY_LOCAL_API`   | `http://127.0.0.1:3500`    | Host mode: local API the relay forwards to.   |
 
 See `.env.example`. The renderer's Settings → **Connection** screen edits these
 at runtime; a saved config persists to the Electron `userData` directory.

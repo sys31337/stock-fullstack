@@ -10,6 +10,7 @@ import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
+import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -41,6 +42,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('SALE');
   const { mutateAsync: createBill } = useCreateBill();
+  const { data: settings } = useGetSettings();
+  const tvaEnabled = settings?.tvaEnabled ?? true;
   const { holdReceipt, removeHeldReceipt } = useReceiptHold();
 
   const [priceTier, setPriceTier] = useState(1);
@@ -98,7 +101,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
       (sum, product) => {
         const currentSellPrice = (product[sellPriceField as keyof typeof product] as number) || 0;
         const preTotal = (product.quantity || 0) * (product.stack || 0) * currentSellPrice;
-        const productTva = preTotal * (product.tva || 0) / 100;
+        const productTva = tvaEnabled ? preTotal * (product.tva || 0) / 100 : 0;
         return sum + preTotal + productTva;
       },
       0
@@ -114,7 +117,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
       orderTotalHT: price(`${totalHT}`),
       orderTotalTTC: price(`${totalTTC}`),
     });
-  }, [productsValues, priceTier])
+  }, [productsValues, priceTier, tvaEnabled])
 
   useEffect(() => {
     if (isFetched) {
@@ -356,10 +359,12 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
                     <span className="text-sm text-muted-foreground">{t('totalHT')}</span>
                     <span className="text-sm font-semibold text-gray-600">{state.orderTotalHT} <small className="text-muted-foreground">DZD</small></span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">{t('tva')}</span>
-                    <span className="text-sm font-semibold text-purple-600">{price(String(Number(state.orderTotalTTC) - Number(state.orderTotalHT)))} <small className="text-muted-foreground">DZD</small></span>
-                  </div>
+                  {tvaEnabled && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">{t('tva')}</span>
+                      <span className="text-sm font-semibold text-purple-600">{price(String(Number(state.orderTotalTTC) - Number(state.orderTotalHT)))} <small className="text-muted-foreground">DZD</small></span>
+                    </div>
+                  )}
                   <div className="border-t border-border" />
                   <div className="flex justify-between items-center pt-1">
                     <span className="text-base font-bold text-gray-900">{t('totalTTC')}</span>

@@ -5,6 +5,7 @@ import { t } from "i18next";
 import { BiPlus } from "react-icons/bi";
 import { randomId } from "@web/shared/functions/words";
 import { IProduct } from "@web/shared/types/product";
+import { useGetSettings } from "@web/shared/hooks/useSettings";
 import { Package } from "lucide-react";
 
 interface ProductsTableProps {
@@ -13,6 +14,8 @@ interface ProductsTableProps {
 }
 
 const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProductsValues }) => {
+  const { data: settings } = useGetSettings();
+  const showTva = settings?.tvaEnabled ?? true;
 
   const addTableRows = () => {
     const rowsInput = {
@@ -87,7 +90,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
           <span className="w-[50px] shrink-0 text-center">{t('qty')}</span>
           <span className="w-[50px] shrink-0 text-center">{t('units')}</span>
           <span className="w-[70px] shrink-0 text-center">{t('buyPrice')}</span>
-          <span className="w-[45px] shrink-0 text-center">TVA</span>
+          {showTva && <span className="w-[45px] shrink-0 text-center">TVA</span>}
           <span className="w-[65px] shrink-0 text-center text-orange-600">P.V 1</span>
           <span className="w-[65px] shrink-0 text-center text-blue-600">P.V 2</span>
           <span className="w-[65px] shrink-0 text-center text-green-600">P.V 3</span>
@@ -113,6 +116,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
           handleChange={handleChange}
           handleProductSelect={handleProductSelect}
           handleBlur={handleBlur}
+          showTva={showTva}
         />
       ))}
 

@@ -21,6 +21,7 @@ const settingsSchema = new Schema({
   articleNumber: String,
   stamp: { type: Number, default: 0 },
   tva: { type: Number, default: 19 },
+  tvaEnabled: { type: Boolean, default: true },
 }, { timestamps: true });
 
 const Settings = model('Settings', settingsSchema);

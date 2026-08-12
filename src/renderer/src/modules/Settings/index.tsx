@@ -51,6 +51,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const [articleNumber, setArticleNumber] = useState('');
   const [stamp, setStamp] = useState(0);
   const [tva, setTva] = useState(19);
+  const [tvaEnabled, setTvaEnabled] = useState(true);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -75,6 +76,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       setArticleNumber(settings.articleNumber ?? '');
       setStamp(settings.stamp ?? 0);
       setTva(settings.tva ?? 19);
+      setTvaEnabled(settings.tvaEnabled ?? true);
       setDirty(false);
     }
   }, [isFetched, settings]);
@@ -87,7 +89,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       return { dashboardStatsEnabled, dashboardStatsBlurred };
     }
     if (activeTab === 'company') {
-      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, accountNumber, rib, articleNumber, stamp, tva };
+      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, accountNumber, rib, articleNumber, stamp, tva, tvaEnabled };
     }
     return {};
   };
@@ -234,6 +236,18 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                   <p className="text-xs text-muted-foreground mt-0.5">{t('companyInfoDesc')}</p>
                 </div>
                 <Separator />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="tva-enabled" className="text-sm font-medium">{t('tvaEnabled')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('tvaEnabledDesc')}</p>
+                  </div>
+                  <Switch
+                    id="tva-enabled"
+                    checked={tvaEnabled}
+                    onCheckedChange={(v) => { setTvaEnabled(v); setDirty(true); }}
+                  />
+                </div>
+                <Separator />
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium">{t('companyName')}</Label>
@@ -300,7 +314,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div>
                       <Label className="text-sm font-medium">{t('tva')}</Label>
-                      <Input type="number" value={tva} onChange={(e) => { setTva(Number(e.target.value)); setDirty(true); }} className="mt-1" />
+                      <Input type="number" value={tva} disabled={!tvaEnabled} onChange={(e) => { setTva(Number(e.target.value)); setDirty(true); }} className="mt-1" />
                     </div>
                   </div>
                 </div>

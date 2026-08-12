@@ -306,6 +306,8 @@
   "totalTTC": "Total TTC",
   "transfers": "Transfers",
   "tva": "TVA",
+  "tvaEnabled": "Enable TVA",
+  "tvaEnabledDesc": "Apply TVA on invoices, receipts, orders and documents",
   "undefined": "Undefined",
   "underline": "Underline",
   "undo": "Undo",

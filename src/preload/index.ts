@@ -16,7 +16,7 @@ interface ElectronWindow extends Window {
 }
 
 const relayApiArg = process.argv.find((a) => a.startsWith('--relay-api='));
-const baseAppUrl = relayApiArg ? relayApiArg.split('=')[1] : 'http://127.0.0.1:4031';
+const baseAppUrl = relayApiArg ? relayApiArg.split('=')[1] : 'http://127.0.0.1:3500';
 
 const api: ElectronWindow['api'] = {
   getBaseAppUrl: () => baseAppUrl,

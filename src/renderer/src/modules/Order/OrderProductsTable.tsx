@@ -5,6 +5,7 @@ import { t } from "i18next";
 import { BiPlus } from "react-icons/bi";
 import { randomId } from "@web/shared/functions/words";
 import { IProduct } from "@web/shared/types/product";
+import { useGetSettings } from "@web/shared/hooks/useSettings";
 import { Package } from "lucide-react";
 import { cn } from "@web/shared/utils/cn";
 
@@ -21,6 +22,8 @@ const colorMap: Record<number, string> = {
 };
 
 const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues, setProductsValues, priceTier }) => {
+  const { data: settings } = useGetSettings();
+  const showTva = settings?.tvaEnabled ?? true;
 
   const addTableRows = () => {
     const rowsInput = {
@@ -78,7 +81,7 @@ const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues,
           <span className="w-[50px] shrink-0 text-center">{t('qty')}</span>
           <span className="w-[50px] shrink-0 text-center">{t('units')}</span>
           <span className="w-[70px] shrink-0 text-center">{t('buyPrice')}</span>
-          <span className="w-[45px] shrink-0 text-center">TVA</span>
+          {showTva && <span className="w-[45px] shrink-0 text-center">TVA</span>}
           <span className={cn("w-[80px] shrink-0 text-center font-bold", colorMap[priceTier])}>{t('price')}</span>
           <span className="w-[90px] shrink-0 text-right ml-1">{t('total')}</span>
         </div>
@@ -102,6 +105,7 @@ const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues,
           handleChange={handleChange}
           handleProductSelect={handleProductSelect}
           priceTier={priceTier}
+          showTva={showTva}
         />
       ))}
 

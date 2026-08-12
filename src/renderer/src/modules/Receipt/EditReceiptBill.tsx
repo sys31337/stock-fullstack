@@ -13,6 +13,7 @@ import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
+import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -74,6 +75,8 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
   const { data: allWarehouses } = useGetAllWarehouses();
   const { data: billInfo, isFetched } = useGetBillInfo(billId, { enabled: !!isOpen });
   const { mutateAsync: updateBill } = useUpdateBill(billId);
+  const { data: settings } = useGetSettings();
+  const tvaEnabled = settings?.tvaEnabled ?? true;
 
   const [state, setState] = useState({
     orderTotalHT: '0.00',
@@ -123,7 +126,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
       (sum, product) => {
         const { buyPrice, quantity, stack, tva } = product;
         const preTotal = quantity * stack * buyPrice;
-        const productTva = preTotal * tva / 100;
+        const productTva = tvaEnabled ? preTotal * tva / 100 : 0;
         const total = preTotal + productTva
         return sum + total;
       },
@@ -142,7 +145,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
       orderTotalTTC: price(`${totalTTC}`),
       orderDebts: price(`${totalTTC - Number(state.orderPaid)}`),
     });
-  }, [productsValues, state.orderPaid, state.orderDebts])
+  }, [productsValues, state.orderPaid, state.orderDebts, tvaEnabled])
 
   useEffect(() => {
     if (isFetched && isOpen && billInfo) {

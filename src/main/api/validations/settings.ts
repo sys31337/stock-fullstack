@@ -23,6 +23,7 @@ const updateSettingsSchema = Joi.object({
   articleNumber: Joi.string().allow('').optional(),
   stamp: Joi.number().optional(),
   tva: Joi.number().optional(),
+  tvaEnabled: Joi.boolean().optional(),
 }).min(1);
 
 export const updateSettingsValidator = validator.body(updateSettingsSchema);
