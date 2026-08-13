@@ -13,6 +13,7 @@ export interface IBill {
   _id: string;
   billDate: string;
   orderId: string;
+  manualOrderId?: boolean;
   category: string | ICategory;
   customer: string | ICustomer;
   type: 'BUY' | 'SALE' | 'ORDER' | 'DELIVERY';

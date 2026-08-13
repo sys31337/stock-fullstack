@@ -129,7 +129,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
   }, [productsValues, state.orderPaid, priceTier, tvaEnabled])
 
   useEffect(() => {
-    if (isFetched) {
+    if (isFetched && !initialHeldData?.values?.orderId) {
       setFieldValue('orderId', String((latestBillNumber ?? 0) + 1))
     }
   }, [isFetched, latestBillNumber, initialHeldData]);

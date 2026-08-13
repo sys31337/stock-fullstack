@@ -120,7 +120,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
   }, [productsValues, priceTier, tvaEnabled])
 
   useEffect(() => {
-    if (isFetched) {
+    if (isFetched && !initialHeldData?.values?.orderId) {
       setFieldValue('orderId', String((latestBillNumber ?? 0) + 1))
     }
   }, [isFetched, latestBillNumber, initialHeldData]);

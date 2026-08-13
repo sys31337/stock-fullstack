@@ -35,11 +35,13 @@ export interface TopProduct {
   name: string;
   quantity: number;
   total: number;
+  stock?: number;
+  lowStock?: boolean;
 }
 
 export interface DashboardAnalytics extends DashboardStats {
   revenueTrend: RevenuePoint[];
-  salesByCategory: CategorySlice[];
+  salesByProduct: CategorySlice[];
   topProducts: TopProduct[];
 }
 

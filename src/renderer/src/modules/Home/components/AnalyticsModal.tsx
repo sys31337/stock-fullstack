@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@web/shared/components/ui/button';
 import {
   Package, Users, Factory, ShoppingCart, ShoppingBag, Clock, AlertTriangle,
-  Warehouse, UserRound, Wallet, Banknote, BarChart3, TrendingUp, SlidersHorizontal,
+  Warehouse, UserRound, Wallet, Banknote, BarChart3, TrendingUp, SlidersHorizontal, Trophy,
 } from 'lucide-react';
 
 const PERIODS = [
@@ -69,7 +69,7 @@ const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose }) => {
 
   const stats = (analytics as any) || {};
   const revenueTrend = analytics?.revenueTrend || [];
-  const salesByCategory = analytics?.salesByCategory || [];
+  const salesByProduct = analytics?.salesByProduct || [];
   const topProducts = analytics?.topProducts || [];
   const recentMovements = analytics?.recentMovements || [];
 
@@ -176,16 +176,22 @@ const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose }) => {
             <div className="rounded-xl border border-border bg-card p-5">
               <h4 className="mb-1 flex items-center gap-2 text-sm font-semibold text-card-foreground">
                 <DonutIcon />
-                {t('salesByCategory')}
+                {t('salesByProduct')}
               </h4>
-              <p className="mb-5 text-xs text-muted-foreground">{t('salesByCategoryDesc')}</p>
-              <DonutChart data={salesByCategory} blurred={blurred} />
+              <p className="mb-5 text-xs text-muted-foreground">{t('salesByProductDesc')}</p>
+              <DonutChart data={salesByProduct} blurred={blurred} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <div className="rounded-xl border border-border bg-card p-5">
-              <h4 className="mb-4 text-sm font-semibold text-card-foreground">{t('topProducts')}</h4>
+              <div className="mb-4">
+                <h4 className="flex items-center gap-2 text-sm font-semibold text-card-foreground">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  {t('bestSellers')}
+                </h4>
+                <p className="text-xs text-muted-foreground">{t('bestSellersDesc')}</p>
+              </div>
               {topProducts.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">{t('noData')}</p>
               ) : (
@@ -201,8 +207,8 @@ const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose }) => {
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex items-baseline justify-between gap-2">
                           <span className="truncate text-sm font-medium text-card-foreground">{p.name}</span>
-                          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                            {p.quantity} <span className="uppercase">×</span>
+                          <span className={cn('shrink-0 text-xs font-semibold tabular-nums text-emerald-600', blurred && 'blur-[5px] select-none')}>
+                            {price(p.total)}
                           </span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -210,6 +216,20 @@ const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose }) => {
                             className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400"
                             style={{ width: `${(p.quantity / maxQuantity) * 100}%` }}
                           />
+                        </div>
+                        <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                          <span className="tabular-nums">{p.quantity} {t('unitsSold')}</span>
+                          <span className="flex items-center gap-1.5">
+                            {p.lowStock && (
+                              <span className="inline-flex items-center gap-1 rounded bg-red-500/10 px-1.5 py-0.5 font-medium text-red-600">
+                                <AlertTriangle className="h-3 w-3" />
+                                {t('lowStockBadge')}
+                              </span>
+                            )}
+                            <span className={cn('tabular-nums', blurred && 'blur-[5px] select-none')}>
+                              {p.stock} {t('inStock')}
+                            </span>
+                          </span>
                         </div>
                       </div>
                     </div>

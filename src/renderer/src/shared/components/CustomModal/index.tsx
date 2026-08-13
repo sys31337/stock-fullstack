@@ -61,17 +61,16 @@ const CustomModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!showConfirm || !onMinimize) return;
+    if (!showConfirm) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         setShowConfirm(false);
-        onMinimize();
       }
     };
     document.addEventListener('keydown', handler, true);
     return () => document.removeEventListener('keydown', handler, true);
-  }, [showConfirm, onMinimize]);
+  }, [showConfirm]);
 
   const handleEscapeKeyDown = (e: Event) => {
     if (confirmOnClose) {
@@ -152,7 +151,7 @@ const CustomModal = ({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        onClick={() => { if (confirmOnClose) setShowConfirm(true); else onMinimize(); }}
+                        onClick={onMinimize}
                         className="w-3 h-3 rounded-full bg-yellow-500 hover:brightness-110 transition-all focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1"
                         aria-label={minimizeTooltip || 'Minimize'}
                       >
@@ -216,7 +215,7 @@ const CustomModal = ({
                 <Button variant="outline" onClick={handleConfirmDiscard} className="flex-1">
                   {confirmDiscardLabel}
                 </Button>
-                <Button variant="ghost" onClick={handleConfirmCancel} className="flex-1">
+                <Button variant="ghost" onClick={(e) => { e.stopPropagation(); handleConfirmCancel(); }} className="flex-1">
                   {confirmCancelLabel}
                 </Button>
               </div>

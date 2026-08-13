@@ -37,6 +37,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const payload: any = {
       ...body,
       orderId: finalOrderId,
+      manualOrderId: !!(orderId && String(orderId).trim()),
       createBy: userId,
       ...(type !== 'SALE' && { warehouse: warehouse || req.defaultWarehouse }),
       status: type === 'ORDER' ? 'pending' : 'completed',

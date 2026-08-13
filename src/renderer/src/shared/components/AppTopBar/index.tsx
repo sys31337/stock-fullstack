@@ -30,7 +30,8 @@ import {
 } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@web/shared/utils/cn'
-import { Wifi } from 'lucide-react'
+import { Wifi, Moon, Sun, Monitor } from 'lucide-react'
+import { useTheme } from '@web/shared/contexts/ThemeContext'
 
 interface ModalActions {
   openProducts: () => void
@@ -256,6 +257,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false)
   const { mutateAsync: logout } = useLogout()
   const navigate = useNavigate()
+  const { theme, setTheme, resolvedTheme } = useTheme()
 
   const [openProducts, setOpenProducts] = useState(false)
   const [openReceipt, setOpenReceipt] = useState(false)
@@ -303,6 +305,18 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   }, [])
 
   const onToggle = () => setIsOpen(!isOpen)
+
+  const cycleTheme = () => {
+    const themes: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
+    const currentIndex = themes.indexOf(theme)
+    const nextIndex = (currentIndex + 1) % themes.length
+    setTheme(themes[nextIndex])
+  }
+
+  const getThemeIcon = () => {
+    if (theme === 'system') return <Monitor className="h-3.5 w-3.5" />
+    return resolvedTheme === 'dark' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />
+  }
 
   const onLogout = async () => {
     try {
@@ -370,6 +384,16 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
               className="text-muted-foreground hover:text-foreground hover:bg-accent gap-1.5 h-8 px-2.5"
             >
               <AiOutlineSetting className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cycleTheme}
+              title={`Theme: ${theme}`}
+              aria-label={`Theme: ${theme}. Click to cycle.`}
+              className="text-muted-foreground hover:text-foreground hover:bg-accent h-8 px-2.5"
+            >
+              {getThemeIcon()}
             </Button>
             <div className="w-px h-5 bg-border mx-1" />
             <Button

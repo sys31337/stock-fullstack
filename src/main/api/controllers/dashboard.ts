@@ -148,7 +148,7 @@ const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: N
     startDate.setUTCHours(0, 0, 0, 0);
     startDate.setUTCDate(startDate.getUTCDate() - (days - 1));
 
-    const [kpis, revenueTrendAgg, salesByCategoryAgg, topProductsAgg, recentMovements] = await Promise.all([
+    const [kpis, revenueTrendAgg, productSalesAgg, recentMovements] = await Promise.all([
       computeKpis(warehouseFilter, today),
       Bill.aggregate([
         { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
@@ -157,23 +157,16 @@ const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: N
       ]),
       Bill.aggregate([
         { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
-        { $lookup: { from: 'categories', localField: 'category', foreignField: '_id', as: 'cat' } },
-        { $unwind: { path: '$cat', preserveNullAndEmptyArrays: true } },
-        { $group: { _id: '$cat.name', total: { $sum: '$orderTotalTTC' } } },
-        { $sort: { total: -1 } },
-      ]),
-      Bill.aggregate([
-        { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
         { $unwind: '$products' },
         {
           $group: {
-            _id: '$products.productName',
+            _id: { id: '$products.id', name: '$products.productName' },
             quantity: { $sum: '$products.quantity' },
-            total: { $sum: { $multiply: ['$products.quantity', '$products.sellPrice_1'] } },
+            revenue: { $sum: { $multiply: ['$products.quantity', '$products.sellPrice_1'] } },
+            cost: { $sum: { $multiply: ['$products.quantity', '$products.buyPrice'] } },
           },
         },
-        { $sort: { quantity: -1 } },
-        { $limit: 5 },
+        { $sort: { revenue: -1 } },
       ]),
       getRecentMovements(req.query.warehouse),
     ]);
@@ -187,22 +180,33 @@ const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: N
       revenueTrend.push({ date: key, total: Math.round(trendMap.get(key) || 0) });
     }
 
-    const salesByCategory = salesByCategoryAgg
-      .map((r: any) => ({ name: r._id || 'Uncategorized', value: Math.round(r.total) }))
-      .filter((r: any) => r.value > 0);
+    const productNames = productSalesAgg.map((r: any) => r._id?.name).filter(Boolean);
+    const stockRows = await Product.find({ productName: { $in: productNames } }).select('productName quantity notify').lean();
+    const stockMap = new Map(stockRows.map((p: any) => [p.productName, p]));
 
-    const topProducts = topProductsAgg.map((r: any) => ({
-      name: r._id || 'Unknown',
-      quantity: r.quantity,
-      total: Math.round(r.total),
-    }));
+    const salesByProduct = productSalesAgg
+      .filter((r: any) => r.revenue > 0)
+      .slice(0, 8)
+      .map((r: any) => ({ name: r._id?.name || 'Unknown', value: Math.round(r.revenue) }));
+
+    const topProducts = productSalesAgg.slice(0, 5).map((r: any) => {
+      const stockRow = stockMap.get(r._id?.name);
+      const stock = stockRow?.quantity ?? 0;
+      return {
+        name: r._id?.name || 'Unknown',
+        quantity: r.quantity,
+        total: Math.round(r.revenue),
+        stock,
+        lowStock: stock <= 5 && !!stockRow?.notify,
+      };
+    });
 
     return res.status(200).send({
       statisticsEnabled,
       statisticsBlurred,
       ...kpis,
       revenueTrend,
-      salesByCategory,
+      salesByProduct,
       topProducts,
       recentMovements,
     });

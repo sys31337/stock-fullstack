@@ -27,7 +27,10 @@ const useGetLatestBillNumber = (type: string) => useQuery(
     .request({
       url: `bills/${type}`,
     })
-    .then(({ data }) => Number(data.shift()?.orderId) || 0),
+    .then(({ data }) => {
+      const latest = (data || []).find((b: any) => /^\d+$/.test(String(b.orderId)));
+      return latest ? Number(latest.orderId) : 0;
+    }),
 );
 
 const useGetBillInfo = (id: string, options?: any) => useQuery(
@@ -49,6 +52,8 @@ const useCreateBill = () => useMutation((data: Payload) => axiosInstance.request
     queryClient.invalidateQueries(['Get all bills']);
     queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get all products']);
+    queryClient.invalidateQueries({ queryKey: ['dashboard-stats'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'], refetchType: 'all' });
   }
 });
 
@@ -62,6 +67,8 @@ const useUpdateBill = (id?: string) => useMutation((data) => axiosInstance.reque
     queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get bill information', id])
     queryClient.invalidateQueries(['Get all products']);
+    queryClient.invalidateQueries({ queryKey: ['dashboard-stats'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'], refetchType: 'all' });
   }
 });
 
@@ -74,6 +81,8 @@ const useCancelOrder = () => useMutation((id: string) => axiosInstance.request({
     queryClient.invalidateQueries(['Get all bills']);
     queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get all products']);
+    queryClient.invalidateQueries({ queryKey: ['dashboard-stats'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'], refetchType: 'all' });
   }
 });
 
@@ -85,6 +94,8 @@ const useCompleteOrder = () => useMutation((id: string) => axiosInstance.request
     queryClient.invalidateQueries(['Get all bills']);
     queryClient.invalidateQueries(['Get all bills of type']);
     queryClient.invalidateQueries(['Get all products']);
+    queryClient.invalidateQueries({ queryKey: ['dashboard-stats'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'], refetchType: 'all' });
   }
 });
 
