@@ -8,9 +8,11 @@ import {
   MonitorSmartphone,
   QrCode,
   RefreshCw,
+  RotateCcw,
   Server,
   Settings,
   ShieldCheck,
+  TriangleAlert,
   Wifi,
   WifiOff,
   X,
@@ -27,7 +29,7 @@ import {
   DialogTitle,
 } from '@web/shared/components/ui/dialog';
 import { cn } from '@web/shared/utils/cn';
-import type { RelayConfigDto, RelayHostInfo, RelayStateSnapshot } from '../../../../preload/relay';
+import type { RelayConfigDto, RelayHostInfo, RelayStateSnapshot, SyncStatusSnapshot, SyncConflictSnapshot } from '../../../../preload/relay';
 
 const STATE_LABEL: Record<string, string> = {
   idle: 'Idle',
@@ -54,6 +56,10 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
   const [state, setState] = useState<RelayStateSnapshot | null>(null);
   const [hosts, setHosts] = useState<RelayHostInfo[]>([]);
   const [config, setConfig] = useState<RelayConfigDto | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatusSnapshot | null>(null);
+  const [conflicts, setConflicts] = useState<SyncConflictSnapshot[]>([]);
+  const [syncing, setSyncing] = useState(false);
+  const [resolvingConflict, setResolvingConflict] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -72,12 +78,20 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
     api.getState().then((s) => mounted && setState(s));
     api.getConfig().then((c) => mounted && setConfig(c));
     api.getHosts().then((h) => mounted && setHosts(h)).catch(() => {});
+    api.getSyncStatus().then((s) => mounted && setSyncStatus(s)).catch(() => {});
+    refreshConflicts();
     const offState = api.onStateChange((s) => mounted && setState(s));
     const offHosts = api.onHosts((h) => mounted && setHosts(h));
+    const offSync = api.onSyncStatusChange((s) => {
+      if (!mounted) return;
+      setSyncStatus(s);
+      refreshConflicts();
+    });
     return () => {
       mounted = false;
       offState();
       offHosts();
+      offSync();
     };
   }, [isOpen]);
 
@@ -119,6 +133,36 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
 
   const refreshHosts = async () => {
     setHosts(await window.api.relay.getHosts());
+  };
+
+  const triggerManualSync = async () => {
+    setSyncing(true);
+    setMessage(null);
+    const result = await window.api.relay.triggerSync();
+    setSyncing(false);
+    setMessage(result.ok
+      ? { ok: true, text: 'Sync triggered. Check the status below for progress.' }
+      : { ok: false, text: result.error || 'Failed to trigger sync' });
+  };
+
+  const refreshConflicts = async () => {
+    try {
+      setConflicts(await window.api.relay.getSyncConflicts());
+    } catch {
+      setConflicts([]);
+    }
+  };
+
+  const resolveConflict = async (conflictId: string, resolution: 'local' | 'remote') => {
+    setResolvingConflict(conflictId);
+    const result = await window.api.relay.resolveSyncConflict(conflictId, resolution);
+    setResolvingConflict(null);
+    if (result.ok) {
+      await refreshConflicts();
+      setMessage({ ok: true, text: `Conflict resolved with ${resolution} version.` });
+    } else {
+      setMessage({ ok: false, text: result.error || 'Failed to resolve conflict' });
+    }
   };
 
   const applyAndReconnect = async () => {
@@ -380,8 +424,111 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
                       <Field label="Registered as" value={state.registeredClientId || '—'} mono />
                       <Field label="Host ID" value={state.hostId} mono />
                       {isHost && <Field label="Host name" value={config.hostName || '—'} />}
-                      <Field label="Client mode HTTP proxy" value={`http://127.0.0.1:${state.clientPort}`} mono />
+                      <Field label="Local API" value="http://127.0.0.1:3500" mono />
                     </dl>
+
+                    {!isHost && syncStatus && (
+                      <>
+                        <SectionHeading
+                          icon={<RefreshCw className="h-4 w-4" />}
+                          title="Offline sync"
+                          description="Local database changes are replayed to the host when linked."
+                        />
+                        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <div className="text-xs text-muted-foreground">Sync state</div>
+                              <div className="mt-0.5 flex items-center gap-2 font-medium">
+                                {syncStatus.isOnline ? (
+                                  <Wifi className="h-3.5 w-3.5 text-emerald-500" />
+                                ) : (
+                                  <WifiOff className="h-3.5 w-3.5 text-amber-500" />
+                                )}
+                                {syncStatus.isOnline ? 'Online' : 'Offline'}
+                                {syncStatus.status !== 'idle' && ` • ${syncStatus.status}`}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Pending changes</div>
+                              <div className="mt-0.5 font-medium">{syncStatus.pendingCount}</div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Last pull</div>
+                              <div className="mt-0.5 font-medium">
+                                {syncStatus.lastPullAt ? new Date(syncStatus.lastPullAt).toLocaleString() : 'Never'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-muted-foreground">Last push</div>
+                              <div className="mt-0.5 font-medium">
+                                {syncStatus.lastPushAt ? new Date(syncStatus.lastPushAt).toLocaleString() : 'Never'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {syncStatus.conflictCount > 0 && (
+                            <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-600">
+                              <TriangleAlert className="h-4 w-4" />
+                              {syncStatus.conflictCount} conflict{syncStatus.conflictCount === 1 ? '' : 's'} need review
+                            </div>
+                          )}
+
+                          {syncStatus.lastError && (
+                            <div className="text-xs text-destructive">Last error: {syncStatus.lastError}</div>
+                          )}
+
+                          <div className="flex items-center gap-2 pt-1">
+                            <Button onClick={triggerManualSync} disabled={syncing || !syncStatus.isOnline}>
+                              {syncing ? (
+                                <>
+                                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                  Syncing…
+                                </>
+                              ) : (
+                                <>
+                                  <RotateCcw className="mr-2 h-4 w-4" />
+                                  Sync now
+                                </>
+                              )}
+                            </Button>
+                          </div>
+
+                          {conflicts.length > 0 && (
+                            <div className="space-y-2 pt-2">
+                              <div className="text-xs font-semibold text-muted-foreground">Conflicts</div>
+                              <ul className="space-y-2">
+                                {conflicts.map((c) => (
+                                  <li key={c._id} className="rounded-lg border border-border bg-background p-3 text-sm">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="font-medium capitalize">{c.collection}</span>
+                                      <span className="font-mono text-xs text-muted-foreground">{c.documentId}</span>
+                                    </div>
+                                    <div className="mt-2 flex items-center gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={resolvingConflict === c._id}
+                                        onClick={() => resolveConflict(c._id, 'local')}
+                                      >
+                                        Use local
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={resolvingConflict === c._id}
+                                        onClick={() => resolveConflict(c._id, 'remote')}
+                                      >
+                                        Use remote
+                                      </Button>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -556,7 +703,7 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
                     <SectionHeading
                       icon={<ArrowLeftRight className="h-4 w-4" />}
                       title="Mode"
-                      description="Switching modes restarts the application. In client mode the local backend & database are not started."
+                      description="Switching modes restarts the application. In client mode a local database is started and synced with the linked host."
                     />
                     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                       <div className="flex items-center gap-2">

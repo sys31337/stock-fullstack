@@ -5,6 +5,8 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import config from './api/config';
 import { startMongoDB, stopMongoDB } from './api/config/mongodb';
+import { setSkipDefaultSeeding } from './api/config/mongoose';
+import { createApiServer } from './api/main';
 import { getRelayManager } from './relay/manager';
 import { registerRelayIpc } from './relay/ipc';
 
@@ -34,7 +36,10 @@ function createWindow(): void {
       nodeIntegrationInSubFrames: true,
       webSecurity: false,
       contextIsolation: false,
-      additionalArguments: [`--relay-api=${relayManager.isHost() ? 'http://127.0.0.1:3500' : `http://127.0.0.1:${relayManager.getClientPort()}`}`],
+      // The renderer always talks to the local Express API. In client mode the
+      // local API records mutations and the sync engine replicates them to the
+      // remote host, so the app keeps working when offline.
+      additionalArguments: ['--relay-api=http://127.0.0.1:3500'],
     },
     frame: false,
     transparent: true,
@@ -98,25 +103,26 @@ app.whenReady().then(async () => {
   registerRelayIpc();
   relayManager.start();
 
-  if (relayManager.isHost()) {
-    const { default: server } = await import('./api/main');
-
-    server.listen(3500, () => {
-      console.error('[server] API server listening on port 3500');
-    });
-
-    server.on('error', (e) => console.error('[server] Error:', e));
-
-    startMongoDB().then(() => {
-      createWindow();
-    }).catch((err) => {
-      console.error('Failed to start MongoDB:', err);
-      dialog.showErrorBox('Database Error', `Failed to start MongoDB.\n\n${err.message}`);
-      app.quit();
-    });
-  } else {
-    createWindow();
+  const clientMode = !relayManager.isHost();
+  if (clientMode) {
+    setSkipDefaultSeeding(true);
   }
+
+  const server = createApiServer({ clientMode });
+
+  server.listen(3500, () => {
+    console.error(`[server] API server listening on port 3500 (mode=${clientMode ? 'client' : 'host'})`);
+  });
+
+  server.on('error', (e) => console.error('[server] Error:', e));
+
+  startMongoDB().then(() => {
+    createWindow();
+  }).catch((err) => {
+    console.error('Failed to start MongoDB:', err);
+    dialog.showErrorBox('Database Error', `Failed to start MongoDB.\n\n${err.message}`);
+    app.quit();
+  });
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);

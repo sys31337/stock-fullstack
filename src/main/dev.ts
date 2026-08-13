@@ -11,6 +11,13 @@ async function main(): Promise<void> {
     server.listen(3500, () => {
       console.log(`API server listening on port 3500`);
     });
+    server.on('error', (err: any) => {
+      if (err?.code === 'EADDRINUSE') {
+        console.log('[dev] Port 3500 is already in use (the Electron app probably owns it). Skipping duplicate API server.');
+      } else {
+        console.error('[dev] API server error:', err);
+      }
+    });
   }
 }
 

@@ -5,6 +5,7 @@ import { RelayHostInfo } from './protocol';
 import { loadRelayConfig, RelayConfig } from './config';
 import { HostBridge } from './hostBridge';
 import { ClientProxy } from './clientProxy';
+import { SyncEngine, SyncStatusSnapshot } from '../sync/syncEngine';
 
 export interface RelayStateSnapshot {
   mode: 'host' | 'client';
@@ -34,8 +35,8 @@ const DEFAULT_RELAY_STATE: RelayStateSnapshot = {
  * Owns the relay lifecycle for the Electron app:
  *   - host mode: registers as a host and bridges relayed requests to the
  *     local Express backend (HostBridge);
- *   - client mode: registers as a client of a remote host and exposes a local
- *     HTTP proxy (ClientProxy) that the renderer talks to transparently.
+ *   - client mode: starts a local backend, registers as a client of a remote
+ *     host, and syncs data between the local DB and the host via SyncEngine.
  */
 class RelayManager {
   config: RelayConfig;
@@ -50,8 +51,16 @@ class RelayManager {
 
   onHosts: (hosts: RelayHostInfo[]) => void = () => {};
 
+  onSyncStatusChange: (snapshot: SyncStatusSnapshot) => void = () => {};
+
+  private syncEngine: SyncEngine | null = null;
+
   constructor() {
     this.config = loadRelayConfig();
+    this.loadPersistedConfig();
+    this.syncEngine = new SyncEngine();
+    this.syncEngine.setSyncToken(this.config.syncToken);
+    this.syncEngine.onStatusChange = (snapshot) => this.onSyncStatusChange(snapshot);
   }
 
   start(): void {
@@ -89,6 +98,7 @@ class RelayManager {
       return { ok: false, error: 'MODE_CHANGE_REQUIRES_RESTART' };
     }
     this.config = { ...this.config, ...partial };
+    this.syncEngine?.setSyncToken(this.config.syncToken);
     this.persistConfig().catch(() => {});
     this.stopClient();
     this.startClient();
@@ -108,7 +118,7 @@ class RelayManager {
     }
     this.config = { ...this.config, targetHostId: hostId, hostPassword: accessPassword ?? '' };
     this.persistConfig().catch(() => {});
-    this.clientProxy?.setTargetHostId(hostId);
+    this.syncEngine?.setRelayClient(this.client, hostId);
     try {
       await this.client.setPayload({
         role: 'client',
@@ -140,6 +150,34 @@ class RelayManager {
     const { app } = require('electron');
     app.relaunch();
     app.exit(0);
+  }
+
+  async triggerSync(): Promise<{ ok: boolean; error?: string }> {
+    if (this.config.mode !== 'client') {
+      return { ok: false, error: 'NOT_CLIENT_MODE' };
+    }
+    try {
+      await this.syncEngine?.triggerSync();
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : 'SYNC_FAILED' };
+    }
+  }
+
+  async getSyncStatus(): Promise<SyncStatusSnapshot | null> {
+    return this.syncEngine?.getStatusSnapshot() ?? null;
+  }
+
+  async getSyncConflicts(): Promise<any[]> {
+    return this.syncEngine?.getConflicts() ?? [];
+  }
+
+  async resolveSyncConflict(
+    conflictId: string,
+    resolution: 'local' | 'remote' | 'merged',
+    mergedDoc?: any,
+  ): Promise<{ ok: boolean; error?: string }> {
+    return this.syncEngine?.resolveConflict(conflictId, resolution, mergedDoc) ?? { ok: false, error: 'SYNC_ENGINE_UNAVAILABLE' };
   }
 
   shutdown(): void {
@@ -176,8 +214,11 @@ class RelayManager {
       if (!this.config.targetHostId) {
         console.warn('[relay] client mode without RELAY_TARGET_HOST — waiting for host selection');
       }
-      this.clientProxy = new ClientProxy(client, this.config.clientPort, this.config.targetHostId);
-      this.clientProxy.start();
+      // The renderer now talks directly to the local API (port 3500), so the
+      // legacy HTTP proxy is no longer needed. The sync engine handles remote
+      // communication over the relay.
+      this.syncEngine?.setRelayClient(client, this.config.targetHostId);
+      this.syncEngine?.start();
     }
 
     this.buildSnapshot();
@@ -192,6 +233,7 @@ class RelayManager {
   private stopClient(): void {
     this.clientProxy?.stop();
     this.clientProxy = null;
+    this.syncEngine?.stop();
     this.client?.disconnect();
     this.client = null;
     this.buildSnapshot();
@@ -200,6 +242,21 @@ class RelayManager {
   private handleStateChange(): void {
     this.buildSnapshot();
     this.onStateChange(this.snapshot);
+
+    const state = this.client?.getState() ?? 'idle';
+    const registered = state === 'registered';
+    this.syncEngine?.setOnline(registered && this.config.mode === 'client' && !!this.config.targetHostId);
+  }
+
+  private loadPersistedConfig(): void {
+    const file = this.configPath();
+    if (!file || !fs.existsSync(file)) return;
+    try {
+      const persisted = JSON.parse(fs.readFileSync(file, 'utf8'));
+      this.config = loadRelayConfig(persisted);
+    } catch {
+      // ignore malformed persisted config
+    }
   }
 
   private buildSnapshot(): void {
@@ -245,6 +302,7 @@ class RelayManager {
       clientId: this.config.clientId,
       targetHostId: this.config.targetHostId,
       clientPort: this.config.clientPort,
+      syncToken: this.config.syncToken,
     };
     await fs.promises.mkdir(path.dirname(file), { recursive: true });
     await fs.promises.writeFile(file, JSON.stringify(toPersist, null, 2), 'utf8');
@@ -256,20 +314,6 @@ let instance: RelayManager | null = null;
 export function getRelayManager(): RelayManager {
   if (!instance) {
     instance = new RelayManager();
-    // Merge a persisted relay.config.json (from a previous session) on top of env.
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { app } = require('electron');
-      if (app?.getPath) {
-        const file = path.join(app.getPath('userData'), 'relay.config.json');
-        if (fs.existsSync(file)) {
-          const persisted = JSON.parse(fs.readFileSync(file, 'utf8'));
-          instance.config = loadRelayConfig(persisted);
-        }
-      }
-    } catch {
-      // not running inside Electron
-    }
   }
   return instance;
 }

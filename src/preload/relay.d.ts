@@ -31,6 +31,26 @@ export interface RelayHostInfo {
   clients: string[];
 }
 
+export interface SyncStatusSnapshot {
+  status: 'idle' | 'pulling' | 'pushing' | 'error';
+  lastPullAt?: string;
+  lastPushAt?: string;
+  lastError?: string;
+  pendingCount: number;
+  conflictCount: number;
+  isOnline: boolean;
+}
+
+export interface SyncConflictSnapshot {
+  _id: string;
+  collection: string;
+  documentId: string;
+  localDoc: any;
+  remoteDoc: any;
+  status: string;
+  createdAt: string;
+}
+
 export interface RelayPreloadApi {
   getState: () => Promise<RelayStateSnapshot>;
   getConfig: () => Promise<RelayConfigDto>;
@@ -41,4 +61,9 @@ export interface RelayPreloadApi {
   restart: () => void;
   onStateChange: (cb: (snapshot: RelayStateSnapshot) => void) => () => void;
   onHosts: (cb: (hosts: RelayHostInfo[]) => void) => () => void;
+  getSyncStatus: () => Promise<SyncStatusSnapshot | null>;
+  triggerSync: () => Promise<{ ok: boolean; error?: string }>;
+  getSyncConflicts: () => Promise<SyncConflictSnapshot[]>;
+  resolveSyncConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) => Promise<{ ok: boolean; error?: string }>;
+  onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => () => void;
 }

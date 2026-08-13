@@ -5,6 +5,7 @@ import type {
   RelayHostInfo,
   RelayPreloadApi,
   RelayStateSnapshot,
+  SyncStatusSnapshot,
 } from './relay';
 
 interface ElectronWindow extends Window {
@@ -37,6 +38,16 @@ const api: ElectronWindow['api'] = {
       const listener = (_e: IpcRendererEvent, hosts: RelayHostInfo[]): void => cb(hosts);
       ipcRenderer.on('relay:hosts', listener);
       return () => { ipcRenderer.removeListener('relay:hosts', listener); };
+    },
+    getSyncStatus: () => ipcRenderer.invoke('sync:get-status'),
+    triggerSync: () => ipcRenderer.invoke('sync:trigger'),
+    getSyncConflicts: () => ipcRenderer.invoke('sync:get-conflicts'),
+    resolveSyncConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) =>
+      ipcRenderer.invoke('sync:resolve-conflict', conflictId, resolution, mergedDoc),
+    onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => {
+      const listener = (_e: IpcRendererEvent, snapshot: SyncStatusSnapshot): void => cb(snapshot);
+      ipcRenderer.on('sync:status-change', listener);
+      return () => { ipcRenderer.removeListener('sync:status-change', listener); };
     },
   },
 };

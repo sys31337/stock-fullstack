@@ -1,5 +1,6 @@
 appId: com.electron.app
 productName: solustock-20-desktop
+compression: store
 directories:
   buildResources: resources
 icon: resources/icon.png

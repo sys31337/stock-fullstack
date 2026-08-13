@@ -17,9 +17,11 @@ import settingsRouter from './helpers/settings';
 import transactionsRouter from './helpers/transactions';
 import reportsRouter from './helpers/reports';
 import deliveryReturnsRouter from './helpers/deliveryReturns';
+import syncRouter from './helpers/sync';
 
 const router = express.Router();
 
+router.use('/sync', syncRouter);
 router.use('/users', usersRouter);
 router.use('/users-enhanced', usersEnhancedRouter);
 router.use('/customers', customersRouter);
