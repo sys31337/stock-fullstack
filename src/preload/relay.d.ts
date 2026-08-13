@@ -36,6 +36,7 @@ export interface RelayPreloadApi {
   getConfig: () => Promise<RelayConfigDto>;
   getHosts: () => Promise<RelayHostInfo[]>;
   reconnect: (cfg: Partial<RelayConfigDto>) => Promise<{ ok: boolean; error?: string }>;
+  connectHost: (hostId: string, password?: string) => Promise<{ ok: boolean; error?: string }>;
   saveConfig: (cfg: Partial<RelayConfigDto>) => Promise<{ ok: boolean; error?: string }>;
   restart: () => void;
   onStateChange: (cb: (snapshot: RelayStateSnapshot) => void) => () => void;

@@ -25,6 +25,7 @@ const api: ElectronWindow['api'] = {
     getConfig: () => ipcRenderer.invoke('relay:get-config'),
     getHosts: () => ipcRenderer.invoke('relay:get-hosts'),
     reconnect: (cfg: Partial<RelayConfigDto>) => ipcRenderer.invoke('relay:reconnect', cfg),
+    connectHost: (hostId: string, password?: string) => ipcRenderer.invoke('relay:connect-host', hostId, password),
     saveConfig: (cfg: Partial<RelayConfigDto>) => ipcRenderer.invoke('relay:save-config', cfg),
     restart: () => { ipcRenderer.invoke('relay:restart'); },
     onStateChange: (cb: (snapshot: RelayStateSnapshot) => void) => {

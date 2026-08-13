@@ -1,18 +1,23 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { t } from 'i18next';
+import { Wifi } from 'lucide-react';
 import parseJwt from '@web/shared/utils/parseJWT';
 import cacheService from '@web/shared/services/cache';
 import authService from '@web/shared/services/auth';
 import { assetsBase } from '@web/config';
+import { Button } from '@web/shared/components/ui/button';
 import { useLogin } from '@web/modules/Authentication/api/useLogin';
 import { useGetAllUsers } from '@web/modules/Authentication/api/useGetAllUsers';
 import LoginForm from '@web/modules/Authentication/components/LoginForm';
 import LanguageSwitcher from '@web/modules/Authentication/components/LanguageSwitcher';
+import ConnectionDrawer from '@web/modules/Connection';
 
 const Authentication = () => {
   const { mutateAsync: login } = useLogin();
   const { data: users } = useGetAllUsers();
   const navigate = useNavigate();
+  const [openConnection, setOpenConnection] = useState(false);
 
   const singleUser = users?.length === 1 ? users[0] : undefined;
 
@@ -64,6 +69,20 @@ const Authentication = () => {
 
         <LanguageSwitcher />
       </div>
+
+      <Button
+        type="button"
+        variant="secondary"
+        size="icon"
+        className="fixed bottom-5 right-5 z-50 h-12 w-12 rounded-full shadow-lg"
+        onClick={() => setOpenConnection(true)}
+        title="Relay settings"
+        aria-label="Relay settings"
+      >
+        <Wifi className="h-5 w-5" />
+      </Button>
+
+      <ConnectionDrawer isOpen={openConnection} onClose={() => setOpenConnection(false)} />
     </div>
   );
 };

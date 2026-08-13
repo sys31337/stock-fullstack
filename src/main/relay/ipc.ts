@@ -22,6 +22,7 @@ export function registerRelayIpc(): void {
   ipcMain.handle('relay:get-config', () => manager.getConfig());
   ipcMain.handle('relay:get-hosts', () => manager.getHosts());
   ipcMain.handle('relay:reconnect', (_event, cfg) => manager.reconnect(cfg));
+  ipcMain.handle('relay:connect-host', (_event, hostId: string, password?: string) => manager.connectToHost(hostId, password));
   ipcMain.handle('relay:save-config', (_event, cfg) => manager.saveConfig(cfg));
   ipcMain.handle('relay:restart', () => manager.restartApp());
 }

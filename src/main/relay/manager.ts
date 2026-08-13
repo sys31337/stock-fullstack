@@ -72,8 +72,8 @@ class RelayManager {
     return this.config;
   }
 
-  getHosts(): RelayHostInfo[] {
-    return this.client?.getHosts() ?? [];
+  getHosts(): Promise<RelayHostInfo[]> {
+    return this.client?.listHosts() ?? Promise.resolve([]);
   }
 
   getStateSnapshot(): RelayStateSnapshot {
@@ -93,6 +93,36 @@ class RelayManager {
     this.stopClient();
     this.startClient();
     return { ok: true };
+  }
+
+  /**
+   * Client mode: link to a specific host (and optionally supply its access
+   * password). Re-registers with the relay and re-points the local proxy.
+   */
+  async connectToHost(hostId: string, accessPassword?: string): Promise<{ ok: boolean; error?: string }> {
+    if (this.config.mode !== 'client') {
+      return { ok: false, error: 'NOT_CLIENT_MODE' };
+    }
+    if (!this.client) {
+      return { ok: false, error: 'RELAY_NOT_CONNECTED' };
+    }
+    this.config = { ...this.config, targetHostId: hostId, hostPassword: accessPassword ?? '' };
+    this.persistConfig().catch(() => {});
+    this.clientProxy?.setTargetHostId(hostId);
+    try {
+      await this.client.setPayload({
+        role: 'client',
+        clientId: this.config.clientId,
+        hostId,
+        accessPassword: accessPassword || undefined,
+        meta: { name: this.config.hostName || 'SoluStock Client' },
+      });
+      this.buildSnapshot();
+      return { ok: true };
+    } catch (error) {
+      this.buildSnapshot();
+      return { ok: false, error: error instanceof Error ? error.message : 'CONNECT_HOST_FAILED' };
+    }
   }
 
   async saveConfig(partial: Partial<RelayConfig>): Promise<{ ok: boolean; error?: string }> {
@@ -124,8 +154,9 @@ class RelayManager {
         : {
           role: 'client' as const,
           clientId: this.config.clientId,
-          hostId: this.config.targetHostId,
-          meta: { name: this.config.hostName },
+          hostId: this.config.targetHostId || undefined,
+          accessPassword: this.config.targetHostId ? this.config.hostPassword || undefined : undefined,
+          meta: { name: this.config.hostName || 'SoluStock Client' },
         };
 
     const client = new RelayClient({
@@ -143,7 +174,7 @@ class RelayManager {
       new HostBridge(client, this.config.localApiUrl);
     } else {
       if (!this.config.targetHostId) {
-        console.warn('[relay] client mode without RELAY_TARGET_HOST — waiting for configuration');
+        console.warn('[relay] client mode without RELAY_TARGET_HOST — waiting for host selection');
       }
       this.clientProxy = new ClientProxy(client, this.config.clientPort, this.config.targetHostId);
       this.clientProxy.start();
@@ -172,11 +203,12 @@ class RelayManager {
   }
 
   private buildSnapshot(): void {
+    const state = this.client?.getState() ?? 'idle';
     this.snapshot = {
       mode: this.config.mode,
       url: this.config.url,
-      state: this.client?.getState() ?? 'idle',
-      connected: this.client?.isRegistered() ?? false,
+      state,
+      connected: state === 'connected' || state === 'registered',
       registeredClientId: this.client?.isRegistered()
         ? (this.config.mode === 'host' ? this.config.hostId : this.config.clientId)
         : '',

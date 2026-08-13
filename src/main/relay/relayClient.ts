@@ -32,6 +32,8 @@ interface PendingRequest {
 
 const noop = (): void => {};
 
+const DEFAULT_TRANSPORTS = ['websocket', 'polling'] as const;
+
 /**
  * socket.io client used by BOTH the Electron main process and the React Native
  * app. It talks the exact protocol implemented by solustock-relay and exposes
@@ -49,6 +51,8 @@ export class RelayClient {
   private hosts: RelayHostInfo[] = [];
 
   private lastRegisterError = '';
+
+  private lastConnectError = '';
 
   private closed = false;
 
@@ -84,13 +88,53 @@ export class RelayClient {
     return this.lastRegisterError;
   }
 
+  getLastConnectError(): string {
+    return this.lastConnectError;
+  }
+
+  getPayload(): RegisterPayload {
+    return this.opts.payload;
+  }
+
+  setUrl(url: string): void {
+    this.opts.url = url;
+  }
+
+  setToken(token: string): void {
+    this.opts.token = token;
+  }
+
+  /** Update the registration payload (e.g. pick a host) and re-register. */
+  setPayload(partial: Partial<RegisterPayload>): Promise<void> {
+    this.opts.payload = { ...this.opts.payload, ...partial };
+    if (this.socket?.connected) {
+      return this.register();
+    }
+    return Promise.resolve();
+  }
+
+  /**
+   * Full teardown that allows reconnecting afterwards (e.g. switching to a
+   * different relay server). Unlike disconnect(), which is final.
+   */
+  reset(): void {
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+    }
+    this.closed = false;
+    this.rejectAll(new Error('RELAY_RESET'));
+    this.setState('idle');
+  }
+
   connect(): void {
     if (this.closed) throw new Error('RelayClient is closed');
     if (this.socket) return;
 
     this.setState('connecting');
     const options: Record<string, unknown> = {
-      transports: ['websocket'],
+      transports: [...DEFAULT_TRANSPORTS],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -103,6 +147,7 @@ export class RelayClient {
     this.socket = socket;
 
     socket.on('connect', () => {
+      this.lastConnectError = '';
       this.setState('connected');
       this.register().catch(() => {});
     });
@@ -112,6 +157,7 @@ export class RelayClient {
         socket.disconnect();
         this.setState('auth-error');
       } else {
+        this.lastConnectError = err.message || 'connection failed';
         this.setState('error');
       }
     });
@@ -136,6 +182,11 @@ export class RelayClient {
     this.socket?.disconnect();
     this.socket = null;
     this.setState('closed');
+  }
+
+  ensureConnected(): void {
+    if (this.closed || this.socket) return;
+    this.connect();
   }
 
   /**
@@ -202,6 +253,13 @@ export class RelayClient {
 
   private register(): Promise<void> {
     if (!this.socket) return Promise.resolve();
+    const { role, hostId } = this.opts.payload;
+    if (role === 'client' && (!hostId || hostId.length === 0)) {
+      // Connected but not linked to a host yet — can still list hosts.
+      this.lastRegisterError = '';
+      this.setState('connected');
+      return Promise.resolve();
+    }
     return new Promise<void>((resolve, reject) => {
       this.socket?.emit(RELAY_EVENTS.REGISTER, this.opts.payload, (ack: Ack) => {
         if (ack?.ok) {

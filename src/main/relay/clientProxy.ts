@@ -33,6 +33,14 @@ export class ClientProxy {
     this.targetHostId = targetHostId;
   }
 
+  getTargetHostId(): string {
+    return this.targetHostId;
+  }
+
+  setTargetHostId(hostId: string): void {
+    this.targetHostId = hostId;
+  }
+
   start(): http.Server {
     if (this.server) return this.server;
     this.server = http.createServer((req, res) => {

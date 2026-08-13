@@ -18,6 +18,14 @@ import {
 import { Button } from '@web/shared/components/ui/button';
 import { Input } from '@web/shared/components/ui/input';
 import { Label } from '@web/shared/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@web/shared/components/ui/dialog';
 import { cn } from '@web/shared/utils/cn';
 import type { RelayConfigDto, RelayHostInfo, RelayStateSnapshot } from '../../../../preload/relay';
 
@@ -25,7 +33,7 @@ const STATE_LABEL: Record<string, string> = {
   idle: 'Idle',
   connecting: 'Connecting…',
   connected: 'Connected',
-  registered: 'Registered',
+  registered: 'Linked to host',
   'auth-error': 'Auth error (bad relay token)',
   error: 'Error',
   closed: 'Closed',
@@ -51,6 +59,11 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
   const [copied, setCopied] = useState(false);
   const [section, setSection] = useState<SectionId>('status');
 
+  const [dialogHost, setDialogHost] = useState<RelayHostInfo | null>(null);
+  const [dialogPassword, setDialogPassword] = useState('');
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState('');
+
   useEffect(() => {
     if (!isOpen) return;
     setSection('status');
@@ -58,7 +71,7 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
     const api = window.api.relay;
     api.getState().then((s) => mounted && setState(s));
     api.getConfig().then((c) => mounted && setConfig(c));
-    api.getHosts().then((h) => mounted && setHosts(h));
+    api.getHosts().then((h) => mounted && setHosts(h)).catch(() => {});
     const offState = api.onStateChange((s) => mounted && setState(s));
     const offHosts = api.onHosts((h) => mounted && setHosts(h));
     return () => {
@@ -81,17 +94,17 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
 
   const [url, setUrl] = useState(form.url);
   const [token, setToken] = useState(form.token);
-  const [targetHostId, setTargetHostId] = useState(form.targetHostId);
   const [hostName, setHostName] = useState(form.hostName);
   const [hostPassword, setHostPassword] = useState(form.hostPassword);
 
   useEffect(() => {
     setUrl(form.url);
     setToken(form.token);
-    setTargetHostId(form.targetHostId);
     setHostName(form.hostName);
     setHostPassword(form.hostPassword);
   }, [form]);
+
+  const targetHostId = state?.targetHostId ?? form.targetHostId;
 
   const qrPayload = useMemo(() => {
     if (state?.mode !== 'host') return null;
@@ -111,11 +124,77 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
   const applyAndReconnect = async () => {
     setSaving(true);
     setMessage(null);
-    const result = await window.api.relay.reconnect({ url, token, targetHostId, hostName, hostPassword });
+    const payload = isHost
+      ? { url, token, hostName, hostPassword }
+      : { url, token };
+    const result = await window.api.relay.reconnect(payload);
     setSaving(false);
     setMessage(result.ok
       ? { ok: true, text: 'Reconnecting with the new settings…' }
       : { ok: false, text: result.error || 'Failed to reconnect' });
+  };
+
+  const waitForSocket = async (timeoutMs = 10000): Promise<void> => {
+    const started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      const s = await window.api.relay.getState();
+      if (s.state === 'connected' || s.state === 'registered') return;
+      if (s.state === 'auth-error') throw new Error('Auth error (bad relay token)');
+      await new Promise<void>((resolve) => setTimeout(resolve, 150));
+    }
+    throw new Error('Could not reach the relay — check the URL and network');
+  };
+
+  const connectAndListHosts = async () => {
+    setSaving(true);
+    setMessage(null);
+    const result = await window.api.relay.reconnect({ url, token, targetHostId: '', hostPassword: '' });
+    if (!result.ok) {
+      setSaving(false);
+      setMessage({ ok: false, text: result.error || 'Failed to connect' });
+      return;
+    }
+    try {
+      await waitForSocket();
+      const list = await window.api.relay.getHosts();
+      setHosts(list);
+      setSection('hosts');
+      setMessage({ ok: true, text: list.length > 0 ? 'Connected. Pick a host below.' : 'Connected, but no hosts are online.' });
+    } catch (e) {
+      setMessage({ ok: false, text: e instanceof Error ? e.message : 'Could not list hosts' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openHostDialog = (h: RelayHostInfo) => {
+    setDialogHost(h);
+    setDialogPassword(targetHostId === h.clientId ? hostPassword : '');
+    setDialogError('');
+  };
+
+  const closeHostDialog = () => {
+    setDialogHost(null);
+    setDialogPassword('');
+    setDialogError('');
+  };
+
+  const confirmHost = async () => {
+    if (!dialogHost) return;
+    setDialogBusy(true);
+    setDialogError('');
+    const result = await window.api.relay.connectHost(dialogHost.clientId, dialogPassword);
+    setDialogBusy(false);
+    if (result.ok) {
+      closeHostDialog();
+      setMessage({ ok: true, text: `Linked to ${dialogHost.name || dialogHost.clientId}.` });
+    } else {
+      setDialogError(
+        result.error === 'INVALID_HOST_PASSWORD'
+          ? 'Wrong host access password'
+          : result.error || 'Failed to link to host',
+      );
+    }
   };
 
   const saveAndRestart = async (mode: 'host' | 'client') => {
@@ -339,28 +418,34 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
                                 Leave empty for open access. Clients must enter this password to link to this host.
                               </p>
                             </div>
+                            <div className="flex items-center gap-2 pt-1">
+                              <Button onClick={applyAndReconnect} disabled={saving}>
+                                {saving ? 'Applying…' : 'Apply & reconnect'}
+                              </Button>
+                            </div>
                           </>
                         ) : (
-                          <div className="space-y-1.5">
-                            <Label htmlFor="target-host">Target Host ID</Label>
-                            <Input id="target-host" value={targetHostId} onChange={(e) => setTargetHostId(e.target.value)} placeholder="host id" list="relay-hosts" />
-                            <datalist id="relay-hosts">
-                              {hosts.map((h) => (
-                                <option key={h.clientId} value={h.clientId}>
-                                  {h.name || h.clientId}
-                                </option>
-                              ))}
-                            </datalist>
-                            <p className="text-xs text-muted-foreground">
-                              Pick a host in the "Online hosts" section to fill this in automatically.
-                            </p>
-                          </div>
+                          <>
+                            <div className="space-y-1.5">
+                              <Label>Linked host</Label>
+                              <div className="rounded-lg border border-border bg-muted px-3 py-2 text-sm">
+                                {targetHostId ? (
+                                  <span className="font-mono">{targetHostId}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">No host selected yet</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Pick a host from the "Online hosts" section and enter its access password.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 pt-1">
+                              <Button onClick={connectAndListHosts} disabled={saving || !url || !token}>
+                                {saving ? 'Connecting…' : 'Connect & list hosts'}
+                              </Button>
+                            </div>
+                          </>
                         )}
-                        <div className="flex items-center gap-2 pt-1">
-                          <Button onClick={applyAndReconnect} disabled={saving}>
-                            {saving ? 'Applying…' : 'Apply & reconnect'}
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -428,7 +513,7 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
                               <button
                                 type="button"
                                 disabled={isHost}
-                                onClick={() => !isHost && setTargetHostId(h.clientId)}
+                                onClick={() => !isHost && openHostDialog(h)}
                                 className={cn(
                                   'flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors',
                                   selected
@@ -504,6 +589,43 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
           </main>
         </div>
       </div>
+
+      <Dialog open={!!dialogHost} onOpenChange={(open) => !open && closeHostDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogHost?.name || dialogHost?.clientId}</DialogTitle>
+            <DialogDescription>
+              {dialogHost?.locked
+                ? 'This host is password protected. Enter its access password to link this device.'
+                : 'Enter the host access password (leave empty if none was set).'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="host-access-password">Host access password</Label>
+              <Input
+                id="host-access-password"
+                type="password"
+                value={dialogPassword}
+                onChange={(e) => setDialogPassword(e.target.value)}
+                placeholder={dialogHost?.locked ? 'required' : 'optional'}
+                disabled={dialogBusy}
+              />
+            </div>
+            {dialogError && (
+              <div className="text-sm text-destructive">{dialogError}</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeHostDialog} disabled={dialogBusy}>
+              Cancel
+            </Button>
+            <Button onClick={confirmHost} disabled={dialogBusy || (dialogHost?.locked && !dialogPassword)}>
+              {dialogBusy ? 'Linking…' : 'Link to host'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
