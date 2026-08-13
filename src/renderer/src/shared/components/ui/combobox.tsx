@@ -47,7 +47,9 @@ export function Combobox({
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (target instanceof Element && target.closest('[data-toast-viewport]')) return
+      if (containerRef.current && !containerRef.current.contains(target)) {
         setOpen(false)
       }
     }

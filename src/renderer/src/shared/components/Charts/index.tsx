@@ -22,6 +22,24 @@ const compact = (n: number): string => {
   return `${Math.round(n)}`;
 };
 
+const smoothPath = (pts: { x: number; y: number }[]): string => {
+  if (pts.length === 0) return '';
+  if (pts.length === 1) return `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+  let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return d;
+};
+
 interface TrendChartProps {
   data: RevenuePoint[];
   blurred?: boolean;
@@ -42,8 +60,10 @@ const TrendChart: React.FC<TrendChartProps> = ({ data, blurred }) => {
 
   const points = data.map((d, i) => ({ x: x(i), y: y(d.total) }));
 
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const areaPath = `${linePath} L${points[points.length - 1].x.toFixed(1)},${pad.top + innerH} L${points[0].x.toFixed(1)},${pad.top + innerH} Z`;
+  const linePath = smoothPath(points);
+  const areaPath = points.length > 1
+    ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${pad.top + innerH} L${points[0].x.toFixed(1)},${pad.top + innerH} Z`
+    : '';
 
   const gridLines = [0, 1, 2, 3, 4].map((i) => {
     const gv = (maxVal / 4) * i;
@@ -80,10 +100,6 @@ const TrendChart: React.FC<TrendChartProps> = ({ data, blurred }) => {
 
       <path d={areaPath} fill="url(#trendFill)" />
       <path d={linePath} fill="none" stroke="hsl(160 84% 39%)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-
-      {points.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="3" fill="hsl(var(--card))" stroke="hsl(160 84% 39%)" strokeWidth="2" />
-      ))}
 
       {data.map((d, i) =>
         i % labelStep === 0 || i === data.length - 1 ? (

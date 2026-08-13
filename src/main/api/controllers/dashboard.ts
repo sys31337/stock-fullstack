@@ -8,6 +8,8 @@ import StockMovement from '@api/models/stockMovement';
 import Settings from '@api/models/settings';
 import { IUserIdRequest } from '@api/types/common';
 
+const SALES_TYPES = ['SALE', 'DELIVERY'];
+
 const getWarehouseFilter = (req: IUserIdRequest): any => {
   const { warehouse } = req.query;
   const warehouseFilter: any = {};
@@ -52,10 +54,10 @@ const computeKpis = async (warehouseFilter: any, today: Date) => {
     Product.countDocuments({}),
     Customer.countDocuments({ type: 'Client' }),
     Customer.countDocuments({ type: 'Supplier' }),
-    Bill.countDocuments({ ...warehouseFilter, type: 'SALE', createdAt: { $gte: today } }),
+    Bill.countDocuments({ ...warehouseFilter, type: { $in: SALES_TYPES }, createdAt: { $gte: today } }),
     Bill.countDocuments({ ...warehouseFilter, type: 'BUY', createdAt: { $gte: today } }),
     Bill.aggregate([
-      { $match: { ...warehouseFilter, type: 'SALE', createdAt: { $gte: today } } },
+      { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, createdAt: { $gte: today } } },
       { $group: { _id: null, total: { $sum: '$orderTotalTTC' } } },
     ]),
     Bill.aggregate([
@@ -63,11 +65,11 @@ const computeKpis = async (warehouseFilter: any, today: Date) => {
       { $group: { _id: null, total: { $sum: '$orderTotalTTC' } } },
     ]),
     Bill.aggregate([
-      { $match: { ...warehouseFilter, type: 'SALE', createdAt: { $gte: yesterday, $lt: today } } },
+      { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, createdAt: { $gte: yesterday, $lt: today } } },
       { $group: { _id: null, total: { $sum: '$orderTotalTTC' } } },
     ]),
     Bill.aggregate([
-      { $match: { ...warehouseFilter, type: 'SALE', status: { $ne: 'cancelled' } } },
+      { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$orderTotalTTC' } } },
     ]),
     Bill.aggregate([
@@ -149,19 +151,19 @@ const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: N
     const [kpis, revenueTrendAgg, salesByCategoryAgg, topProductsAgg, recentMovements] = await Promise.all([
       computeKpis(warehouseFilter, today),
       Bill.aggregate([
-        { $match: { ...warehouseFilter, type: 'SALE', status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
+        { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
         { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, total: { $sum: '$orderTotalTTC' } } },
         { $sort: { _id: 1 } },
       ]),
       Bill.aggregate([
-        { $match: { ...warehouseFilter, type: 'SALE', status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
+        { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
         { $lookup: { from: 'categories', localField: 'category', foreignField: '_id', as: 'cat' } },
         { $unwind: { path: '$cat', preserveNullAndEmptyArrays: true } },
         { $group: { _id: '$cat.name', total: { $sum: '$orderTotalTTC' } } },
         { $sort: { total: -1 } },
       ]),
       Bill.aggregate([
-        { $match: { ...warehouseFilter, type: 'SALE', status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
+        { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: startDate } } },
         { $unwind: '$products' },
         {
           $group: {

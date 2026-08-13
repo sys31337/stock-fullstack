@@ -13,8 +13,9 @@ const ToastViewport = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Viewport
     ref={ref}
+    data-toast-viewport=""
     className={cn(
-      "fixed top-0 z-[300] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+      "fixed top-0 z-[300] flex max-h-screen w-full flex-col-reverse p-4 pointer-events-none sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
       className
     )}
     {...props}
@@ -163,15 +164,16 @@ export const ToastStateProvider = ({ children }: { children: React.ReactNode }) 
   return (
     <ToastStateContext.Provider value={{ toasts, toast, dismiss }}>
       {children}
-      <ToastViewport />
-      {toasts.map((t) => (
-        <Toast key={t.id} variant={t.variant as "default" | "destructive" | undefined} className="flex flex-col gap-1">
-          {t.title && <ToastTitle>{t.title}</ToastTitle>}
-          {t.description && <ToastDescription>{t.description}</ToastDescription>}
-          {t.action}
-          <ToastClose onClick={() => dismiss(t.id)} />
-        </Toast>
-      ))}
+      <ToastViewport>
+        {toasts.map((t) => (
+          <Toast key={t.id} data-toast-viewport="" variant={t.variant as "default" | "destructive" | undefined} className="flex flex-col gap-1">
+            {t.title && <ToastTitle>{t.title}</ToastTitle>}
+            {t.description && <ToastDescription>{t.description}</ToastDescription>}
+            {t.action}
+            <ToastClose onClick={() => dismiss(t.id)} />
+          </Toast>
+        ))}
+      </ToastViewport>
     </ToastStateContext.Provider>
   )
 }

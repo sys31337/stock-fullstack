@@ -10,7 +10,13 @@ const PopoverTrigger = PopoverPrimitive.Trigger
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
->(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
+>(({ className, align = "center", sideOffset = 4, onPointerDownOutside, onInteractOutside, ...props }, ref) => {
+  const isToastEvent = (event: Event) => {
+    const target = event.target
+    return target instanceof Element && !!target.closest('[data-toast-viewport]')
+  }
+
+  return (
   <PopoverPrimitive.Portal>
     <PopoverPrimitive.Content
       ref={ref}
@@ -20,10 +26,25 @@ const PopoverContent = React.forwardRef<
         "z-[250] w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none pointer-events-auto data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
+      onPointerDownOutside={(event) => {
+        if (isToastEvent(event)) {
+          event.preventDefault()
+          return
+        }
+        onPointerDownOutside?.(event)
+      }}
+      onInteractOutside={(event) => {
+        if (isToastEvent(event)) {
+          event.preventDefault()
+          return
+        }
+        onInteractOutside?.(event)
+      }}
       {...props}
     />
   </PopoverPrimitive.Portal>
-))
+  )
+})
 PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
 export { Popover, PopoverTrigger, PopoverContent }
