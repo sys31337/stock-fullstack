@@ -127,8 +127,10 @@ const ReceiptBill: React.FC = () => {
   @page { size: 210mm 297mm; margin: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; width: 210mm; height: 297mm; }
-  body { display: flex; flex-direction: column; }
-  table { border-collapse: collapse; }
+  body { display: flex; flex-direction: column; padding: 20px; font-family: sans-serif; font-size: 10px; line-height: 1.5; color: #111; }
+  p { margin: 0; }
+  table { border-collapse: collapse; max-width: 100%; }
+  td, th { padding: 2px 4px; vertical-align: top; }
   tr, th, td { break-inside: avoid; page-break-inside: avoid; }
   h1, h2, h3, h4 { break-after: avoid; }
   thead { display: table-header-group; }
@@ -136,7 +138,7 @@ const ReceiptBill: React.FC = () => {
   img { max-width: 100%; }
 </style>
 </head>
-<body>${content}</body>
+<body class="bill-document">${content}</body>
 </html>`)
     iframeDoc.close()
     iframe.contentWindow?.focus()
@@ -236,8 +238,8 @@ const ReceiptBill: React.FC = () => {
         {mode === 'view' && (
           <div className="p-6 print:p-0 mb-4 print:mb-0">
             <div
-              className="mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0"
-              style={{ width: '210mm', maxWidth: '100%', minHeight: '297mm' }}
+              className="bill-document mx-auto bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none print:mx-0"
+              style={{ width: '210mm', maxWidth: '100%', minHeight: '297mm', padding: '20px', boxSizing: 'border-box' }}
               dangerouslySetInnerHTML={{ __html: data?.content || fullHtml(data!, settings || undefined) }}
             />
           </div>

@@ -1,17 +1,14 @@
 import React, { useRef, useCallback, useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
-import { Table } from '@tiptap/extension-table'
-import { TableRow } from '@tiptap/extension-table-row'
-import { TableCell } from '@tiptap/extension-table-cell'
-import { TableHeader } from '@tiptap/extension-table-header'
 import { Image as ImageExtension } from '@tiptap/extension-image'
 import { Underline } from '@tiptap/extension-underline'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { Highlight } from '@tiptap/extension-highlight'
 import { Link } from '@tiptap/extension-link'
-import { TextStyle } from '@tiptap/extension-text-style'
+import { TextStyle, FontSize, FontFamily, LineHeight } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import { StyledTable, StyledTableCell, StyledTableHeader, TableRow } from './tableExtensions'
 import dayjs from 'dayjs'
 import { t } from 'i18next'
 import { price, asLetters } from '@web/shared/functions/words'
@@ -61,12 +58,26 @@ function formatInvoiceNumber(num: number | string, year: string): string {
   return `${num}/${year}`
 }
 
+function esc(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function fullHtml(bill: IBill, settings?: SettingsData): string {
   const customer = bill.customer as any
   const clientName = customer && customer._id !== defaultId ? customer?.fullname : t('counter')
   const isInvoice = bill.type === 'SALE'
   const showTownCity = customer?.town || customer?.city
   const tvaEnabled = settings?.tvaEnabled ?? true
+
+  const companyName = esc(settings?.companyName || '')
+  const companyAddress = settings?.companyAddress
+    ? `${esc(settings.companyAddress)}${settings?.wilaya ? ` - ${esc(settings.wilaya)}` : ''}`
+    : esc(settings?.wilaya || '')
 
   if (isInvoice) {
     const billYear = dayjs(bill.billDate).format('YYYY')
@@ -75,24 +86,24 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
     const taxAmount = Number(bill.orderTotalHT) * tvaRate / 100
     const stampAmount = settings?.stamp ?? 0
     const totalTTC = Number(bill.orderTotalHT) + taxAmount - Number(bill.orderPaid || 0)
-    const tvaRow = tvaEnabled
-      ? `<div style="display:flex;flex-direction:row">
-        <div style="width:50%;border:0.3px solid #000;border-top:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">TVA:</span></div>
-        <div style="width:50%;border:0.3px solid #000;border-top:0;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${taxAmount}`)}</span></div>
-      </div>`
-      : ''
 
     const productRows = bill.products.map((p: any, k: number) => {
       const total = Number(p.buyPrice) * Number(p.quantity) * Number(p.stack)
-      return `<tr style="flex-direction:row">
-        <td style="width:5%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">${k + 1}</td>
-        <td style="width:20%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">${p.barCode}</td>
-        <td style="width:35%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">${p.productName}</td>
-        <td style="width:10%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">${p.quantity}</td>
-        <td style="width:14%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">${price(`${p.buyPrice}`)}</td>
-        <td style="width:16%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">${price(`${total}`)}</td>
+      return `<tr>
+        <td align="center" style="width:5%;border:0.5px solid #000;padding:3px;font-size:9px">${k + 1}</td>
+        <td align="center" style="width:20%;border:0.5px solid #000;padding:3px;font-size:9px">${esc(p.barCode)}</td>
+        <td align="center" style="width:35%;border:0.5px solid #000;padding:3px;font-size:9px">${esc(p.productName)}</td>
+        <td align="center" style="width:10%;border:0.5px solid #000;padding:3px;font-size:9px">${Number(p.quantity)}</td>
+        <td align="center" style="width:14%;border:0.5px solid #000;padding:3px;font-size:9px">${price(`${p.buyPrice}`)}</td>
+        <td align="center" style="width:16%;border:0.5px solid #000;padding:3px;font-size:9px">${price(`${total}`)}</td>
       </tr>`
     }).join('')
+
+    const tvaRow = tvaEnabled ? `<tr>
+      <td>&nbsp;</td>
+      <td align="right" style="width:22.5%;border:0.3px solid #000;border-top:0;padding:3px;font-size:9px"><b>TVA:</b></td>
+      <td align="right" style="width:22.5%;border:0.3px solid #000;border-left:0;border-top:0;padding:3px;font-size:9px">${price(`${taxAmount}`)}</td>
+    </tr>` : ''
 
     const contactItems: {l:string;v:string}[] = []
     if (settings?.companyPhone) contactItems.push({ l:'T\u00E9l:', v: settings.companyPhone })
@@ -107,169 +118,161 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
       for (let i = 0; i < contactItems.length; i += perRow) {
         const rowItems = contactItems.slice(i, i + perRow)
         const cols = rowItems.map((item, ri) =>
-          `<div style="${ri > 0 ? 'border-left:0.3px solid #000;' : ''}padding:2px 6px;width:${100 / perRow}%"><span style="font-size:9px;font-weight:bold">${item.l} </span><span style="font-size:9px">${item.v}</span></div>`
+          `<td style="${ri > 0 ? 'border-left:0.3px solid #000;' : ''}padding:2px 6px;width:${100 / perRow}%;font-size:9px;border-top:0.3px solid #000"><b>${item.l} </b>${esc(item.v)}</td>`
         ).join('')
-        rows.push(`<div style="display:flex;flex-direction:row;border-top:0.3px solid #000;font-size:9px">${cols}</div>`)
+        rows.push(`<tr>${cols}</tr>`)
       }
-      contactFooter = `<div style="margin-top:4px">${rows.join('')}</div>`
+      contactFooter = `<table style="width:100%;border-collapse:collapse;margin-top:4px">${rows.join('')}</table>`
     }
 
-    return `<div style="padding:20px;font-family:'Roboto Condensed',sans-serif;font-size:9px;line-height:1.4;color:#111">
-      <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:bold">${settings?.companyName || ''}</div>
-        <div style="font-size:9px;text-align:right">${settings?.companyAddress ? `${settings.companyAddress} - ${settings.wilaya || ''}` : settings?.wilaya || ''}</div>
-      </div>
-      <table style="width:100%;margin-bottom:12px;border-collapse:collapse;font-size:9px">
-        <tr><td style="width:70%"></td><td style="width:30%;text-align:right">RC: ${settings?.rc || ''}</td></tr>
-        <tr><td style="width:70%;font-size:9px">Compte: ${settings?.accountNumber || ''}</td><td style="width:30%;text-align:right;border-top:0.5px dashed #000">NIF: ${settings?.nif || ''}</td></tr>
-        <tr><td style="width:70%;font-size:9px">RIB: ${settings?.rib || ''}</td><td style="width:30%;text-align:right;border-top:0.5px dashed #000">Article: ${settings?.articleNumber || ''}</td></tr>
-      </table>
-      <hr style="border:none;border-bottom:1px solid #000;margin-bottom:10px" />
-      <div style="display:flex;flex-direction:row;align-items:center;padding:5px 0;border-bottom:0.5px solid #000;margin-bottom:8px">
-        <div style="width:41%"><div style="font-size:43px;font-weight:bold">FACTURE</div></div>
-        <div style="width:27%;text-align:right"><span style="font-size:16px;font-weight:bold">N\u00B0: ${formatInvoiceNumber(bill.orderId, billYear)}</span></div>
-        <div style="width:31%;text-align:right"><span style="font-size:16px;font-weight:bold">${settings?.wilaya || ''} le ${billDayFormatted}</span></div>
-      </div>
-      <div style="height:8px"></div>
-      <table style="width:100%;margin-bottom:10px;border-collapse:collapse;font-size:9px">
-        <tr>
-          <td style="width:21.1%;font-weight:bold;font-size:9px">Paiement:</td>
-          <td style="width:28.9%;font-size:9px">${bill.paymentMethod || ''}</td>
-          <td style="width:21.1%;font-weight:bold;font-size:9px;text-align:right">RC:</td>
-          <td style="width:28.9%;font-size:9px;padding-left:4px">${customer?.rc || ''}</td>
-        </tr>
-        <tr>
-          <td style="width:21.1%;font-weight:bold;font-size:9px">Client:</td>
-          <td style="width:28.9%;font-size:9px">${clientName}</td>
-          <td style="width:21.1%;font-weight:bold;font-size:9px;text-align:right">NIF:</td>
-          <td style="width:28.9%;font-size:9px;padding-left:4px">${customer?.nif || ''}</td>
-        </tr>
-        <tr>
-          <td style="width:50%;font-weight:bold;font-size:9px" colspan="2">${showTownCity ? `${customer?.town ? customer.town.toUpperCase() : ''}${customer?.town && customer?.city ? ' W ' : ''}${customer?.city ? customer.city.toUpperCase() : ''}` : ''}</td>
-          <td style="width:21.1%;font-weight:bold;font-size:9px;text-align:right">Article:</td>
-          <td style="width:28.9%;font-size:9px;padding-left:4px">${customer?.nar || ''}</td>
-        </tr>
-      </table>
-      <div style="height:6px"></div>
-      <table style="width:100%;border-collapse:collapse;border-style:solid;border-width:0.5px;border-right-width:0;border-bottom-width:0;margin-bottom:10px">
-        <thead>
-          <tr style="background-color:#d6dfe0">
-            <th style="width:5%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">#</th>
-            <th style="width:20%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">Ref</th>
-            <th style="width:35%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">D\u00E9signation</th>
-            <th style="width:10%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">Qt\u00E9</th>
-            <th style="width:14%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">PU</th>
-            <th style="width:16%;border-style:solid;border-width:0.5px;border-left-width:0;border-top-width:0;padding:3px;font-size:9px;text-align:center">Total</th>
-          </tr>
-        </thead>
-        <tbody>${productRows}</tbody>
-      </table>
-      <div style="display:flex;flex-direction:row;justify-content:flex-end;margin-bottom:8px">
-        <div style="display:flex;flex-direction:row;justify-content:flex-end;width:40%">
-          <span style="font-size:9px;font-weight:bold">Montant report\u00E9:  </span>
-          <span style="font-size:9px">${price(`${bill.orderTotalHT}`)}</span>
-        </div>
-      </div>
-      <div style="margin-top:20px">
-        <div style="display:flex;flex-direction:row;margin-bottom:16px">
-          <div style="width:60%;padding-right:8px">
-            <div style="font-size:9px;font-weight:bold">Arr\u00EAt\u00E9 la pr\u00E9sente facture</div>
-            <div style="font-size:9px;margin-top:2px">${asLetters(totalTTC)} TTC.</div>
-          </div>
-          <div style="width:40%;display:flex;flex-direction:column">
-            <div style="display:flex;flex-direction:row">
-              <div style="width:50%;border:0.3px solid #000;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">Total HT:</span></div>
-              <div style="width:50%;border:0.3px solid #000;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${bill.orderTotalHT}`)}</span></div>
-            </div>
-            ${tvaRow}
-            <div style="display:flex;flex-direction:row">
-              <div style="width:50%;border:0.3px solid #000;border-top:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">Timbre:</span></div>
-              <div style="width:50%;border:0.3px solid #000;border-top:0;border-left:0;padding:3px;text-align:right"><span style="font-size:9px">${price(`${stampAmount}`)}</span></div>
-            </div>
-            <div style="display:flex;flex-direction:row">
-              <div style="width:50%;border:0.3px solid #000;border-top:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">Net \u00E0 payer:</span></div>
-              <div style="width:50%;border:0.3px solid #000;border-top:0;border-left:0;padding:3px;text-align:right"><span style="font-size:9px;font-weight:bold">${price(`${totalTTC}`)}</span></div>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:12px">
-          <div style="font-size:14px;font-weight:bold">${settings?.companyName || ''}</div>
-          <div style="font-size:9px;margin-top:4px">${settings?.companyAddress ? `${settings.companyAddress} - ${settings.wilaya || ''}` : settings?.wilaya || ''}</div>
-        </div>
-        ${contactFooter}
-        ${bill.description ? `<div style="margin-top:8px;font-size:9px"><b>Notes:</b> ${bill.description}</div>` : ''}
-      </div>
-    </div>`
+    return `
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <td style="width:60%;font-size:11px;font-weight:bold">${companyName}</td>
+    <td align="right" style="width:40%;font-size:9px">${companyAddress}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:4px">
+  <tr>
+    <td style="width:70%;font-size:9px">&nbsp;</td>
+    <td align="right" style="width:30%;font-size:9px">RC: ${esc(settings?.rc || '')}</td>
+  </tr>
+  <tr>
+    <td style="width:70%;font-size:9px">Compte: ${esc(settings?.accountNumber || '')}</td>
+    <td align="right" style="width:30%;font-size:9px;border-top:0.5px dashed #000">NIF: ${esc(settings?.nif || '')}</td>
+  </tr>
+  <tr>
+    <td style="width:70%;font-size:9px">RIB: ${esc(settings?.rib || '')}</td>
+    <td align="right" style="width:30%;font-size:9px;border-top:0.5px dashed #000">Article: ${esc(settings?.articleNumber || '')}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:4px">
+  <tr><td style="border-top:1px solid #000">&nbsp;</td></tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <td style="width:41%;font-size:43px;font-weight:bold;padding-bottom:2px;border-bottom:0.5px solid #000">FACTURE</td>
+    <td align="right" style="width:27%;font-size:16px;font-weight:bold;padding-bottom:2px;border-bottom:0.5px solid #000;vertical-align:bottom">N\u00B0: ${formatInvoiceNumber(bill.orderId, billYear)}</td>
+    <td align="right" style="width:32%;font-size:16px;font-weight:bold;padding-bottom:2px;border-bottom:0.5px solid #000;vertical-align:bottom">${esc(settings?.wilaya || '')} le ${billDayFormatted}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <td style="width:21.1%;font-size:9px"><b>Paiement:</b></td>
+    <td style="width:28.9%;font-size:9px">${esc(bill.paymentMethod || '')}</td>
+    <td align="right" style="width:21.1%;font-size:9px"><b>RC:</b></td>
+    <td style="width:28.9%;font-size:9px;padding-left:4px">${esc(customer?.rc || '')}</td>
+  </tr>
+  <tr>
+    <td style="width:21.1%;font-size:9px"><b>Client:</b></td>
+    <td style="width:28.9%;font-size:9px">${esc(clientName)}</td>
+    <td align="right" style="width:21.1%;font-size:9px"><b>NIF:</b></td>
+    <td style="width:28.9%;font-size:9px;padding-left:4px">${esc(customer?.nif || '')}</td>
+  </tr>
+  <tr>
+    <td style="width:50%;font-size:9px" colspan="2">${showTownCity ? esc(`${customer?.town ? customer.town.toUpperCase() : ''}${customer?.town && customer?.city ? ' W ' : ''}${customer?.city ? customer.city.toUpperCase() : ''}`) : '&nbsp;'}</td>
+    <td align="right" style="width:21.1%;font-size:9px"><b>Article:</b></td>
+    <td style="width:28.9%;font-size:9px;padding-left:4px">${esc(customer?.nar || '')}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <th align="center" style="width:5%;border:0.5px solid #000;padding:3px;font-size:9px;background:#d6dfe0">#</th>
+    <th align="center" style="width:20%;border:0.5px solid #000;padding:3px;font-size:9px;background:#d6dfe0">Ref</th>
+    <th align="center" style="width:35%;border:0.5px solid #000;padding:3px;font-size:9px;background:#d6dfe0">D\u00E9signation</th>
+    <th align="center" style="width:10%;border:0.5px solid #000;padding:3px;font-size:9px;background:#d6dfe0">Qt\u00E9</th>
+    <th align="center" style="width:14%;border:0.5px solid #000;padding:3px;font-size:9px;background:#d6dfe0">PU</th>
+    <th align="center" style="width:16%;border:0.5px solid #000;padding:3px;font-size:9px;background:#d6dfe0">Total</th>
+  </tr>
+  ${productRows}
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <td style="width:60%">&nbsp;</td>
+    <td align="right" style="width:40%;font-size:9px"><b>Montant report\u00E9:</b> ${price(`${bill.orderTotalHT}`)}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <td style="width:55%;font-size:9px;vertical-align:top;padding-right:8px"><b>Arr\u00EAt\u00E9 la pr\u00E9sente facture</b><br/>${esc(asLetters(totalTTC))} TTC.</td>
+    <td align="right" style="width:22.5%;border:0.3px solid #000;padding:3px;font-size:9px"><b>Total HT:</b></td>
+    <td align="right" style="width:22.5%;border:0.3px solid #000;border-left:0;padding:3px;font-size:9px">${price(`${bill.orderTotalHT}`)}</td>
+  </tr>
+  ${tvaRow}
+  <tr>
+    <td>&nbsp;</td>
+    <td align="right" style="width:22.5%;border:0.3px solid #000;border-top:0;padding:3px;font-size:9px"><b>Timbre:</b></td>
+    <td align="right" style="width:22.5%;border:0.3px solid #000;border-left:0;border-top:0;padding:3px;font-size:9px">${price(`${stampAmount}`)}</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td align="right" style="width:22.5%;border:0.3px solid #000;border-top:0;padding:3px;font-size:9px"><b>Net \u00E0 payer:</b></td>
+    <td align="right" style="width:22.5%;border:0.3px solid #000;border-left:0;border-top:0;padding:3px;font-size:9px"><b>${price(`${totalTTC}`)}</b></td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-top:10px">
+  <tr>
+    <td style="width:60%;font-size:14px;font-weight:bold">${companyName}</td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td style="width:60%;font-size:9px">${companyAddress}</td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+${contactFooter}
+${bill.description ? `<table style="width:100%;border-collapse:collapse;margin-top:6px"><tr><td style="font-size:9px"><b>Notes:</b> ${esc(bill.description)}</td></tr></table>` : ''}`
   }
 
   const productRows = bill.products.map((p: any, k: number) => {
     const productTotal = Number(p.buyPrice) * Number(p.quantity) * Number(p.stack)
     const productTva = tvaEnabled ? Number(p.buyPrice) * Number(p.quantity) * Number(p.stack) * Number(p.tva || 0) / 100 : 0
-    return `<tr style="flex-direction:row">
-      <td style="width:5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${k + 1}</td>
-      <td style="width:15%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${p.barCode}</td>
-      <td style="width:35%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${p.productName}</td>
-      <td style="width:10%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${p.quantity} \u00D7 ${p.stack}</td>
-      <td style="width:10%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center;font-weight:bold">${price(`${p.buyPrice}`)}</td>
-      <td style="width:12.5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center;font-weight:bold">${price(`${productTotal}`)}</td>
-      <td style="width:12.5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center;font-weight:bold">${price(`${productTotal + productTva}`)}</td>
+    return `<tr>
+      <td align="center" style="width:5%;border:1px solid #000;padding:5px 0;font-size:10px">${k + 1}</td>
+      <td align="center" style="width:15%;border:1px solid #000;padding:5px 0;font-size:10px">${esc(p.barCode)}</td>
+      <td align="center" style="width:35%;border:1px solid #000;padding:5px 0;font-size:10px">${esc(p.productName)}</td>
+      <td align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px">${Number(p.quantity)} \u00D7 ${Number(p.stack)}</td>
+      <td align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${p.buyPrice}`)}</td>
+      <td align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${productTotal}`)}</td>
+      <td align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${productTotal + productTva}`)}</td>
     </tr>`
   }).join('')
 
   const billTypeLabel = bill.type === 'BUY' ? t('receiptBillId') : bill.type === 'ORDER' ? t('orderId') : t('deliveryBillId')
 
-  return `<div style="padding:20px;font-family:sans-serif;font-size:10px;line-height:1.5;color:#111">
-    <div style="display:flex;flex-direction:row;justify-content:space-between;align-items:center;font-size:12px">
-      <div>
-        <div style="display:flex;flex-direction:row;gap:2px">
-          <span style="font-weight:bold">${t('customer')}:</span>
-          <span>${clientName}</span>
-        </div>
-        <div style="display:flex;flex-direction:row;gap:2px;margin-top:2px">
-          <span style="font-weight:bold">${t('date')}:</span>
-          <span>${dayjs(bill.billDate).format('DD/MM/YYYY HH:mm:ss')}</span>
-        </div>
-      </div>
-      <div style="background:#ddd;padding:10px 20px;border-radius:10px;margin-bottom:5px;font-size:16px;font-weight:bold">
-        ${billTypeLabel}${bill.orderId}
-      </div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #000;border-right-width:0;border-bottom-width:0">
-      <thead>
-        <tr style="background:#ddd;font-weight:bold">
-          <th style="width:5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">#</th>
-          <th style="width:15%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">${t('reference')}</th>
-          <th style="width:35%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">D\u00E9signation</th>
-          <th style="width:10%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">Quantit\u00E9</th>
-          <th style="width:10%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">Prix</th>
-          <th style="width:12.5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">Total (HT)</th>
-          <th style="width:12.5%;border:1px solid #000;border-left-width:0;border-top-width:0;padding:5px 0;font-size:10px;text-align:center">Total (TTC)</th>
-        </tr>
-      </thead>
-      <tbody>${productRows}</tbody>
-    </table>
-    <div style="display:flex;flex-direction:row;justify-content:space-between;margin-top:5px;font-size:10px">
-      <div>${bill.description ? `<span><b>Note:</b> ${bill.description}</span>` : ''}</div>
-      <div style="font-size:10px;text-align:left;display:flex;flex-direction:column;align-items:flex-end">
-        <div style="display:flex;flex-direction:row;gap:2px">
-          <span style="font-weight:bold">Totale (HT):</span>
-          <span style="text-align:right;width:70px">${price(`${bill.orderTotalHT}`)} DA</span>
-        </div>
-        <div style="display:flex;flex-direction:row;gap:2px">
-          <span style="font-weight:bold">Totale (TTC):</span>
-          <span style="text-align:right;width:70px">${price(`${bill.orderTotalTTC}`)} DA</span>
-        </div>
-        <div style="display:flex;flex-direction:row;gap:2px">
-          <span style="font-weight:bold">Versement:</span>
-          <span style="text-align:right;width:70px">${price(`${bill.orderPaid}`)} DA</span>
-        </div>
-        <div style="display:flex;flex-direction:row;gap:2px">
-          <span style="font-weight:bold">Dettes:</span>
-          <span style="text-align:right;width:70px">${price(`${bill.orderDebts}`)} DA</span>
-        </div>
-      </div>
-    </div>
-  </div>`
+  return `
+<table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+  <tr>
+    <td style="width:55%;font-size:12px;vertical-align:top">
+      <b>${esc(t('customer'))}:</b> ${esc(clientName)}<br/>
+      <b>${esc(t('date'))}:</b> ${dayjs(bill.billDate).format('DD/MM/YYYY HH:mm:ss')}
+    </td>
+    <td align="center" style="width:45%;font-size:16px;font-weight:bold;background:#ddd;padding:10px 20px;border-radius:10px">${esc(billTypeLabel)}${esc(bill.orderId)}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;margin-bottom:5px">
+  <tr>
+    <th align="center" style="width:5%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">#</th>
+    <th align="center" style="width:15%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">${esc(t('reference'))}</th>
+    <th align="center" style="width:35%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">D\u00E9signation</th>
+    <th align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Quantit\u00E9</th>
+    <th align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Prix</th>
+    <th align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Total (HT)</th>
+    <th align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Total (TTC)</th>
+  </tr>
+  ${productRows}
+</table>
+<table style="width:100%;border-collapse:collapse;margin-top:5px">
+  <tr>
+    <td style="width:50%;font-size:10px;vertical-align:top">${bill.description ? `<b>Note:</b> ${esc(bill.description)}` : '&nbsp;'}</td>
+    <td align="right" style="width:50%;font-size:10px">
+      <b>Totale (HT):</b> ${price(`${bill.orderTotalHT}`)} DA<br/>
+      <b>Totale (TTC):</b> ${price(`${bill.orderTotalTTC}`)} DA<br/>
+      <b>Versement:</b> ${price(`${bill.orderPaid}`)} DA<br/>
+      <b>Dettes:</b> ${price(`${bill.orderDebts}`)} DA
+    </td>
+  </tr>
+</table>`
 }
 
 const ToolbarButton = ({ onClick, active, children, title, disabled }: {
@@ -318,12 +321,12 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
           underline: false,
           link: false,
         }),
-        Table.configure({
+        StyledTable.configure({
           resizable: true,
         }),
+        StyledTableCell,
+        StyledTableHeader,
         TableRow,
-        TableCell,
-        TableHeader,
         ImageExtension,
         Underline,
         TextAlign.configure({
@@ -333,6 +336,9 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
           multicolor: true,
         }),
         TextStyle,
+        FontSize,
+        FontFamily,
+        LineHeight,
         Color,
         Link.configure({
           openOnClick: false,
@@ -342,7 +348,7 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
       content: initialContent || fullHtml(bill, settings),
       editorProps: {
         attributes: {
-          class: 'focus:outline-none min-h-[297mm] px-[20px] py-[20px]',
+          class: 'focus:outline-none bill-document min-h-[297mm] px-[20px] py-[20px]',
         },
       },
     })
@@ -386,13 +392,24 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
 
     if (!editor) return null
 
+    const setStyleProperty = (style: unknown, prop: string, value: string): string => {
+      const parts = (typeof style === 'string' ? style : '').split(';').map(p => p.trim()).filter(Boolean)
+      const idx = parts.findIndex(p => p.split(':')[0]?.trim().toLowerCase() === prop.toLowerCase())
+      if (idx >= 0) parts.splice(idx, 1)
+      if (value !== '') parts.push(`${prop}: ${value}`)
+      return parts.join(';')
+    }
+
     const setTableWidth = (width: string) => {
       const { state } = editor
       const { from, to } = state.selection
       state.doc.nodesBetween(from, to, (node, pos) => {
         if (node.type.name === 'table') {
           editor.chain().focus().command(({ tr }) => {
-            tr.setNodeMarkup(pos, undefined, { ...node.attrs, style: { ...node.attrs.style, width } })
+            tr.setNodeMarkup(pos, undefined, {
+              ...node.attrs,
+              style: setStyleProperty(node.attrs.style, 'width', width === 'auto' ? '' : width),
+            })
             return true
           }).run()
         }
@@ -570,7 +587,7 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
                       editor.chain().focus().command(({ tr }) => {
                         tr.setNodeMarkup(pos, undefined, {
                           ...node.attrs,
-                          style: { ...node.attrs.style, backgroundColor: c === 'transparent' ? '' : c }
+                          style: setStyleProperty(node.attrs.style, 'background-color', c === 'transparent' ? '' : c),
                         })
                         return true
                       }).run()
@@ -589,7 +606,7 @@ const DocumentEditor = forwardRef<DocumentEditorHandle, DocumentEditorProps>(
                         editor.chain().focus().command(({ tr }) => {
                           tr.setNodeMarkup(pos, undefined, {
                             ...node.attrs,
-                            style: { ...node.attrs.style, borderWidth: e.target.value }
+                            style: setStyleProperty(node.attrs.style, 'border-width', e.target.value),
                           })
                           return true
                         }).run()

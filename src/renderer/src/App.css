@@ -439,3 +439,42 @@ body,
   text-align: center;
   color: #999;
 }
+
+/* Shared bill document base styles (used in both view mode and the WYSIWYG editor
+   so the rendered bill matches what is edited) */
+.bill-document {
+  font-family: sans-serif;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #111;
+}
+
+.bill-document > * + * {
+  margin-top: 4px;
+}
+
+.bill-document p {
+  margin: 0;
+}
+
+.bill-document ul,
+.bill-document ol {
+  padding-left: 2em;
+  margin: 0.5em 0;
+}
+
+.bill-document table {
+  border-collapse: collapse;
+  max-width: 100%;
+}
+
+.bill-document td,
+.bill-document th {
+  padding: 2px 4px;
+  vertical-align: top;
+}
+
+.bill-document img {
+  max-width: 100%;
+  height: auto;
+}
