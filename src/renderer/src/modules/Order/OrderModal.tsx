@@ -140,7 +140,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
         ...valuesWithoutCategory,
         pricingCategory: 0,
         reservedUntil: formatReservedUntil(reservedUntilDate),
-        paymentMethod: 'CASH',
         type: 'ORDER',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,

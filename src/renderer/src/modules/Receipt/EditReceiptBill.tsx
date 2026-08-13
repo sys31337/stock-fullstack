@@ -192,7 +192,6 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
     try {
       const payload = {
         ...values,
-        paymentMethod: 'CASH',
         type: 'BUY',
         warehouse: values.warehouse || undefined,
         orderTotalHT: state.orderTotalHT,

@@ -267,10 +267,6 @@ function fullHtml(bill: IBill, settings?: SettingsData): string {
           <span style="font-weight:bold">Dettes:</span>
           <span style="text-align:right;width:70px">${price(`${bill.orderDebts}`)} DA</span>
         </div>
-        <div style="display:flex;flex-direction:row;gap:2px">
-          <span style="font-weight:bold">M\u00E9thode de paiement:</span>
-          <span style="text-align:right;width:70px">${bill.paymentMethod}</span>
-        </div>
       </div>
     </div>
   </div>`

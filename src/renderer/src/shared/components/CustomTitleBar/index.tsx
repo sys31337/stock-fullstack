@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Moon, Sun, Monitor } from 'lucide-react'
+import { useTheme } from '@web/shared/contexts/ThemeContext'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { ipcRenderer } = require('electron')
@@ -6,6 +8,7 @@ const { ipcRenderer } = require('electron')
 const CustomTitleBar = () => {
   const [isMaximized, setIsMaximized] = useState(true)
   const dragRef = useRef(false)
+  const { theme, setTheme, resolvedTheme } = useTheme()
 
   useEffect(() => {
     ipcRenderer.invoke('isMaximized').then((val: boolean) => setIsMaximized(val))
@@ -42,6 +45,18 @@ const CustomTitleBar = () => {
     document.addEventListener('mouseup', handleMouseUp)
   }, [])
 
+  const cycleTheme = () => {
+    const themes: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
+    const currentIndex = themes.indexOf(theme)
+    const nextIndex = (currentIndex + 1) % themes.length
+    setTheme(themes[nextIndex])
+  }
+
+  const getThemeIcon = () => {
+    if (theme === 'system') return <Monitor className="h-3.5 w-3.5" />
+    return resolvedTheme === 'dark' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />
+  }
+
   return (
     <div className="custom-titlebar">
       <div className="custom-titlebar-left">
@@ -69,6 +84,16 @@ const CustomTitleBar = () => {
         onMouseDown={handleDragMouseDown}
         onDoubleClick={handleMaximize}
       />
+      <div className="flex items-center gap-2 pr-3">
+        <button
+          onClick={cycleTheme}
+          className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={`Theme: ${theme}. Click to cycle.`}
+          title={`Theme: ${theme}`}
+        >
+          {getThemeIcon()}
+        </button>
+      </div>
     </div>
   )
 }

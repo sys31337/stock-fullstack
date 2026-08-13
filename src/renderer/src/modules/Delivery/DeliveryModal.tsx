@@ -142,7 +142,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
       const payload = {
         ...valuesWithoutCategory,
         pricingCategory: 0,
-        paymentMethod: 'CASH',
         type: 'DELIVERY' as const,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,

@@ -30,7 +30,7 @@ const billsSchema = new Schema({
   orderTotalTTC: requiredNumber,
   orderPaid: requiredNumber,
   orderDebts: requiredNumber,
-  paymentMethod: { type: String, default: 'Cash', required: true },
+  paymentMethod: { type: String, default: '' },
   pricingCategory: { type: Number, default: 0 },
   description: String,
   content: { type: String, default: '' },

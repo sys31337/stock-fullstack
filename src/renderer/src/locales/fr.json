@@ -358,5 +358,9 @@
   "ai": "N° Activité",
   "generalInfo": "Informations générales",
   "legalInfo": "Identifiants légaux",
-  "financialInfo": "Crédit"
+  "financialInfo": "Crédit",
+  "theme": "Thème",
+  "themeLight": "Clair",
+  "themeDark": "Sombre",
+  "themeSystem": "Système"
 }

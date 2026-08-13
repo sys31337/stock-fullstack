@@ -118,7 +118,6 @@ const CustomerModal = ({ customer, type, trigger }: CustomerModalProps) => {
           size="sm"
         >
           <FaUserPlus className="h-3.5 w-3.5 text-white" />
-          <span className="text-xs font-medium">{t('addCustomer')}</span>
         </Button>
       )}
       <CustomModal

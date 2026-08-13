@@ -28,7 +28,7 @@ const createBillSchema = Joi.object({
   orderTotalTTC: number.required(),
   orderPaid: number.required(),
   orderDebts: number.required(),
-  paymentMethod: string.required(),
+  paymentMethod: string.optional().allow(''),
   pricingCategory: Joi.when('type', {
     is: 'BUY',
     then: Joi.forbidden(),
@@ -67,7 +67,7 @@ const updateBillSchema = Joi.object({
   orderTotalTTC: number,
   orderPaid: number,
   orderDebts: number,
-  paymentMethod: string,
+  paymentMethod: string.optional().allow(''),
   pricingCategory: number,
   warehouse: mongooseId,
   description: string.optional().allow(''),

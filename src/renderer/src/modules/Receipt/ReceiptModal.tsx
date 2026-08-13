@@ -138,7 +138,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
     try {
       const payload = {
         ...values,
-        paymentMethod: 'CASH',
         type: 'BUY',
         warehouse: values.warehouse,
         orderTotalHT: state.orderTotalHT,

@@ -358,5 +358,9 @@
   "ai": "AI",
   "generalInfo": "General information",
   "legalInfo": "Legal identifiers",
-  "financialInfo": "Financial"
+  "financialInfo": "Financial",
+  "theme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System"
 }

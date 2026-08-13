@@ -349,5 +349,9 @@
   "ai": "رقم النشاط",
   "generalInfo": "معلومات عامة",
   "legalInfo": "المعرفات القانونية",
-  "financialInfo": "الرصيد"
+  "financialInfo": "الرصيد",
+  "theme": "المظهر",
+  "themeLight": "فاتح",
+  "themeDark": "داكن",
+  "themeSystem": "النظام"
 }

@@ -179,7 +179,6 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
       const payload = {
         ...values,
         pricingCategory: 0,
-        paymentMethod: 'CASH',
         type: 'DELIVERY' as const,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
