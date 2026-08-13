@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import Customer from '@api/models/customers';
 import Transaction from '@api/models/transactions';
+import StockMovement from '@api/models/stockMovement';
 import { IUserIdRequest } from '@api/types/common';
 import { DEFAULT_CUSTOMER_ID } from '@api/functions/transactions';
+import { deliveryProductUpdateHandler, buyBillproductUpdateHandler } from '@api/functions/products';
 import { createAuditLog } from '@api/utils/auditLog';
 
 const createFund = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
@@ -74,8 +76,78 @@ const getByCustomer = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
+const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ message: 'Invalid transaction id' });
+    }
+
+    const transaction = await Transaction.findById(id).populate('bill');
+    if (!transaction) {
+      return res.status(404).send({ message: 'Transaction not found' });
+    }
+
+    const customer = await Customer.findById(transaction.customer);
+    if (customer) {
+      const newFunds = Number(customer.credit || 0) - Number(transaction.addedAmount || 0);
+      customer.credit = newFunds;
+      await customer.save();
+    }
+
+    const bill = transaction.bill as any;
+    if (bill) {
+      await StockMovement.deleteMany({ relatedBill: bill._id, type: { $in: ['OUT', 'IN'] } });
+      if (bill.type === 'DELIVERY') {
+        await deliveryProductUpdateHandler(bill.products || [], []);
+        await StockMovement.create(
+          (bill.products || []).map((p: any) => ({
+            product: p.id,
+            warehouse: bill.warehouse,
+            type: 'RETURN',
+            quantity: p.quantity,
+            reference: `DEL_REVERT_${bill.orderId}`,
+            relatedBill: bill._id,
+            notes: `Delivery ${bill.orderId} deleted; stock restored`,
+            createdBy: req.userId,
+          })),
+        );
+      } else if (bill.type === 'BUY') {
+        await buyBillproductUpdateHandler(bill.products || [], []);
+        await StockMovement.create(
+          (bill.products || []).map((p: any) => ({
+            product: p.id,
+            warehouse: bill.warehouse,
+            type: 'OUT',
+            quantity: p.quantity,
+            reference: `BUY_REVERT_${bill.orderId}`,
+            relatedBill: bill._id,
+            notes: `Purchase bill ${bill.orderId} deleted; stock removed`,
+            createdBy: req.userId,
+          })),
+        );
+      }
+      await bill.deleteOne();
+    }
+
+    await transaction.deleteOne();
+
+    await createAuditLog(req, {
+      action: 'delete',
+      resource: 'transaction',
+      resourceId: id,
+      details: `Deleted transaction for ${customer?.fullname || transaction.customer}; credit reversed`,
+    });
+
+    return res.status(200).send({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export {
   createFund,
   getAll,
   getByCustomer,
+  deleteOne,
 };

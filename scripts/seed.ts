@@ -28,6 +28,7 @@ import StockMovement from '@api/models/stockMovement';
 import Transaction from '@api/models/transactions';
 import WarehouseTransfer from '@api/models/warehouseTransfer';
 import AuditLog from '@api/models/auditLog';
+import DeliveryReturn from '@api/models/deliveryReturn';
 import { ALL_PERMISSIONS } from '@api/constants/permissions';
 
 const DEFAULT_ID = '0a0aaa0a0aa00000aaaaaa0a';
@@ -37,7 +38,7 @@ const PASSWORD = 'admin123';
 const counts: Record<string, number> = {
   settings: 0, roles: 0, users: 0, warehouses: 0, categories: 0,
   customers: 0, products: 0, bills: 0, movements: 0, transactions: 0,
-  transfers: 0, auditLogs: 0,
+  transfers: 0, auditLogs: 0, deliveryReturns: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -242,7 +243,7 @@ async function wipeDatabase(): Promise<void> {
   const collections = [
     'settings', 'roles', 'users', 'warehouses', 'categories', 'customers',
     'products', 'bills', 'stockmovements', 'transactions', 'warehousetransfers',
-    'auditlogs', 'payments',
+    'auditlogs', 'payments', 'deliveryreturns',
   ];
   for (const name of collections) {
     try {
@@ -324,6 +325,16 @@ async function seedRolesAndUsers() {
       role: 'Cashier / Salesperson', access: 'assigned', wh: [mainWh], defaultWh: mainWh,
       status: 'disabled',
     },
+    {
+      username: 'delivery.moussa', email: 'delivery.moussa@solustock.local', fullname: 'Moussa Livreur',
+      role: 'Warehouse Manager', access: 'assigned', wh: [mainWh, bWh], defaultWh: mainWh,
+      type: 'VENDOR',
+    },
+    {
+      username: 'delivery.lydia', email: 'delivery.lydia@solustock.local', fullname: 'Lydia Livreuse',
+      role: 'Warehouse Manager', access: 'assigned', wh: [mainWh], defaultWh: mainWh,
+      type: 'VENDOR',
+    },
   ];
 
   const users: any[] = [];
@@ -339,7 +350,7 @@ async function seedRolesAndUsers() {
         password: hash,
         salt,
         isMainAccount: !!def.isMainAccount,
-        type: 'USER',
+        type: def.type || 'USER',
         status: def.status || 'active',
         role: roleDoc,
         permissions: rolePermissions,
@@ -356,7 +367,11 @@ async function seedRolesAndUsers() {
     users.push(user);
   }
 
-  return { adminUserId: users[0]._id.toString(), userIds: users.map((u) => u._id.toString()) };
+  return {
+    adminUserId: users[0]._id.toString(),
+    userIds: users.map((u) => u._id.toString()),
+    vendorIds: users.filter((u) => u.type === 'VENDOR').map((u) => u._id.toString()),
+  };
 }
 
 async function seedSettings() {
@@ -595,6 +610,7 @@ interface CreateBillInput {
   cancelledBy?: string;
   cancelReason?: string;
   description?: string;
+  salesPerson?: string;
 }
 
 async function createBill(input: CreateBillInput): Promise<{ bill: any; paid: number; debts: number } | null> {
@@ -634,6 +650,7 @@ async function createBill(input: CreateBillInput): Promise<{ bill: any; paid: nu
   if (input.convertFromOrder) payload.convertFromOrder = input.convertFromOrder;
   if (input.cancelledBy) payload.cancelledBy = input.cancelledBy;
   if (input.cancelReason) payload.cancelReason = input.cancelReason;
+  if (input.salesPerson) payload.salesPerson = input.salesPerson;
 
   const bill = await new Bill(payload).save();
   counts.bills += 1;
@@ -653,9 +670,10 @@ async function seedBills(opts: {
   supplierIds: string[];
   warehouseIds: string[];
   userIds: string[];
+  vendorIds: string[];
 }) {
   const {
-    products, stock, categoryIds, clientIds, supplierIds, warehouseIds, userIds,
+    products, stock, categoryIds, clientIds, supplierIds, warehouseIds, userIds, vendorIds,
   } = opts;
 
   const activeWhs = warehouseIds.slice(0, 3);
@@ -765,6 +783,7 @@ async function seedBills(opts: {
       type: 'DELIVERY', orderId: manual ? `LIV-${100 + i}` : String(deliveryNo),
       date, items, priceField: 'sellPrice_1', warehouse, customer, category,
       createBy: pick(userIds), description: 'Bon de livraison',
+      salesPerson: vendorIds.length ? pick(vendorIds) : undefined,
     });
     if (!created) continue;
     const { bill, debts } = created;
@@ -850,6 +869,7 @@ async function seedBills(opts: {
         priceField: 'sellPrice_1', warehouse, customer,
         convertFromOrder: bill.orderId, createBy: pick(userIds),
         description: 'Livraison depuis commande',
+        salesPerson: vendorIds.length ? pick(vendorIds) : undefined,
       });
       for (const it of items) {
         await makeMovement({
@@ -1021,6 +1041,80 @@ async function seedTransfers(opts: {
 }
 
 // ---------------------------------------------------------------------------
+// Delivery returns (cash reconciliation)
+// ---------------------------------------------------------------------------
+
+async function seedDeliveryReturns(opts: {
+  vendorIds: string[];
+  warehouseIds: string[];
+  adminUserId: string;
+}) {
+  const { vendorIds, warehouseIds, adminUserId } = opts;
+
+  if (vendorIds.length === 0) return;
+
+  console.log('\nSeeding delivery returns (cash reconciliation)...');
+
+  for (const vendorId of vendorIds) {
+    for (let d = 0; d < 5; d += 1) {
+      const date = new Date();
+      date.setDate(date.getDate() - d);
+      date.setHours(0, 0, 0, 0);
+
+      const dayStart = new Date(date);
+      const dayEnd = new Date(date);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const [agg, billCount] = await Promise.all([
+        Bill.aggregate([
+          {
+            $match: {
+              type: 'DELIVERY',
+              status: { $ne: 'cancelled' },
+              salesPerson: new mongoose.Types.ObjectId(vendorId),
+              createdAt: { $gte: dayStart, $lte: dayEnd },
+            },
+          },
+          { $group: { _id: null, expected: { $sum: '$orderPaid' } } },
+        ]),
+        Bill.countDocuments({
+          type: 'DELIVERY',
+          status: { $ne: 'cancelled' },
+          salesPerson: new mongoose.Types.ObjectId(vendorId),
+          createdAt: { $gte: dayStart, $lte: dayEnd },
+        }),
+      ]);
+
+      const expected = Math.round(agg[0]?.expected || 0);
+      if (billCount === 0 && expected === 0) continue;
+
+      const short = Math.random() > 0.7;
+      const returned = short
+        ? round2(expected * (0.85 + Math.random() * 0.14))
+        : expected;
+      const warehouse = pick(warehouseIds.slice(0, 3));
+      const recordedAt = new Date(date.getTime() + 3 * 3600 * 1000);
+
+      await new DeliveryReturn({
+        deliveryPerson: vendorId,
+        warehouse,
+        deliveryDate: date,
+        expectedAmount: expected,
+        enteredAmount: returned,
+        returnedAmount: returned,
+        status: d === 0 ? (Math.random() > 0.5 ? 'confirmed' : 'pending') : 'confirmed',
+        notes: short ? 'Écart de caisse constaté (seed)' : 'Encaissements jour (seed)',
+        createdBy: adminUserId,
+        updatedBy: adminUserId,
+        createdAt: recordedAt,
+        updatedAt: recordedAt,
+      }).save();
+      counts.deliveryReturns += 1;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Finalize product quantities + warehouse stock distribution
 // ---------------------------------------------------------------------------
 
@@ -1153,7 +1247,7 @@ async function main(): Promise<void> {
     console.log('\n--no-wipe: keeping existing data, adding only what is missing.');
   }
 
-  const { adminUserId, userIds } = await seedRolesAndUsers();
+  const { adminUserId, userIds, vendorIds } = await seedRolesAndUsers();
   const warehouseIds = await seedWarehouses(adminUserId);
   await seedSettings();
   const { categoryIds } = await seedCategories();
@@ -1161,8 +1255,10 @@ async function main(): Promise<void> {
   const { products, stock } = await seedProducts(categoryIds);
 
   await seedBills({
-    products, stock, categoryIds, clientIds, supplierIds, warehouseIds, userIds,
+    products, stock, categoryIds, clientIds, supplierIds, warehouseIds, userIds, vendorIds,
   });
+
+  await seedDeliveryReturns({ vendorIds, warehouseIds, adminUserId });
 
   await seedTransfers({ products, stock, warehouseIds, userIds });
   await seedAuditLogs(userIds);
@@ -1190,6 +1286,7 @@ async function main(): Promise<void> {
   console.log(`  Stock movements      : ${await StockMovement.countDocuments()}`);
   console.log(`  Transactions         : ${await Transaction.countDocuments()}`);
   console.log(`  Warehouse transfers  : ${await WarehouseTransfer.countDocuments()}`);
+  console.log(`  Delivery returns     : ${await DeliveryReturn.countDocuments()}`);
   console.log(`  Audit logs           : ${await AuditLog.countDocuments()}`);
   console.log('--------------------------------------------');
   console.log(`  Pending orders       : ${await Bill.countDocuments({ type: 'ORDER', status: 'pending' })} (1 is expired & auto-cancels on next fetch)`);
@@ -1201,6 +1298,7 @@ async function main(): Promise<void> {
   console.log(`  Scenario notes       :`);
   console.log(`    - 1 expired pending order will auto-cancel (release stock).`);
   console.log(`    - 1 suspended user, 1 disabled user, 1 inactive warehouse.`);
+  console.log(`    - 2 delivery (VENDOR) users with daily cash returns + delivery bills assigned.`);
   console.log(`    - manual order ids (INV-2026-114, LIV-124) test the manual id path.`);
   console.log('============================================');
 

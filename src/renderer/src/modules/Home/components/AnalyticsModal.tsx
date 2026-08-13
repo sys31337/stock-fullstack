@@ -42,6 +42,10 @@ const KPIS: KpiItem[] = [
   { key: 'totalWarehouses', label: 'totalWarehouses', icon: <Warehouse className="h-4 w-4" />, tone: 'bg-teal-500/10 text-teal-600' },
   { key: 'totalUsers', label: 'totalUsers', icon: <UserRound className="h-4 w-4" />, tone: 'bg-blue-500/10 text-blue-600' },
   { key: 'totalSalesAmount', label: 'totalRevenue', icon: <Wallet className="h-4 w-4" />, tone: 'bg-emerald-500/10 text-emerald-600', amount: true },
+  { key: 'todayCashCollected', label: 'todayCashCollected', icon: <Banknote className="h-4 w-4" />, tone: 'bg-sky-500/10 text-sky-600', amount: true },
+  { key: 'profitThisMonth', label: 'profitThisMonth', icon: <TrendingUp className="h-4 w-4" />, tone: 'bg-violet-500/10 text-violet-600', amount: true },
+  { key: 'profitThisYear', label: 'profitThisYear', icon: <Trophy className="h-4 w-4" />, tone: 'bg-indigo-500/10 text-indigo-600', amount: true },
+  { key: 'employeeDebt', label: 'employeeDebt', icon: <UserRound className="h-4 w-4" />, tone: 'bg-rose-500/10 text-rose-600', amount: true },
 ];
 
 const movementTone: Record<string, string> = {

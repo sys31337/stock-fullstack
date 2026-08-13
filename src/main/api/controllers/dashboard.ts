@@ -6,6 +6,7 @@ import Warehouse from '@api/models/warehouse';
 import User from '@api/models/user';
 import StockMovement from '@api/models/stockMovement';
 import Settings from '@api/models/settings';
+import DeliveryReturn from '@api/models/deliveryReturn';
 import { IUserIdRequest } from '@api/types/common';
 
 const SALES_TYPES = ['SALE', 'DELIVERY'];
@@ -34,6 +35,8 @@ const sumAggregate = (result: any[]): number => Math.round(result[0]?.total || 0
 const computeKpis = async (warehouseFilter: any, today: Date) => {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const yearStart = new Date(today.getFullYear(), 0, 1);
 
   const [
     totalProducts,
@@ -50,6 +53,10 @@ const computeKpis = async (warehouseFilter: any, today: Date) => {
     lowStockProducts,
     totalWarehouses,
     totalUsers,
+    todayCashCollected,
+    profitThisMonth,
+    profitThisYear,
+    employeeDebt,
   ] = await Promise.all([
     Product.countDocuments({}),
     Customer.countDocuments({ type: 'Client' }),
@@ -80,7 +87,46 @@ const computeKpis = async (warehouseFilter: any, today: Date) => {
     Product.countDocuments({ quantity: { $lte: 5 }, notify: true }),
     Warehouse.countDocuments({ isActive: true }),
     User.countDocuments({ status: 'active' }),
+    Bill.aggregate([
+      { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, createdAt: { $gte: today } } },
+      { $group: { _id: null, total: { $sum: '$orderPaid' } } },
+    ]),
+    Bill.aggregate([
+      { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: monthStart } } },
+      { $unwind: '$products' },
+      {
+        $group: {
+          _id: null,
+          revenue: { $sum: '$orderTotalTTC' },
+          cost: { $sum: { $multiply: ['$products.quantity', '$products.buyPrice'] } },
+        },
+      },
+    ]),
+    Bill.aggregate([
+      { $match: { ...warehouseFilter, type: { $in: SALES_TYPES }, status: { $ne: 'cancelled' }, createdAt: { $gte: yearStart } } },
+      { $unwind: '$products' },
+      {
+        $group: {
+          _id: null,
+          revenue: { $sum: '$orderTotalTTC' },
+          cost: { $sum: { $multiply: ['$products.quantity', '$products.buyPrice'] } },
+        },
+      },
+    ]),
+    DeliveryReturn.aggregate([
+      {
+        $group: {
+          _id: null,
+          outstanding: {
+            $sum: { $max: [{ $subtract: ['$expectedAmount', '$returnedAmount'] }, 0] },
+          },
+        },
+      },
+    ]),
   ]);
+
+  const monthProfit = profitThisMonth[0] || { revenue: 0, cost: 0 };
+  const yearProfit = profitThisYear[0] || { revenue: 0, cost: 0 };
 
   return {
     totalProducts,
@@ -97,6 +143,10 @@ const computeKpis = async (warehouseFilter: any, today: Date) => {
     lowStockProducts,
     totalWarehouses,
     totalUsers,
+    todayCashCollected: sumAggregate(todayCashCollected),
+    profitThisMonth: Math.round(monthProfit.revenue - monthProfit.cost),
+    profitThisYear: Math.round(yearProfit.revenue - yearProfit.cost),
+    employeeDebt: Math.round(employeeDebt[0]?.outstanding || 0),
   };
 };
 

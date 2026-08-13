@@ -15,6 +15,8 @@ import permissionsRouter from './helpers/permissions';
 import dashboardRouter from './helpers/dashboard';
 import settingsRouter from './helpers/settings';
 import transactionsRouter from './helpers/transactions';
+import reportsRouter from './helpers/reports';
+import deliveryReturnsRouter from './helpers/deliveryReturns';
 
 const router = express.Router();
 
@@ -33,5 +35,7 @@ router.use('/permissions', permissionsRouter);
 router.use('/dashboard', dashboardRouter);
 router.use('/settings', settingsRouter);
 router.use('/transactions', transactionsRouter);
+router.use('/reports', reportsRouter);
+router.use('/delivery-returns', deliveryReturnsRouter);
 
 export default router;

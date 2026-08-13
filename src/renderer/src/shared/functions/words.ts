@@ -1,6 +1,15 @@
 export const randomId = () => Math.random().toString(16).slice(8);
 export const price = (string: string | number) => parseFloat(`${string}`).toFixed(2);
 
+/**
+ * Money with thousands separator and two decimals, e.g. 1234567.5 -> "1,234,567.50".
+ */
+export const money = (value: string | number): string => {
+  const n = Number(value);
+  if (Number.isNaN(n)) return '0.00';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 const units = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
 const tens = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante'];
 

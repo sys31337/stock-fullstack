@@ -8,6 +8,10 @@ import {
   ArrowDownRight,
   BarChart3,
   Lock,
+  Banknote,
+  TrendingUp,
+  CalendarRange,
+  HandCoins,
 } from 'lucide-react';
 import { Button } from '@web/shared/components/ui/button';
 import { t } from 'i18next';
@@ -151,6 +155,49 @@ const Statistics: React.FC<StatisticsProps> = ({ stats, isLoading, onViewAll }) 
           icon={<AlertTriangle className="h-5 w-5" />}
           tone="bg-red-500/10 text-red-600"
           footer={<span className="text-muted-foreground">{t('belowStockThreshold')}</span>}
+          blurred={blurred}
+          loading={isLoading}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <HeroCard
+          label="todayCashCollected"
+          value={stats?.todayCashCollected || 0}
+          icon={<Banknote className="h-5 w-5" />}
+          tone="bg-sky-500/10 text-sky-600"
+          amount
+          footer={<span className="text-muted-foreground">{t('cashCollectedToday')}</span>}
+          blurred={blurred}
+          loading={isLoading}
+        />
+        <HeroCard
+          label="profitThisMonth"
+          value={stats?.profitThisMonth || 0}
+          icon={<TrendingUp className="h-5 w-5" />}
+          tone="bg-violet-500/10 text-violet-600"
+          amount
+          footer={<span className="text-muted-foreground">{t('thisMonth')}</span>}
+          blurred={blurred}
+          loading={isLoading}
+        />
+        <HeroCard
+          label="profitThisYear"
+          value={stats?.profitThisYear || 0}
+          icon={<CalendarRange className="h-5 w-5" />}
+          tone="bg-indigo-500/10 text-indigo-600"
+          amount
+          footer={<span className="text-muted-foreground">{t('thisYear')}</span>}
+          blurred={blurred}
+          loading={isLoading}
+        />
+        <HeroCard
+          label="employeeDebt"
+          value={stats?.employeeDebt || 0}
+          icon={<HandCoins className="h-5 w-5" />}
+          tone="bg-rose-500/10 text-rose-600"
+          amount
+          footer={<span className="text-muted-foreground">{t('employeeDebtDesc')}</span>}
           blurred={blurred}
           loading={isLoading}
         />

@@ -18,6 +18,10 @@ export interface DashboardStats {
   lowStockProducts?: number;
   totalWarehouses?: number;
   totalUsers?: number;
+  todayCashCollected?: number;
+  profitThisMonth?: number;
+  profitThisYear?: number;
+  employeeDebt?: number;
   recentMovements?: any[];
 }
 

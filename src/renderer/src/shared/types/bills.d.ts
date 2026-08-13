@@ -28,6 +28,7 @@ export interface IBill {
   pricingCategory: number;
   description: string;
   warehouse?: string;
+  salesPerson?: string | { _id: string; fullname?: string } | null;
   content?: string;
   contentHistory?: IContentHistoryEntry[];
 }

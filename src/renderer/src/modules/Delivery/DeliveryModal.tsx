@@ -11,6 +11,7 @@ import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
+import { useSalespeople } from '@web/shared/hooks/useReports';
 import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
@@ -43,6 +44,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allWarehouses } = useGetAllWarehouses();
+  const { data: salespeople } = useSalespeople();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('DELIVERY');
   const { mutateAsync: createBill } = useCreateBill();
   const { data: settings } = useGetSettings();
@@ -64,6 +66,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
     description: '',
     customer: '',
     warehouse: '',
+    salesPerson: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -183,6 +186,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         description: '',
         customer: '',
         warehouse: '',
+        salesPerson: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -370,6 +374,21 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                         value={values.warehouse}
                         selectOptions={
                           allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
+                        }
+                        isSelect={true}
+                        inputSize="sm"
+                        className="[&_>div>div]:rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('salesPerson')}</Label>
+                      <CustomInput
+                        name="salesPerson"
+                        setFieldValue={setFieldValue}
+                        handleBlur={handleBlur}
+                        value={values.salesPerson}
+                        selectOptions={
+                          salespeople && salespeople.map((s) => ({ label: s.fullname, value: s._id }))
                         }
                         isSelect={true}
                         inputSize="sm"

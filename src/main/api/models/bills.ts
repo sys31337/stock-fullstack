@@ -9,6 +9,7 @@ const billsSchema = new Schema({
   category: { type: Schema.Types.ObjectId, ref: 'Category' },
   customer: { type: Schema.Types.ObjectId, ref: 'Customer' },
   warehouse: { type: Schema.Types.ObjectId, ref: 'Warehouse', index: true },
+  salesPerson: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
   type: {
     type: String,
     enum: ['BUY', 'SALE', 'ORDER', 'DELIVERY'],

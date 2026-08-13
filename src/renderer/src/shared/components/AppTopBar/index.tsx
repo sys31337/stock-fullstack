@@ -74,6 +74,10 @@ interface NavItem {
   children?: SubMenuItem[]
 }
 
+const navigateTo = (path: string) => {
+  window.location.hash = path
+}
+
 const NAV_ITEMS: NavItem[] = [
   {
     label: 'tiers',
@@ -118,6 +122,17 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'roles', action: (a) => a.openRoles() },
       { label: 'users', action: (a) => a.openUsers() },
       { label: 'auditLogs', action: (a) => a.openAuditLogs() },
+    ],
+  },
+  {
+    label: 'reports',
+    children: [
+      { label: 'overview', action: () => navigateTo('/reports') },
+      { label: 'ledger', action: () => navigateTo('/reports/ledger') },
+      { label: 'cashStatement', action: () => navigateTo('/reports/cash-statement') },
+      { label: 'productStats', action: () => navigateTo('/reports/products') },
+      { label: 'salespeopleReport', action: () => navigateTo('/reports/salespeople') },
+      { label: 'deliveryReturns', action: () => navigateTo('/reports/delivery-returns') },
     ],
   },
 ]
