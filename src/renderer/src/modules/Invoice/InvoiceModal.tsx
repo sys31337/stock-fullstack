@@ -136,7 +136,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: '0',
-        orderDebts: '0',
+        orderDebts: state.orderTotalTTC,
         ...(convertFromOrder && { convertFromOrder }),
         products: productsValues.map((product) => {
           const { _id, __v, createdAt, updatedAt, notify, id, reserved, category, customer, sellPrice_1, sellPrice_2, sellPrice_3, warehouseStock, ...rest } = product as any;

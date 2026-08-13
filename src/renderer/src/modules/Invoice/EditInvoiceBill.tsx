@@ -168,7 +168,7 @@ const EditInvoiceBill: React.FC<EditInvoiceBillProps> = ({ billId, isOpen: propI
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: '0',
-        orderDebts: '0',
+        orderDebts: state.orderTotalTTC,
         products: productsValues.map((product) => {
           const { _id, __v, createdAt, updatedAt, notify, id, reserved, category, customer, sellPrice_1, sellPrice_2, sellPrice_3, warehouseStock, ...rest } = product as any;
           return {
