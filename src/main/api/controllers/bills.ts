@@ -223,8 +223,8 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       const skipStockCheck = settings?.allowOutOfStockSales ?? false;
       await deliveryProductUpdateHandler(oldProductsArr, newProductsArr, skipStockCheck);
 
-      const revertReference = `${oldBill.type}-UPDATE-REVERT-${oldBill.orderId}`;
-      const updateReference = `${oldBill.type}-UPDATE-${oldBill.orderId}`;
+      const revertReference = `${oldBill.type}-UPDATE-REVERT-${oldBill._id}`;
+      const updateReference = `${oldBill.type}-UPDATE-${oldBill._id}`;
       await ensureStockMovementReference(revertReference);
       await ensureStockMovementReference(updateReference);
 
@@ -232,6 +232,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
           await StockMovement.create({
+            _id: deterministicMovementId(revertReference, product.barCode),
             product: dbProduct._id,
             warehouse: oldBill.warehouse,
             type: 'IN',
@@ -249,6 +250,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
           await StockMovement.create({
+            _id: deterministicMovementId(updateReference, product.barCode),
             product: dbProduct._id,
             warehouse: body.warehouse || oldBill.warehouse,
             type: 'OUT',
