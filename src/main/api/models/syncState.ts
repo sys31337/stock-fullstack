@@ -13,6 +13,8 @@ export interface ISyncState {
   syncSequence?: number;
   /** Per-collection pull cursor (last sequence number consumed). */
   collectionCursors?: Record<string, number>;
+  /** Protocol version; used to trigger a full re-sync after breaking changes. */
+  syncVersion?: number;
   updatedAt: Date;
 }
 
@@ -27,6 +29,7 @@ const syncStateSchema = new Schema<ISyncState>({
   conflictCount: { type: Number, default: 0 },
   syncSequence: { type: Number, default: 0 },
   collectionCursors: { type: Schema.Types.Mixed, default: {} },
+  syncVersion: { type: Number, default: 0 },
 }, { timestamps: true, _id: false });
 
 const SyncState = model<ISyncState>('SyncState', syncStateSchema);
