@@ -15,6 +15,8 @@ export default defineConfig({
         '@api/controllers': resolve('src/main/api/controllers'),
         '@api/functions': resolve('src/main/api/functions'),
         '@api/middlewares': resolve('src/main/api/middlewares'),
+        '@api/plugins': resolve('src/main/api/plugins'),
+        '@api/services': resolve('src/main/api/services'),
         '@api/socket': resolve('src/main/api/socket'),
         '@api/routes': resolve('src/main/api/routes'),
         '@api/utils': resolve('src/main/api/utils'),
