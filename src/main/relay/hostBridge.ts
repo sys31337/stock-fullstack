@@ -51,7 +51,14 @@ export class HostBridge {
       });
     }
 
-    const headers: Record<string, string> = { host: url.host, connection: 'close' };
+    const headers: Record<string, string> = {
+      host: url.host,
+      connection: 'close',
+      // Mark this request as coming from a linked client through the relay.
+      // The local API uses this header to authorize relay-forwarded traffic
+      // (the client and host may not share the same JWT secret).
+      'x-relay-origin': requesterId,
+    };
     for (const header of FORWARD_HEADERS) {
       const value = request.headers?.[header];
       if (value) headers[header] = value;

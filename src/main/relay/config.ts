@@ -23,8 +23,6 @@ export interface RelayConfig {
   clientPort: number;
   /** Local API base URL the host bridge forwards relayed requests to. */
   localApiUrl: string;
-  /** Shared secret used to authenticate sync requests between host and client. */
-  syncToken: string;
 }
 
 export const DEFAULT_RELAY_URL = 'http://127.0.0.1:4050';
@@ -53,7 +51,6 @@ export function loadRelayConfig(override?: Partial<RelayConfig>): RelayConfig {
     targetHostId: '',
     clientPort: DEFAULT_CLIENT_PORT,
     localApiUrl: LOCAL_API_URL,
-    syncToken: process.env.SYNC_TOKEN || process.env.RELAY_TOKEN || DEFAULT_RELAY_TOKEN,
   };
 
   return {
@@ -67,7 +64,6 @@ export function loadRelayConfig(override?: Partial<RelayConfig>): RelayConfig {
     targetHostId: process.env.RELAY_TARGET_HOST || defaults.targetHostId,
     clientPort: parseInt(process.env.RELAY_CLIENT_PORT || String(defaults.clientPort), 10),
     localApiUrl: process.env.RELAY_LOCAL_API || defaults.localApiUrl,
-    syncToken: process.env.SYNC_TOKEN || process.env.RELAY_TOKEN || defaults.syncToken,
     ...override,
   };
 }

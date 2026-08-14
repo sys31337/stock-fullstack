@@ -20,6 +20,16 @@ if (is.dev) {
 const { ELECTRON_RENDERER_URL } = config
 const relayManager = getRelayManager();
 
+function clientDbName(targetHostId: string): string {
+  if (!targetHostId) return 'stock-unlinked';
+  const sanitized = targetHostId
+    .replace(/[^a-zA-Z0-9_-]/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+    .slice(0, 50);
+  return sanitized ? `stock-${sanitized}` : 'stock-unlinked';
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -106,6 +116,10 @@ app.whenReady().then(async () => {
   const clientMode = !relayManager.isHost();
   if (clientMode) {
     setSkipDefaultSeeding(true);
+    // In client mode isolate each linked host's data in its own local database.
+    // The database name is derived from the persisted target host id; changing
+    // the linked host restarts the app so the new database is used.
+    process.env.MONGODB_DB_NAME = clientDbName(relayManager.getConfig().targetHostId);
   }
 
   const server = createApiServer({ clientMode });

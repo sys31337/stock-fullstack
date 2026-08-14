@@ -59,7 +59,6 @@ class RelayManager {
     this.config = loadRelayConfig();
     this.loadPersistedConfig();
     this.syncEngine = new SyncEngine();
-    this.syncEngine.setSyncToken(this.config.syncToken);
     this.syncEngine.onStatusChange = (snapshot) => this.onSyncStatusChange(snapshot);
   }
 
@@ -98,7 +97,6 @@ class RelayManager {
       return { ok: false, error: 'MODE_CHANGE_REQUIRES_RESTART' };
     }
     this.config = { ...this.config, ...partial };
-    this.syncEngine?.setSyncToken(this.config.syncToken);
     this.persistConfig().catch(() => {});
     this.stopClient();
     this.startClient();
@@ -302,7 +300,6 @@ class RelayManager {
       clientId: this.config.clientId,
       targetHostId: this.config.targetHostId,
       clientPort: this.config.clientPort,
-      syncToken: this.config.syncToken,
     };
     await fs.promises.mkdir(path.dirname(file), { recursive: true });
     await fs.promises.writeFile(file, JSON.stringify(toPersist, null, 2), 'utf8');

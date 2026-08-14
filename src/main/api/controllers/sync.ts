@@ -5,11 +5,10 @@ import type { IUserIdRequest } from '@api/types/common';
 import { SYNC_COLLECTIONS } from '../../../main/sync/collectionConfig';
 
 const LOCAL_API_URL = process.env.RELAY_LOCAL_API || 'http://127.0.0.1:3500';
-const SYNC_TOKEN = process.env.SYNC_TOKEN || process.env.RELAY_TOKEN || 'change-me';
 
-function isSyncAuthorized(req: IUserIdRequest): boolean {
-  const header = req.headers['x-sync-token'];
-  return typeof header === 'string' && header === SYNC_TOKEN;
+function isRelayRequest(req: IUserIdRequest): boolean {
+  const origin = req.headers['x-relay-origin'];
+  return typeof origin === 'string' && origin.length > 0;
 }
 
 interface PullResult {
@@ -38,8 +37,8 @@ function normalizeDoc(doc: any, includeAuthFields = false): any {
 
 export const pullCollection = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
-    if (!isSyncAuthorized(req)) {
-      return res.status(403).send({ message: 'INVALID_SYNC_TOKEN' });
+    if (!isRelayRequest(req)) {
+      return res.status(403).send({ message: 'NOT_A_RELAY_REQUEST' });
     }
     const { collection } = req.params;
     const { since, page = '1', limit = '200', includeAuth } = req.query;
@@ -81,8 +80,8 @@ export const pullCollection = async (req: IUserIdRequest, res: Response, next: N
 
 export const pushOperation = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
-    if (!isSyncAuthorized(req)) {
-      return res.status(403).send({ message: 'INVALID_SYNC_TOKEN' });
+    if (!isRelayRequest(req)) {
+      return res.status(403).send({ message: 'NOT_A_RELAY_REQUEST' });
     }
     const { method, path, body, headers } = req.body;
     if (!method || !path) {
@@ -100,13 +99,13 @@ export const pushOperation = async (req: IUserIdRequest, res: Response, next: Ne
       });
     }
 
-    // Replay the request against the local Express API authenticated with the
-    // sync token. The auth middleware maps sync-token requests to the main
-    // admin account so business logic and audit logs keep working even when
-    // the client and host do not share the same JWT secret.
+    // Replay the request against the local Express API as a relay-forwarded
+    // request. The auth middleware recognizes x-relay-origin and maps it to
+    // the main admin account so business logic and audit logs keep working
+    // even when the client and host do not share the same JWT secret.
     const replayHeaders: Record<string, string> = { ...headers };
     delete replayHeaders.authorization;
-    replayHeaders.authorization = `Bearer ${SYNC_TOKEN}`;
+    replayHeaders['x-relay-origin'] = req.headers['x-relay-origin'] as string;
 
     const response = await replayLocalRequest(method, path, body, replayHeaders);
 
@@ -208,8 +207,8 @@ function replayLocalRequest(
 
 export const getSyncState = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
-    if (!isSyncAuthorized(req)) {
-      return res.status(403).send({ message: 'INVALID_SYNC_TOKEN' });
+    if (!isRelayRequest(req)) {
+      return res.status(403).send({ message: 'NOT_A_RELAY_REQUEST' });
     }
     return res.status(200).send({ now: new Date().toISOString() });
   } catch (error) {

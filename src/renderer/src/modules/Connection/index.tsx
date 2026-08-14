@@ -231,7 +231,8 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
     setDialogBusy(false);
     if (result.ok) {
       closeHostDialog();
-      setMessage({ ok: true, text: `Linked to ${dialogHost.name || dialogHost.clientId}.` });
+      setMessage({ ok: true, text: `Linked to ${dialogHost.name || dialogHost.clientId}. Restarting to switch to that host's local database...` });
+      setTimeout(() => window.api.relay.restart(), 800);
     } else {
       setDialogError(
         result.error === 'INVALID_HOST_PASSWORD'

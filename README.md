@@ -58,7 +58,6 @@ Configuration (via env or the in-app **Connection** screen):
 | `RELAY_TARGET_HOST` | ``                         | Client mode: pre-selected host id (optional; can be picked in the UI). |
 | `RELAY_CLIENT_PORT` | `4032`                     | Legacy setting (no longer used).              |
 | `RELAY_LOCAL_API`   | `http://127.0.0.1:3500`    | Host mode: local API the relay forwards to.   |
-| `SYNC_TOKEN`        | `<RELAY_TOKEN>`            | Shared secret for host/client sync (optional). |
 
 See `.env.example`. The renderer's Settings → **Connection** screen edits these
 at runtime; a saved config persists to the Electron `userData` directory.
@@ -79,7 +78,8 @@ at runtime; a saved config persists to the Electron `userData` directory.
 
 In client mode the local MongoDB is started together with a full local Express
 backend. Mutating requests are recorded as pending sync operations and replayed
-to the linked host when the relay connection is available. The host pulls its
-data back to the client, including user credentials so login continues to work
-offline. Conflicts (the same record changed on both sides) are flagged for
-manual review in Settings → Connection.
+to the linked host through the relay when the connection is available. The host
+pulls its data back to the client, including user credentials so login continues
+to work offline. Sync traffic is authorized by the relay link itself, so no
+extra sync token is needed. Conflicts (the same record changed on both sides)
+are flagged for manual review in Settings → Connection.

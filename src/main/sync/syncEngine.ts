@@ -27,8 +27,6 @@ export class SyncEngine {
 
   private targetHostId = '';
 
-  private syncToken = '';
-
   private online = false;
 
   private active = false;
@@ -48,10 +46,6 @@ export class SyncEngine {
   setRelayClient(relay: RelayClient, targetHostId: string): void {
     this.relay = relay;
     this.targetHostId = targetHostId;
-  }
-
-  setSyncToken(token: string): void {
-    this.syncToken = token;
   }
 
   setOnline(online: boolean): void {
@@ -206,7 +200,7 @@ export class SyncEngine {
       requestId: crypto.randomUUID(),
       method: op.method,
       path: op.path,
-      headers: this.withSyncToken(op.headers || {}),
+      headers: op.headers || {},
       body: op.body,
     };
 
@@ -298,7 +292,7 @@ export class SyncEngine {
         requestId: crypto.randomUUID(),
         method: 'GET',
         path: `/api/v1/sync/pull/${collection.name}?${queryString}`,
-        headers: this.withSyncToken({}),
+        headers: {},
       };
 
       const response = await this.request(this.targetHostId, envelope);
@@ -347,13 +341,6 @@ export class SyncEngine {
     delete cleanDoc.__v;
 
     await Model.findByIdAndUpdate(id, cleanDoc, { upsert: true, new: true, setDefaultsOnInsert: true });
-  }
-
-  private withSyncToken(headers: Record<string, string>): Record<string, string> {
-    if (this.syncToken) {
-      headers['x-sync-token'] = this.syncToken;
-    }
-    return headers;
   }
 
   private async request(targetHostId: string, envelope: RequestEnvelope): Promise<RelayEnvelope> {
