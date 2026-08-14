@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import logger from 'morgan';
 import path from 'path';
 import cors from 'cors';
-import { connectDB } from '@api/config/mongoose';
+import { connectDB, setSkipDefaultSeeding } from '@api/config/mongoose';
 import '@api/models'; // register all synced Mongoose models
 import { errorHandler, notFound } from '@api/middlewares/error';
 import { syncRecorderMiddleware, setSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
@@ -30,6 +30,7 @@ function buildApp(clientMode: boolean, dbName?: string): express.Application {
 
   if (clientMode) {
     setSyncRecorderClientMode(true);
+    setSkipDefaultSeeding(true);
     app.use(syncRecorderMiddleware);
   }
 
