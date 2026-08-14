@@ -101,7 +101,9 @@ export async function pullChanges(options: PullChangesOptions): Promise<{
     sequence: entry.sequence,
     documentId: entry.documentId,
     operation: entry.operation,
-    doc: entry.docSnapshot,
+    doc: entry.operation === 'delete'
+      ? { _id: entry.documentId, __deleted: true }
+      : entry.docSnapshot,
   }));
 
   return {

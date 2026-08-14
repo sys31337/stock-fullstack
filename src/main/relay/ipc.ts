@@ -38,4 +38,5 @@ export function registerRelayIpc(): void {
   ipcMain.handle('sync:get-conflicts', () => manager.getSyncConflicts());
   ipcMain.handle('sync:resolve-conflict', (_event, conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) =>
     manager.resolveSyncConflict(conflictId, resolution, mergedDoc));
+  ipcMain.handle('sync:reset-and-full-sync', () => manager.resetAndFullSync());
 }

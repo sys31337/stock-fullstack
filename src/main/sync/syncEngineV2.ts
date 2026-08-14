@@ -33,9 +33,15 @@ const CURRENT_SYNC_VERSION = 2;
 export class SyncEngineV2 {
   private relay: RelayClient | null = null;
 
+  private clientMode: boolean;
+
   private targetHostId = '';
 
   private online = false;
+
+  constructor(clientMode = false) {
+    this.clientMode = clientMode;
+  }
 
   private active = false;
 
@@ -185,6 +191,44 @@ export class SyncEngineV2 {
       conflictCount,
       isOnline: this.online,
     };
+  }
+
+  /**
+   * Wipe all synced collection data and cursors on the client, then perform a
+   * full re-pull from the host. This is the fastest way to recover from
+   * diverged local state (duplicate derived records, missing deletes, etc.).
+   */
+  async resetAndFullSync(): Promise<{ ok: boolean; error?: string }> {
+    if (!this.clientMode) {
+      return { ok: false, error: 'RESET_ONLY_AVAILABLE_IN_CLIENT_MODE' };
+    }
+
+    try {
+      for (const cfg of SYNC_COLLECTIONS) {
+        const Model = this.getLocalModel(cfg.model);
+        if (Model) {
+          await Model.deleteMany({});
+        }
+      }
+
+      const state = await this.ensureState();
+      state.collectionCursors = {};
+      state.lastPullAt = undefined;
+      state.lastPushAt = undefined;
+      state.lastError = '';
+      state.markModified('collectionCursors');
+      await state.save();
+
+      this.lastPullAt = undefined;
+      this.lastPushAt = undefined;
+      this.lastError = '';
+
+      await this.triggerSync();
+      return { ok: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { ok: false, error: message };
+    }
   }
 
   async resolveConflict(

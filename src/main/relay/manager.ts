@@ -62,7 +62,7 @@ class RelayManager {
   constructor() {
     this.config = loadRelayConfig();
     this.loadPersistedConfig();
-    this.syncEngine = new SyncEngineV2();
+    this.syncEngine = new SyncEngineV2(this.config.mode === 'client');
     this.syncEngine.onStatusChange = (snapshot) => this.onSyncStatusChange(snapshot);
     setOnOperationRecorded(() => {
       this.syncEngine?.notifyOperationRecorded();
@@ -183,6 +183,13 @@ class RelayManager {
     mergedDoc?: any,
   ): Promise<{ ok: boolean; error?: string }> {
     return this.syncEngine?.resolveConflict(conflictId, resolution, mergedDoc) ?? { ok: false, error: 'SYNC_ENGINE_UNAVAILABLE' };
+  }
+
+  async resetAndFullSync(): Promise<{ ok: boolean; error?: string }> {
+    if (this.config.mode !== 'client') {
+      return { ok: false, error: 'NOT_CLIENT_MODE' };
+    }
+    return this.syncEngine?.resetAndFullSync() ?? { ok: false, error: 'SYNC_ENGINE_UNAVAILABLE' };
   }
 
   shutdown(): void {
