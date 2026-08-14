@@ -79,8 +79,14 @@ export class SyncEngine {
   }
 
   async triggerSync(): Promise<void> {
-    if (!this.online || !this.relay || !this.targetHostId) return;
-    if (this.currentStatus !== 'idle') return;
+    if (!this.online || !this.relay || !this.targetHostId) {
+      console.log(`[sync] skipped: online=${this.online} relay=${!!this.relay} targetHostId=${this.targetHostId || '(none)'}`);
+      return;
+    }
+    if (this.currentStatus !== 'idle') {
+      console.log(`[sync] skipped: already ${this.currentStatus}`);
+      return;
+    }
 
     try {
       await this.pushPending();
@@ -179,6 +185,7 @@ export class SyncEngine {
         op.retryCount += 1;
         op.status = op.retryCount >= 3 ? 'failed' : 'pending';
         op.errorMessage = error instanceof Error ? error.message : String(error);
+        this.lastError = `[sync] push failed for ${op.collection}/${op.documentId || op.path}: ${op.errorMessage}`;
         await op.save();
         // Stop pushing on conflict or repeated failure to keep order.
         if (op.status === 'failed' || op.errorMessage?.includes('CONFLICT')) {
@@ -257,7 +264,9 @@ export class SyncEngine {
       try {
         await this.pullCollection(collection, since);
       } catch (error) {
-        console.error(`[sync] pull failed for ${collection.name}`, error);
+        const message = `[sync] pull failed for ${collection.name}: ${error instanceof Error ? error.message : String(error)}`;
+        console.error(message);
+        this.lastError = message;
       }
     }
 
