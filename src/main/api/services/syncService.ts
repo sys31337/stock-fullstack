@@ -325,6 +325,7 @@ export async function pullCollectionChanges(
 
   const cursor = typeof req.query.cursor === 'string' ? parseInt(req.query.cursor, 10) : 0;
   const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 200;
+  const includeAuth = req.query.includeAuth === 'true';
 
   const { changes, hasMore, maxSequence, nextCursor } = await pullChanges({
     collection,
@@ -344,7 +345,7 @@ export async function pullCollectionChanges(
       }
       const current = await Model.findById(change.documentId).lean();
       if (current) {
-        const normalized = normalizeDoc(current);
+        const normalized = normalizeDoc(current, includeAuth && collection === 'users');
         docs.push({ ...normalized, sequence: change.sequence });
       } else if (change.doc) {
         docs.push({ ...change.doc, sequence: change.sequence });
