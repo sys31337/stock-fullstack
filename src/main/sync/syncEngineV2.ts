@@ -357,6 +357,8 @@ export class SyncEngineV2 {
     const pageSize = 200;
     let currentCursor = cursor;
     let hasMore = true;
+    let totalPulled = 0;
+    let totalApplied = 0;
 
     while (hasMore) {
       const authParam = collection.syncAuthFields ? '&includeAuth=true' : '';
@@ -369,6 +371,7 @@ export class SyncEngineV2 {
       const docs = response.docs || [];
       hasMore = response.hasMore ?? false;
       currentCursor = response.nextCursor ?? response.maxSequence ?? currentCursor;
+      totalPulled += docs.length;
 
       // Skip documents that have pending local changes or unresolved conflicts.
       const pendingIds = await SyncOperation.find({
@@ -387,9 +390,15 @@ export class SyncEngineV2 {
         const id = doc._id || doc.id;
         if (!id || skipIds.has(String(id))) continue;
         await this.applyLocalDoc(collection.name, doc);
+        totalApplied += 1;
       }
 
       await this.updateCollectionCursor(collection.name, currentCursor);
+    }
+
+    if (totalPulled > 0 || cursor === 0) {
+      const localCount = await Model.estimatedDocumentCount();
+      console.log(`[sync:v2] pulled ${collection.name}: pulled=${totalPulled} applied=${totalApplied} local=${localCount} cursor=${cursor}->${currentCursor}`);
     }
   }
 
