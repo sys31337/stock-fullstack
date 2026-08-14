@@ -25,7 +25,7 @@ export interface SyncStatusSnapshot {
   isOnline: boolean;
 }
 
-const POLL_INTERVAL_MS = 10_000;
+const POLL_INTERVAL_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 120_000;
 /** Bump this when the sync protocol changes in a way that requires clients to re-pull everything. */
 const CURRENT_SYNC_VERSION = 2;
@@ -52,6 +52,9 @@ export class SyncEngineV2 {
   /** In-memory lock to prevent concurrent sync runs. */
   private running = false;
 
+  /** True if an operation was recorded while a sync was already running. */
+  private queuedTrigger = false;
+
   onStatusChange: (snapshot: SyncStatusSnapshot) => void = () => {};
 
   setRelayClient(relay: RelayClient, targetHostId: string): void {
@@ -63,9 +66,22 @@ export class SyncEngineV2 {
     const wasOnline = this.online;
     this.online = online;
     if (online && !wasOnline) {
-      this.triggerSync().catch(() => {});
+      this.notifyOperationRecorded();
     }
     this.broadcastStatus();
+  }
+
+  /**
+   * Called whenever the sync recorder queues a new operation. Runs a sync
+   * immediately if idle, otherwise schedules one to run as soon as the current
+   * sync finishes so changes propagate to other devices with minimal delay.
+   */
+  notifyOperationRecorded(): void {
+    if (this.running) {
+      this.queuedTrigger = true;
+      return;
+    }
+    this.triggerSync().catch(() => {});
   }
 
   start(): void {
@@ -114,12 +130,18 @@ export class SyncEngineV2 {
 
   async triggerSync(): Promise<void> {
     if (!this.online || !this.relay || !this.targetHostId) {
-      console.log(`[sync:v2] skipped: online=${this.online} relay=${!!this.relay} targetHostId=${this.targetHostId || '(none)'}`);
       return;
     }
     if (this.running) {
-      console.log('[sync:v2] skipped: already running');
       return;
+    }
+    // Wait briefly for the relay to be registered. If it is not, skip silently
+    // instead of logging a storm of errors during startup/reconnection.
+    if (this.relay.getState() !== 'registered') {
+      const becameRegistered = await this.waitForRegistered(3000);
+      if (!becameRegistered) {
+        return;
+      }
     }
 
     this.running = true;
@@ -141,6 +163,12 @@ export class SyncEngineV2 {
       this.broadcastStatus();
     } finally {
       this.running = false;
+      // If an operation was recorded while we were busy, sync again right away
+      // so the change is propagated immediately.
+      if (this.queuedTrigger) {
+        this.queuedTrigger = false;
+        this.triggerSync().catch(() => {});
+      }
     }
   }
 
@@ -267,6 +295,13 @@ export class SyncEngineV2 {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      // NOT_REGISTERED is expected during brief disconnects; do not mark ops as
+      // failed and do not spam logs.
+      if (message === 'NOT_REGISTERED') {
+        this.currentStatus = 'idle';
+        this.broadcastStatus();
+        return;
+      }
       for (const op of pending) {
         op.retryCount += 1;
         op.status = op.retryCount >= 5 ? 'failed' : 'pending';
@@ -295,7 +330,12 @@ export class SyncEngineV2 {
       try {
         await this.pullCollection(collection, cursors[collection.name] ?? 0);
       } catch (error) {
-        const message = `[sync:v2] pull failed for ${collection.name}: ${error instanceof Error ? error.message : String(error)}`;
+        const rawMessage = error instanceof Error ? error.message : String(error);
+        // NOT_REGISTERED is expected during brief disconnects; do not spam logs.
+        if (rawMessage === 'NOT_REGISTERED') {
+          return;
+        }
+        const message = `[sync:v2] pull failed for ${collection.name}: ${rawMessage}`;
         console.error(message);
         this.lastError = message;
       }
@@ -463,7 +503,10 @@ export class SyncEngineV2 {
 
   private async request<T>(targetHostId: string, method: string, path: string, body?: unknown): Promise<T> {
     if (!this.relay) throw new Error('RELAY_NOT_AVAILABLE');
-    await this.waitForRegistered(10000);
+    const registered = await this.waitForRegistered(10000);
+    if (!registered) {
+      throw new Error('NOT_REGISTERED');
+    }
 
     const envelope: RequestEnvelope = {
       kind: 'request',
@@ -489,15 +532,16 @@ export class SyncEngineV2 {
     return this.parseBody(response.body) as T;
   }
 
-  private async waitForRegistered(timeoutMs: number): Promise<void> {
-    if (!this.relay) throw new Error('RELAY_NOT_AVAILABLE');
+  private async waitForRegistered(timeoutMs: number): Promise<boolean> {
+    if (!this.relay) return false;
     const start = Date.now();
     while (this.relay.getState() !== 'registered') {
       if (Date.now() - start > timeoutMs) {
-        throw new Error('NOT_REGISTERED');
+        return false;
       }
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
+    return true;
   }
 
   private parseBody(body: unknown): any {
