@@ -72,6 +72,7 @@ export interface RelayPreloadApi {
   getSyncConflicts: () => Promise<SyncConflictSnapshot[]>;
   resolveSyncConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) => Promise<{ ok: boolean; error?: string }>;
   resetAndFullSync: () => Promise<{ ok: boolean; error?: string }>;
+  reconcileWithHost: () => Promise<{ ok: boolean; error?: string }>;
   onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => () => void;
   onSyncDataChange: (cb: (message: SyncBroadcastMessage) => void) => () => void;
 }

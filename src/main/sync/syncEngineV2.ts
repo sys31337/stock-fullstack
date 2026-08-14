@@ -224,10 +224,50 @@ export class SyncEngineV2 {
       this.lastError = '';
 
       await this.triggerSync();
+      await this.reconcileAllCollections();
       return { ok: true };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { ok: false, error: message };
+    }
+  }
+
+  /**
+   * Compare each synced collection's local ids against the host's current
+   * snapshot and delete any local documents the host no longer has. This fixes
+   * stale data caused by delete events that were missed in the change log.
+   */
+  async reconcileAllCollections(): Promise<void> {
+    if (!this.online || !this.relay || !this.targetHostId) return;
+
+    for (const cfg of SYNC_COLLECTIONS) {
+      try {
+        await this.reconcileCollection(cfg);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[sync:v2] reconcile failed for ${cfg.name}: ${message}`);
+      }
+    }
+  }
+
+  private async reconcileCollection(collection: SyncCollectionConfig): Promise<void> {
+    const Model = this.getLocalModel(collection.model);
+    if (!Model) return;
+
+    const response = await this.request<{ ids: string[] }>(
+      this.targetHostId,
+      'GET',
+      `/api/v1/sync/v2/snapshot/${collection.name}`,
+    );
+
+    const hostIds = new Set((response.ids || []).map(String));
+    const localDocs = await Model.find({}, '_id').lean();
+    const toDelete = localDocs.filter((d: any) => !hostIds.has(String(d._id)));
+
+    if (toDelete.length > 0) {
+      const ids = toDelete.map((d: any) => String(d._id));
+      await Model.deleteMany({ _id: { $in: ids } });
+      console.log(`[sync:v2] reconciled ${collection.name}: deleted ${ids.length} stale local doc(s)`);
     }
   }
 

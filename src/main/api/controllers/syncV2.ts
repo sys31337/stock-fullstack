@@ -32,6 +32,24 @@ export const pullV2 = async (req: IUserIdRequest, res: Response, next: NextFunct
   }
 };
 
+export const snapshotV2 = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { collection } = req.params;
+    const cfg = SYNC_COLLECTIONS.find((c) => c.name === collection);
+    if (!cfg) {
+      return res.status(404).send({ message: 'Unknown collection' });
+    }
+    const Model = mongoose.connection.models[cfg.model];
+    if (!Model) {
+      return res.status(404).send({ message: 'Model not registered' });
+    }
+    const ids = (await Model.find({}, '_id').lean()).map((d: any) => String(d._id));
+    return res.status(200).send({ collection, ids, generatedAt: new Date().toISOString() });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export const diagnosticsV2 = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const counts: Record<string, number> = {};

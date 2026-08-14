@@ -192,6 +192,18 @@ class RelayManager {
     return this.syncEngine?.resetAndFullSync() ?? { ok: false, error: 'SYNC_ENGINE_UNAVAILABLE' };
   }
 
+  async reconcileWithHost(): Promise<{ ok: boolean; error?: string }> {
+    if (this.config.mode !== 'client') {
+      return { ok: false, error: 'NOT_CLIENT_MODE' };
+    }
+    try {
+      await this.syncEngine?.reconcileAllCollections();
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : 'RECONCILE_FAILED' };
+    }
+  }
+
   shutdown(): void {
     this.stopClient();
   }
