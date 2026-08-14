@@ -6,6 +6,7 @@ import { loadRelayConfig, RelayConfig } from './config';
 import { HostBridge } from './hostBridge';
 import { ClientProxy } from './clientProxy';
 import { SyncEngine, SyncStatusSnapshot } from '../sync/syncEngine';
+import { setOnOperationRecorded } from '../api/middlewares/syncRecorder';
 
 export interface RelayStateSnapshot {
   mode: 'host' | 'client';
@@ -60,6 +61,9 @@ class RelayManager {
     this.loadPersistedConfig();
     this.syncEngine = new SyncEngine();
     this.syncEngine.onStatusChange = (snapshot) => this.onSyncStatusChange(snapshot);
+    setOnOperationRecorded(() => {
+      this.syncEngine?.triggerSync().catch(() => {});
+    });
   }
 
   start(): void {

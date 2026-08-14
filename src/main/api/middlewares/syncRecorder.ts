@@ -4,12 +4,18 @@ import { getSyncCollectionByEndpoint } from '../../sync/collectionConfig';
 
 let clientModeEnabled = false;
 
+let onOperationRecorded: (() => void) | null = null;
+
 export function setSyncRecorderClientMode(enabled: boolean): void {
   clientModeEnabled = enabled;
 }
 
 export function isSyncRecorderClientMode(): boolean {
   return clientModeEnabled;
+}
+
+export function setOnOperationRecorded(callback: () => void): void {
+  onOperationRecorded = callback;
 }
 
 const EXACT_SKIP_PATHS = new Set([
@@ -145,6 +151,7 @@ async function queueOperation(
     existing.retryCount = 0;
     existing.errorMessage = undefined;
     await existing.save();
+    onOperationRecorded?.();
     return;
   }
 
@@ -158,4 +165,5 @@ async function queueOperation(
     status: 'pending',
     retryCount: 0,
   }).save();
+  onOperationRecorded?.();
 }
