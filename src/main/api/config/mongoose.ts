@@ -15,8 +15,8 @@ export function setSkipDefaultSeeding(skip: boolean): void {
   skipDefaultSeeding = skip;
 }
 
-const connectDB = async (): Promise<boolean> => {
-  const uri = await startMongoDB();
+const connectDB = async (dbName?: string): Promise<boolean> => {
+  const uri = await startMongoDB(dbName);
   mongoose.set('strictQuery', true);
   mongoose.connect(uri);
 

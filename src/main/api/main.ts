@@ -15,7 +15,7 @@ import { log } from '@api/utils';
 
 const whitelist = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4172', 'http://localhost:4030', 'http://localhost:5030', 'file://', 'null'];
 
-function buildApp(clientMode: boolean): express.Application {
+function buildApp(clientMode: boolean, dbName?: string): express.Application {
   const app = express();
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({ origin: [...whitelist], optionsSuccessStatus: 200, credentials: true }));
@@ -35,7 +35,7 @@ function buildApp(clientMode: boolean): express.Application {
   app.get('/', (_req, res) => res.sendStatus(200));
 
   /** Initialise mongoose connection */
-  connectDB();
+  connectDB(dbName);
 
   /** Start order auto-cancel scheduler (host mode only) */
   if (!clientMode) {
@@ -65,18 +65,15 @@ function attachSocketIO(server: ReturnType<typeof createServer>): Server {
 
 export interface ApiServerOptions {
   clientMode?: boolean;
+  dbName?: string;
 }
 
 export function createApiServer(options: ApiServerOptions = {}): ReturnType<typeof createServer> {
-  const { clientMode = false } = options;
-  const app = buildApp(clientMode);
+  const { clientMode = false, dbName } = options;
+  const app = buildApp(clientMode, dbName);
   const server = createServer(app);
   attachSocketIO(server);
   return server;
 }
 
-// Default server for host mode (kept for compatibility with dev scripts).
-const defaultServer = createApiServer({ clientMode: false });
-export const io = (defaultServer as any).io as Server;
-
-export default defaultServer;
+export default createApiServer;

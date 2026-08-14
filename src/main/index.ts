@@ -114,15 +114,12 @@ app.whenReady().then(async () => {
   relayManager.start();
 
   const clientMode = !relayManager.isHost();
+  const clientDb = clientMode ? clientDbName(relayManager.getConfig().targetHostId) : undefined;
   if (clientMode) {
     setSkipDefaultSeeding(true);
-    // In client mode isolate each linked host's data in its own local database.
-    // The database name is derived from the persisted target host id; changing
-    // the linked host restarts the app so the new database is used.
-    process.env.MONGODB_DB_NAME = clientDbName(relayManager.getConfig().targetHostId);
   }
 
-  const server = createApiServer({ clientMode });
+  const server = createApiServer({ clientMode, dbName: clientDb });
 
   server.listen(3500, () => {
     console.error(`[server] API server listening on port 3500 (mode=${clientMode ? 'client' : 'host'})`);

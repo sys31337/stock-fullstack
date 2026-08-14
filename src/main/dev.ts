@@ -6,7 +6,8 @@ async function main(): Promise<void> {
   relayManager.start();
 
   if (relayManager.isHost()) {
-    const { default: server } = await import('@api/main');
+    const { createApiServer } = await import('@api/main');
+    const server = createApiServer({ clientMode: false });
     await startMongoDB();
     server.listen(3500, () => {
       console.log(`API server listening on port 3500`);

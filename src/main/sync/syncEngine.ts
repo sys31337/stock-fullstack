@@ -345,7 +345,19 @@ export class SyncEngine {
 
   private async request(targetHostId: string, envelope: RequestEnvelope): Promise<RelayEnvelope> {
     if (!this.relay) throw new Error('RELAY_NOT_AVAILABLE');
+    await this.waitForRegistered(10000);
     return this.relay.request(targetHostId, envelope, REQUEST_TIMEOUT_MS);
+  }
+
+  private async waitForRegistered(timeoutMs: number): Promise<void> {
+    if (!this.relay) throw new Error('RELAY_NOT_AVAILABLE');
+    const start = Date.now();
+    while (this.relay.getState() !== 'registered') {
+      if (Date.now() - start > timeoutMs) {
+        throw new Error('NOT_REGISTERED');
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
   }
 
   private parseBody(body: unknown): any {

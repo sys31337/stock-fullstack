@@ -140,19 +140,19 @@ function spawnMongod(port: number, extraArgs: string[] = []): ChildProcess {
   return proc;
 }
 
-export async function startMongoDB(): Promise<string> {
+export async function startMongoDB(dbNameOverride?: string): Promise<string> {
   if (currentUri) return currentUri;
   if (startingPromise) return startingPromise;
 
-  startingPromise = initMongoDB();
+  startingPromise = initMongoDB(dbNameOverride);
   return startingPromise;
 }
 
-async function initMongoDB(): Promise<string> {
+async function initMongoDB(dbNameOverride?: string): Promise<string> {
   const port = parseInt(process.env.MONGODB_PORT || '27018', 10);
   const username = process.env.MONGODB_ROOT_USER || 'stock_admin';
   const password = process.env.MONGODB_ROOT_PASS || 'admin';
-  const dbName = process.env.MONGODB_DB_NAME || 'stock';
+  const dbName = dbNameOverride || process.env.MONGODB_DB_NAME || 'stock';
 
   const alreadyRunning = await isPortInUse(port);
   if (!alreadyRunning) {
