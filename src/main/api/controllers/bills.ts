@@ -151,6 +151,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
           const reference = `${type}-CONV-${body.convertFromOrder}-${billRefId}`;
           await ensureStockMovementReference(reference);
           await StockMovement.create({
+            _id: deterministicMovementId(reference, product.barCode),
             product: dbProduct._id,
             warehouse: payload.warehouse,
             type: 'OUT',
