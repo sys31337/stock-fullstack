@@ -5,7 +5,7 @@ import type { RelayEnvelope, RequestEnvelope } from '../relay/protocol';
 import SyncOperation from '../api/models/syncOperation';
 import SyncConflict from '../api/models/syncConflict';
 import SyncState from '../api/models/syncState';
-import { SYNC_COLLECTIONS, SyncCollectionConfig } from './collectionConfig';
+import { SYNC_COLLECTIONS, SyncCollectionConfig, getSyncCollectionByName } from './collectionConfig';
 
 export type SyncEngineStatus = 'idle' | 'pulling' | 'pushing' | 'error';
 
@@ -60,8 +60,26 @@ export class SyncEngine {
   start(): void {
     if (this.active) return;
     this.active = true;
+    this.migrateLegacyPaths().catch(() => {});
     this.scheduleNextPoll();
     this.broadcastStatus();
+  }
+
+  private async migrateLegacyPaths(): Promise<void> {
+    try {
+      const ops = await SyncOperation.find({ status: 'pending' }).lean();
+      for (const op of ops) {
+        if (!op.path || op.path.startsWith('/api/v1/')) continue;
+        const cfg = getSyncCollectionByName(op.collection);
+        if (!cfg) continue;
+        const suffix = op.path.startsWith('/') ? op.path : `/${op.path}`;
+        const fixedPath = `/api/v1/${cfg.endpoint}${suffix}`;
+        console.log('[sync] migrating legacy path', op.path, '->', fixedPath);
+        await SyncOperation.updateOne({ _id: op._id }, { path: fixedPath });
+      }
+    } catch (err) {
+      console.error('[sync] migrateLegacyPaths failed', err);
+    }
   }
 
   stop(): void {

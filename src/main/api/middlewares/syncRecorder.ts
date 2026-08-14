@@ -77,7 +77,13 @@ export function syncRecorderMiddleware(req: Request, res: Response, next: NextFu
   }
 
   const pathInfo = extractEndpointAndId(req.path);
-  console.log('[syncRecorder]', req.method, req.path, '->', pathInfo);
+  console.log('[syncRecorder]', req.method, {
+    originalUrl: req.originalUrl,
+    url: req.url,
+    baseUrl: req.baseUrl,
+    path: req.path,
+    pathInfo,
+  });
   if (!pathInfo || shouldSkip(req.path)) {
     next();
     return;
@@ -179,6 +185,6 @@ async function queueOperation(
     status: 'pending',
     retryCount: 0,
   }).save();
-  console.log('[syncRecorder] queued', op._id, op.method, op.path, op.documentId);
+  console.log('[syncRecorder] queued', op._id, op.method, 'captured=', path, 'stored=', op.path, op.documentId);
   onOperationRecorded?.();
 }
