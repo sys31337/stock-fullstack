@@ -14,7 +14,7 @@ import {
 } from '@api/plugins/syncChangeTracking';
 import { seedChangeLogFromExistingData } from '@api/services/syncChangeLogService';
 
-let skipDefaultSeeding = false;
+let skipDefaultSeeding = true;
 
 export function setSkipDefaultSeeding(skip: boolean): void {
   skipDefaultSeeding = skip;
