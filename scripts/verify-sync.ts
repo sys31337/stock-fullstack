@@ -84,6 +84,7 @@ async function run(): Promise<void> {
   const orderId = String(Date.now());
 
   // 1. Idempotent bill creation with a stable id.
+  const nowIso = new Date().toISOString();
   const createOp = {
     operationId: crypto.randomUUID(),
     documentId: stableBillId,
@@ -92,8 +93,8 @@ async function run(): Promise<void> {
     path: '/api/v1/bills',
     body: {
       _id: stableBillId,
-      billDate: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
+      billDate: nowIso,
+      createdAt: nowIso,
       type: 'SALE',
       orderId,
       orderTotalHT: 100,
@@ -123,7 +124,7 @@ async function run(): Promise<void> {
   assert(push1.results[0].status === 'applied', 'First push applies the bill');
   assert(push1.results[0].sequence !== undefined, 'Applied change gets a sequence number');
   assert(push1.results[0].doc?._id === stableBillId, 'Applied bill preserves the client-supplied _id');
-  assert(push1.results[0].doc?.createdAt === createOp.body.billDate, 'Applied bill preserves the client-created createdAt');
+  assert(push1.results[0].doc?.createdAt === nowIso, 'Applied bill preserves the client-created createdAt');
 
   // Retry the exact same operation.
   const push2 = await pushOperations(req, [createOp]);
@@ -144,6 +145,7 @@ async function run(): Promise<void> {
   assert(pull.docs.length === 1, 'Pull returns one bill from cursor 0');
   assert(String(pull.docs[0]._id) === stableBillId, 'Pulled bill has the same stable _id');
   assert(pull.nextCursor === pull.maxSequence, 'Next cursor equals max sequence on last page');
+  assert(pull.nextCursor > 0, 'Pull cursor advances past 0');
 
   // 3. Conflict detection: modify the server bill, then push an older update.
   await Bill.findByIdAndUpdate(stableBillId, { orderTotalTTC: 200 });
