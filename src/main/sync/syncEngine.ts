@@ -100,6 +100,11 @@ export class SyncEngine {
       return;
     }
 
+    // Reset last error at the start of a manual/auto sync so the UI reflects
+    // only the result of this attempt.
+    this.lastError = '';
+    this.broadcastStatus();
+
     try {
       await this.pushPending();
       await this.pullAll();
@@ -358,7 +363,71 @@ export class SyncEngine {
     const cleanDoc = { ...doc };
     delete cleanDoc.__v;
 
-    await Model.findByIdAndUpdate(id, cleanDoc, { upsert: true, new: true, setDefaultsOnInsert: true });
+    try {
+      await Model.findByIdAndUpdate(id, cleanDoc, { upsert: true, new: true, setDefaultsOnInsert: true });
+    } catch (error: any) {
+      if (error?.code === 11000) {
+        const resolved = await this.resolveDuplicateKeyConflict(Model, cfg, cleanDoc, error);
+        if (resolved) return;
+      }
+      throw error;
+    }
+  }
+
+  private async resolveDuplicateKeyConflict(
+    Model: any,
+    cfg: SyncCollectionConfig,
+    remoteDoc: any,
+    error: any,
+  ): Promise<boolean> {
+    const dupKey = this.parseDuplicateKey(error);
+    if (!dupKey || Object.keys(dupKey).length === 0) return false;
+
+    const localDoc = await Model.findOne(dupKey).lean();
+    if (!localDoc) return false;
+    const localId = String(localDoc._id);
+
+    // If the local document has unsynced changes, do not overwrite it automatically.
+    const hasPendingLocalChange = await SyncOperation.exists({
+      status: { $in: ['pending', 'syncing'] },
+      collection: cfg.name,
+      documentId: localId,
+    });
+    if (hasPendingLocalChange) {
+      console.log('[sync] skipping pulled doc, local copy has pending changes', cfg.name, dupKey);
+      return true;
+    }
+
+    const remoteUpdatedAt = new Date(remoteDoc.updatedAt || 0).getTime();
+    const localUpdatedAt = new Date(localDoc.updatedAt || 0).getTime();
+
+    if (remoteUpdatedAt > localUpdatedAt) {
+      // Remote is newer: remove the local duplicate and insert the remote version.
+      await Model.findByIdAndDelete(localId);
+      await Model.create(remoteDoc);
+      console.log('[sync] resolved duplicate key by keeping remote', cfg.name, dupKey);
+      return true;
+    }
+
+    // Local is newer or equal: keep local. If the remote _id differs, the host
+    // will receive the local version on the next push and update its copy.
+    console.log('[sync] resolved duplicate key by keeping local', cfg.name, dupKey);
+    return true;
+  }
+
+  private parseDuplicateKey(error: any): Record<string, any> | null {
+    if (error.keyValue && typeof error.keyValue === 'object') {
+      return error.keyValue;
+    }
+    const message = error?.message || '';
+    const match = message.match(/dup key:\s*(\{.*?\})\s*$/);
+    if (!match) return null;
+    try {
+      // The driver prints unquoted keys: { type: "DELIVERY", orderId: "505" }
+      return JSON.parse(match[1].replace(/([a-zA-Z0-9_]+):/g, '"$1":'));
+    } catch {
+      return null;
+    }
   }
 
   private async request(targetHostId: string, envelope: RequestEnvelope): Promise<RelayEnvelope> {
