@@ -21,9 +21,12 @@ class SyncBroadcaster extends EventEmitter {
    */
   async emitChange(maxSequence: number, sourceClientId?: string): Promise<void> {
     const message: SyncBroadcastMessage = { topic: 'sync:change', maxSequence, sourceClientId };
+    console.log(`[sync:broadcaster] emitChange seq=${maxSequence} source=${sourceClientId || '(host)'} bridge=${this.hostBridge ? 'yes' : 'no'}`);
     this.emit('change', message);
     if (this.hostBridge) {
-      await this.hostBridge.broadcast('sync:change', message, sourceClientId).catch(() => {});
+      await this.hostBridge.broadcast('sync:change', message, sourceClientId).catch((err) => {
+        console.error('[sync:broadcaster] broadcast failed:', err instanceof Error ? err.message : err);
+      });
     }
   }
 

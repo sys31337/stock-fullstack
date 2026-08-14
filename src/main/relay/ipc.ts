@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import { getRelayManager, RelayStateSnapshot } from './manager';
 import { RelayHostInfo } from './protocol';
+import syncBroadcaster from '../sync/syncBroadcaster';
 
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -20,6 +21,9 @@ export function registerRelayIpc(): void {
   manager.onSyncStatusChange = (snapshot) => {
     broadcast('sync:status-change', snapshot);
   };
+  syncBroadcaster.onChange((message) => {
+    broadcast('sync:data-change', message);
+  });
 
   ipcMain.handle('relay:get-state', () => manager.getStateSnapshot());
   ipcMain.handle('relay:get-config', () => manager.getConfig());

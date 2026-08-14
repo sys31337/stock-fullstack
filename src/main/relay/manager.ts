@@ -256,7 +256,7 @@ class RelayManager {
   }
 
   private handleReceive(receivePayload: ReceivePayload): void {
-    const { envelope } = receivePayload;
+    const { envelope, from } = receivePayload;
     // Hosts broadcast sync change notifications as request envelopes to a
     // virtual endpoint so they are forwarded reliably by the relay server.
     if (
@@ -264,6 +264,7 @@ class RelayManager {
       envelope.path === '/__sync__/notify' &&
       envelope.headers?.['x-sync-topic'] === 'sync:change'
     ) {
+      console.log(`[relay:manager] received sync:change notification from ${from}`);
       // A peer (host or another client via the host) reported a change.
       // Trigger a pull to catch up.
       this.syncEngine?.triggerSync().catch(() => {});

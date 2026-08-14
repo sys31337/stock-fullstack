@@ -51,6 +51,18 @@ export class HostBridge {
    * so we encode the notification as a request to a virtual sync endpoint.
    */
   async broadcast(topic: string, payload?: unknown, excludeClientId?: string): Promise<void> {
+    if (this.connectedClients.length === 0) {
+      try {
+        const hosts = await this.relay.listHosts();
+        this.connectedClients = hosts.flatMap((h) => h.clients || []);
+      } catch {
+        // keep empty
+      }
+    }
+    const targets = this.connectedClients.filter((id) => id && id !== excludeClientId);
+    console.log(`[host-bridge] broadcasting topic=${topic} to ${targets.length} client(s)`, targets);
+    if (targets.length === 0) return;
+
     const envelope: RequestEnvelope = {
       kind: 'request',
       requestId: crypto.randomUUID(),
@@ -59,8 +71,14 @@ export class HostBridge {
       headers: { 'x-sync-topic': topic },
       body: payload,
     };
-    const targets = this.connectedClients.filter((id) => id && id !== excludeClientId);
-    await Promise.all(targets.map((clientId) => this.relay.send(clientId, envelope).catch(() => {})));
+    await Promise.all(
+      targets.map((clientId) =>
+        this.relay
+          .send(clientId, envelope)
+          .then(() => console.log(`[host-bridge] notify sent to ${clientId}`))
+          .catch((err: Error) => console.warn(`[host-bridge] notify failed to ${clientId}:`, err.message)),
+      ),
+    );
   }
 
   private async handleRequest(requesterId: string, request: RequestEnvelope): Promise<void> {
