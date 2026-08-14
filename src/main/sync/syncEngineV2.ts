@@ -85,6 +85,7 @@ export class SyncEngineV2 {
     if ((state.syncVersion || 0) < CURRENT_SYNC_VERSION) {
       console.log(`[sync:v2] upgrading sync version ${state.syncVersion || 0} -> ${CURRENT_SYNC_VERSION}; resetting pull cursors`);
       state.collectionCursors = {};
+      state.markModified('collectionCursors');
       state.syncVersion = CURRENT_SYNC_VERSION;
       await state.save();
     }
@@ -529,9 +530,10 @@ export class SyncEngineV2 {
 
   private async updateCollectionCursor(collection: string, cursor: number): Promise<void> {
     const state = await this.ensureState();
-    const cursors = state.collectionCursors || {};
+    const cursors = { ...(state.collectionCursors || {}) };
     cursors[collection] = Math.max(cursor, cursors[collection] ?? 0);
     state.collectionCursors = cursors;
+    state.markModified('collectionCursors');
     state.updatedAt = new Date();
     await state.save();
   }
