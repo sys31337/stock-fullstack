@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
+import crypto from 'node:crypto';
 import SyncOperation from '@api/models/syncOperation';
+import SyncState from '@api/models/syncState';
 import { getSyncCollectionByEndpoint } from '../../sync/collectionConfig';
 
 let clientModeEnabled = false;
@@ -48,16 +50,29 @@ function extractEndpointAndId(path: string): { endpoint: string; documentId?: st
   return { endpoint: cfg.endpoint, documentId: maybeId && maybeId.length === 24 ? maybeId : undefined };
 }
 
-function normalizeBody(body: unknown): unknown {
+function normalizeBody(body: unknown, keepId: boolean): unknown {
   if (body === null || body === undefined) return undefined;
   if (typeof body !== 'object') return body;
   const clone = JSON.parse(JSON.stringify(body));
   // Strip runtime-only fields that should not be replayed to the host.
   // Keep updatedAt so the host can detect conflicts.
-  delete clone._id;
+  // Preserve the stable _id when replaying creates so the server uses the
+  // same document id instead of minting a new one.
+  if (!keepId) {
+    delete clone._id;
+  }
   delete clone.createdAt;
   delete clone.__v;
   return clone;
+}
+
+async function currentBaseSequence(): Promise<number> {
+  try {
+    const state = await SyncState.findById('global').lean();
+    return state?.syncSequence ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -137,45 +152,64 @@ async function queueOperation(
 
   // For POST requests the local DB generated the _id; capture it from the
   // response body so the host can receive the same id. Some controllers wrap
-  // the result in a `data` or `result` field.
-  if (method === 'POST' && responseBody && typeof responseBody === 'object') {
-    const unwrap = (responseBody as any).data ?? (responseBody as any).result ?? responseBody;
-    const bodyId = unwrap?._id || unwrap?.id;
-    if (typeof bodyId === 'string' && bodyId.length === 24) {
-      documentId = bodyId;
+  // the result in a `data` or `result` field. Also honor an _id sent by the
+  // client in the request body.
+  if (method === 'POST') {
+    const reqId = (requestBody as any)?._id || (requestBody as any)?.id;
+    if (typeof reqId === 'string' && reqId.length === 24) {
+      documentId = reqId;
+    } else if (responseBody && typeof responseBody === 'object') {
+      const unwrap = (responseBody as any).data ?? (responseBody as any).result ?? responseBody;
+      const bodyId = unwrap?._id || unwrap?.id;
+      if (typeof bodyId === 'string' && bodyId.length === 24) {
+        documentId = bodyId;
+      }
     }
+  }
+
+  if (!documentId) {
+    console.warn('[syncRecorder] skipping operation without document id', method, path);
+    return;
   }
 
   // If a document was deleted locally there is no body to replay; send an
   // empty payload so the host can delete by id.
-  const body = method === 'DELETE' ? undefined : normalizeBody(requestBody);
+  const body = method === 'DELETE' ? undefined : normalizeBody(requestBody, true);
+  const baseUpdatedAt = (body as any)?.updatedAt || (requestBody as any)?.updatedAt;
+  const baseSequence = await currentBaseSequence();
 
   const headers: Record<string, string> = {};
   const authHeader = reqHeaders.authorization;
   if (authHeader) headers.authorization = String(authHeader);
 
   // De-duplicate: if there is already a pending operation for the same
-  // document and method, update it instead of creating another record.
+  // document, update it instead of creating another record. The operation id
+  // is deterministic per document so retries of the same logical operation do
+  // not create duplicates.
   const existing = await SyncOperation.findOne({
     status: 'pending',
     collection: cfg.name,
     documentId,
   }).sort({ createdAt: -1 });
 
-  if (existing && method !== 'POST') {
+  if (existing) {
     existing.method = method as any;
     existing.body = body;
     existing.headers = headers;
     existing.path = path;
+    existing.baseSequence = baseSequence;
+    existing.baseUpdatedAt = baseUpdatedAt;
     existing.retryCount = 0;
     existing.errorMessage = undefined;
     await existing.save();
-    console.log('[syncRecorder] updated existing', existing._id, existing.method, existing.path, existing.documentId);
+    console.log('[syncRecorder] updated existing', existing.operationId, existing.method, existing.path, existing.documentId);
     onOperationRecorded?.();
     return;
   }
 
+  const operationId = crypto.randomUUID();
   const op = await new SyncOperation({
+    operationId,
     method,
     collection: cfg.name,
     path,
@@ -184,7 +218,9 @@ async function queueOperation(
     headers,
     status: 'pending',
     retryCount: 0,
+    baseSequence,
+    baseUpdatedAt,
   }).save();
-  console.log('[syncRecorder] queued', op._id, op.method, 'captured=', path, 'stored=', op.path, op.documentId);
+  console.log('[syncRecorder] queued', op.operationId, op.method, 'captured=', path, 'stored=', op.path, op.documentId);
   onOperationRecorded?.();
 }

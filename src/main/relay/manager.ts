@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { RelayClient, RelayState } from './relayClient';
-import { RelayHostInfo } from './protocol';
+import { ReceivePayload, RelayHostInfo } from './protocol';
 import { loadRelayConfig, RelayConfig } from './config';
 import { HostBridge } from './hostBridge';
 import { ClientProxy } from './clientProxy';
-import { SyncEngine, SyncStatusSnapshot } from '../sync/syncEngine';
+import SyncEngineV2, { SyncStatusSnapshot } from '../sync/syncEngineV2';
 import { setOnOperationRecorded } from '../api/middlewares/syncRecorder';
+import syncBroadcaster from '../sync/syncBroadcaster';
 
 export interface RelayStateSnapshot {
   mode: 'host' | 'client';
@@ -37,7 +38,7 @@ const DEFAULT_RELAY_STATE: RelayStateSnapshot = {
  *   - host mode: registers as a host and bridges relayed requests to the
  *     local Express backend (HostBridge);
  *   - client mode: starts a local backend, registers as a client of a remote
- *     host, and syncs data between the local DB and the host via SyncEngine.
+ *     host, and syncs data between the local DB and the host via SyncEngineV2.
  */
 class RelayManager {
   config: RelayConfig;
@@ -45,6 +46,8 @@ class RelayManager {
   private client: RelayClient | null = null;
 
   private clientProxy: ClientProxy | null = null;
+
+  private hostBridge: HostBridge | null = null;
 
   private snapshot: RelayStateSnapshot = { ...DEFAULT_RELAY_STATE };
 
@@ -54,12 +57,12 @@ class RelayManager {
 
   onSyncStatusChange: (snapshot: SyncStatusSnapshot) => void = () => {};
 
-  private syncEngine: SyncEngine | null = null;
+  private syncEngine: SyncEngineV2 | null = null;
 
   constructor() {
     this.config = loadRelayConfig();
     this.loadPersistedConfig();
-    this.syncEngine = new SyncEngine();
+    this.syncEngine = new SyncEngineV2();
     this.syncEngine.onStatusChange = (snapshot) => this.onSyncStatusChange(snapshot);
     setOnOperationRecorded(() => {
       this.syncEngine?.triggerSync().catch(() => {});
@@ -205,13 +208,15 @@ class RelayManager {
       payload,
       onStateChange: () => this.handleStateChange(),
       onHostsChange: (hosts) => this.onHosts(hosts),
+      onReceive: (receivePayload) => this.handleReceive(receivePayload),
       onPeerStatus: () => {},
     });
 
     this.client = client;
 
     if (mode === 'host') {
-      new HostBridge(client, this.config.localApiUrl);
+      this.hostBridge = new HostBridge(client, this.config.localApiUrl);
+      syncBroadcaster.setHostBridge(this.hostBridge);
     } else {
       if (!this.config.targetHostId) {
         console.warn('[relay] client mode without RELAY_TARGET_HOST — waiting for host selection');
@@ -248,6 +253,21 @@ class RelayManager {
     const state = this.client?.getState() ?? 'idle';
     const registered = state === 'registered';
     this.syncEngine?.setOnline(registered && this.config.mode === 'client' && !!this.config.targetHostId);
+  }
+
+  private handleReceive(receivePayload: ReceivePayload): void {
+    const { envelope } = receivePayload;
+    // Hosts broadcast sync change notifications as request envelopes to a
+    // virtual endpoint so they are forwarded reliably by the relay server.
+    if (
+      envelope?.kind === 'request' &&
+      envelope.path === '/__sync__/notify' &&
+      envelope.headers?.['x-sync-topic'] === 'sync:change'
+    ) {
+      // A peer (host or another client via the host) reported a change.
+      // Trigger a pull to catch up.
+      this.syncEngine?.triggerSync().catch(() => {});
+    }
   }
 
   private loadPersistedConfig(): void {

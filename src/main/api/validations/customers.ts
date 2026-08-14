@@ -1,10 +1,11 @@
 import Joi from 'joi';
 import expressJoiValidation from 'express-joi-validation';
-import { string } from './schema';
+import { mongooseId, string } from './schema';
 
 const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createCustomerSchema = Joi.object({
+  _id: mongooseId,
   fullname: string.required(),
   address: string.optional().allow(''),
   phoneNumber: string.optional().allow(''),
@@ -21,6 +22,7 @@ const createCustomerSchema = Joi.object({
 });
 
 const updateCustomerSchema = Joi.object({
+  _id: mongooseId,
   fullname: string.optional(),
   address: string.optional().allow(''),
   phoneNumber: string.optional().allow(''),

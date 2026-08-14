@@ -1,11 +1,14 @@
-import { model, Schema, Types } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 export type SyncConflictStatus = 'pending' | 'local' | 'remote' | 'merged';
 
 export interface ISyncConflict {
   collection: string;
   documentId: string;
-  operationId: Types.ObjectId;
+  /** Reference to the originating SyncOperation document. */
+  operationId?: Schema.Types.ObjectId;
+  /** Client-generated operation id (uuid) for v2 operations. */
+  operationUuid?: string;
   localDoc: any;
   remoteDoc: any;
   mergedDoc?: any;
@@ -17,7 +20,8 @@ export interface ISyncConflict {
 const syncConflictSchema = new Schema<ISyncConflict>({
   collection: { type: String, required: true, index: true },
   documentId: { type: String, required: true, index: true },
-  operationId: { type: Schema.Types.ObjectId, ref: 'SyncOperation', required: true },
+  operationId: { type: Schema.Types.ObjectId, ref: 'SyncOperation' },
+  operationUuid: { type: String, index: true },
   localDoc: { type: Schema.Types.Mixed, required: true },
   remoteDoc: { type: Schema.Types.Mixed, required: true },
   mergedDoc: { type: Schema.Types.Mixed },

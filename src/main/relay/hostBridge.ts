@@ -1,7 +1,8 @@
 import http from 'node:http';
 import { URL } from 'node:url';
+import crypto from 'node:crypto';
 import { RelayClient } from './relayClient';
-import { ReceivePayload, RelayEnvelope, RequestEnvelope } from './protocol';
+import { ReceivePayload, RelayEnvelope, RequestEnvelope, RelayHostInfo } from './protocol';
 
 const FORWARD_HEADERS = ['authorization', 'accept-language', 'accept', 'content-type', 'x-public'];
 
@@ -17,22 +18,58 @@ export class HostBridge {
 
   private requestTimeoutMs: number;
 
+  private connectedClients: string[] = [];
+
   constructor(relay: RelayClient, localApiUrl: string, requestTimeoutMs = 60000) {
     this.relay = relay;
     this.localApiUrl = localApiUrl;
     this.requestTimeoutMs = requestTimeoutMs;
+
+    const originalReceive = this.relay.onReceive;
     this.relay.onReceive = (payload: ReceivePayload) => {
-      const { envelope } = payload;
-      if (envelope && envelope.kind === 'request' && payload.from) {
-        this.handleRequest(payload.from, envelope).catch(() => {
+      const { envelope, from } = payload;
+      if (envelope && envelope.kind === 'request' && from) {
+        this.handleRequest(from, envelope).catch(() => {
           // handled inside; nothing to do
         });
+      } else {
+        originalReceive(payload);
       }
     };
+
+    const originalHostsChange = this.relay.onHostsChange;
+    this.relay.onHostsChange = (hosts: RelayHostInfo[]) => {
+      this.connectedClients = hosts.flatMap((h) => h.clients || []);
+      originalHostsChange(hosts);
+    };
+  }
+
+  /**
+   * Broadcast a lightweight notification to every connected linked client so
+   * they can pull missed changes immediately instead of waiting for the poll.
+   * The relay protocol only guarantees forwarding of request/response envelopes,
+   * so we encode the notification as a request to a virtual sync endpoint.
+   */
+  async broadcast(topic: string, payload?: unknown, excludeClientId?: string): Promise<void> {
+    const envelope: RequestEnvelope = {
+      kind: 'request',
+      requestId: crypto.randomUUID(),
+      method: 'POST',
+      path: '/__sync__/notify',
+      headers: { 'x-sync-topic': topic },
+      body: payload,
+    };
+    const targets = this.connectedClients.filter((id) => id && id !== excludeClientId);
+    await Promise.all(targets.map((clientId) => this.relay.send(clientId, envelope).catch(() => {})));
   }
 
   private async handleRequest(requesterId: string, request: RequestEnvelope): Promise<void> {
     const { requestId, method, path } = request;
+
+    // Virtual sync notifications are handled by the client; do not forward.
+    if (path === '/__sync__/notify') {
+      return;
+    }
 
     const respond = (envelope: RelayEnvelope): void => {
       this.relay.send(requesterId, envelope).catch(() => {

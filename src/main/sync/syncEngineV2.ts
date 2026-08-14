@@ -1,11 +1,17 @@
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
 import type { RelayClient } from '../relay/relayClient';
-import type { RelayEnvelope, RequestEnvelope } from '../relay/protocol';
+import type { RequestEnvelope } from '../relay/protocol';
 import SyncOperation from '../api/models/syncOperation';
 import SyncConflict from '../api/models/syncConflict';
 import SyncState from '../api/models/syncState';
-import { SYNC_COLLECTIONS, SyncCollectionConfig, getSyncCollectionByName } from './collectionConfig';
+import { SYNC_COLLECTIONS, SyncCollectionConfig } from './collectionConfig';
+import type {
+  SyncOperationPayload,
+  SyncPushRequest,
+  SyncPushResponse,
+  SyncPullResponse,
+} from './syncProtocol';
 
 export type SyncEngineStatus = 'idle' | 'pulling' | 'pushing' | 'error';
 
@@ -19,10 +25,10 @@ export interface SyncStatusSnapshot {
   isOnline: boolean;
 }
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 120_000;
 
-export class SyncEngine {
+export class SyncEngineV2 {
   private relay: RelayClient | null = null;
 
   private targetHostId = '';
@@ -40,6 +46,9 @@ export class SyncEngine {
   private lastPullAt?: Date;
 
   private lastPushAt?: Date;
+
+  /** In-memory lock to prevent concurrent sync runs. */
+  private running = false;
 
   onStatusChange: (snapshot: SyncStatusSnapshot) => void = () => {};
 
@@ -60,25 +69,23 @@ export class SyncEngine {
   start(): void {
     if (this.active) return;
     this.active = true;
-    this.migrateLegacyPaths().catch(() => {});
+    this.migrateLegacyOperations().catch(() => {});
     this.scheduleNextPoll();
     this.broadcastStatus();
   }
 
-  private async migrateLegacyPaths(): Promise<void> {
-    try {
-      const ops = await SyncOperation.find({ status: 'pending' }).lean();
-      for (const op of ops) {
-        if (!op.path || op.path.startsWith('/api/v1/')) continue;
-        const cfg = getSyncCollectionByName(op.collection);
-        if (!cfg) continue;
-        const suffix = op.path.startsWith('/') ? op.path : `/${op.path}`;
-        const fixedPath = `/api/v1/${cfg.endpoint}${suffix}`;
-        console.log('[sync] migrating legacy path', op.path, '->', fixedPath);
-        await SyncOperation.updateOne({ _id: op._id }, { path: fixedPath });
-      }
-    } catch (err) {
-      console.error('[sync] migrateLegacyPaths failed', err);
+  private async migrateLegacyOperations(): Promise<void> {
+    // Legacy SyncOperation records created before the v2 protocol did not have
+    // a unique operation id. Assign one to each so they can be pushed.
+    const legacyOps = await SyncOperation.find({ operationId: { $exists: false } }).lean();
+    for (const op of legacyOps) {
+      await SyncOperation.updateOne(
+        { _id: op._id },
+        { $set: { operationId: crypto.randomUUID() } },
+      );
+    }
+    if (legacyOps.length > 0) {
+      console.log(`[sync:v2] migrated ${legacyOps.length} legacy operations`);
     }
   }
 
@@ -92,20 +99,23 @@ export class SyncEngine {
 
   async triggerSync(): Promise<void> {
     if (!this.online || !this.relay || !this.targetHostId) {
-      console.log(`[sync] skipped: online=${this.online} relay=${!!this.relay} targetHostId=${this.targetHostId || '(none)'}`);
+      console.log(`[sync:v2] skipped: online=${this.online} relay=${!!this.relay} targetHostId=${this.targetHostId || '(none)'}`);
       return;
     }
-    if (this.currentStatus !== 'idle') {
-      console.log(`[sync] skipped: already ${this.currentStatus}`);
+    if (this.running) {
+      console.log('[sync:v2] skipped: already running');
       return;
     }
 
-    // Reset last error at the start of a manual/auto sync so the UI reflects
-    // only the result of this attempt.
+    this.running = true;
     this.lastError = '';
     this.broadcastStatus();
 
     try {
+      // Pull first: if the server has newer state, learn it before pushing our
+      // own changes. This reduces the chance of conflicts and ensures our base
+      // sequence is as fresh as possible.
+      await this.pullAll();
       await this.pushPending();
       await this.pullAll();
       await this.updateState();
@@ -114,6 +124,8 @@ export class SyncEngine {
       this.currentStatus = 'error';
       await this.updateState();
       this.broadcastStatus();
+    } finally {
+      this.running = false;
     }
   }
 
@@ -147,24 +159,20 @@ export class SyncEngine {
       }
       await conflict.save();
 
-      const operation = await SyncOperation.findById(conflict.operationId);
-      if (operation) {
-        if (resolution === 'local') {
-          // Keep the local change and retry pushing it.
-          operation.status = 'pending';
-          operation.errorMessage = undefined;
-          await operation.save();
-        } else if (resolution === 'remote' || resolution === 'merged') {
-          // Apply the chosen remote/merged version locally.
-          operation.status = 'resolved';
-          await operation.save();
-          const chosenDoc = resolution === 'merged' && mergedDoc ? mergedDoc : conflict.remoteDoc;
-          await this.applyLocalDoc(conflict.collection, chosenDoc);
-        }
+      if (resolution === 'local') {
+        // Re-queue the local change so it is pushed again.
+        await SyncOperation.updateOne(
+          { _id: conflict.operationId },
+          { $set: { status: 'pending', errorMessage: undefined, retryCount: 0 } },
+        );
+      } else if (resolution === 'remote' || resolution === 'merged') {
+        const chosenDoc = resolution === 'merged' && mergedDoc ? mergedDoc : conflict.remoteDoc;
+        await this.applyLocalDoc(conflict.collection, chosenDoc);
       }
 
       await this.updateState();
       this.broadcastStatus();
+      this.triggerSync().catch(() => {});
       return { ok: true };
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : 'RESOLVE_FAILED' };
@@ -189,26 +197,69 @@ export class SyncEngine {
     this.broadcastStatus();
 
     const pending = await SyncOperation.find({ status: 'pending' }).sort({ createdAt: 1 });
+    if (pending.length === 0) {
+      this.currentStatus = 'idle';
+      this.lastPushAt = new Date();
+      await this.updateState();
+      this.broadcastStatus();
+      return;
+    }
 
-    for (const op of pending) {
-      try {
-        op.status = 'syncing';
-        await op.save();
-        await this.pushOperation(op);
-        op.status = 'resolved';
-        op.errorMessage = undefined;
-        await op.save();
-      } catch (error) {
-        op.retryCount += 1;
-        op.status = op.retryCount >= 3 ? 'failed' : 'pending';
-        op.errorMessage = error instanceof Error ? error.message : String(error);
-        this.lastError = `[sync] push failed for ${op.method} ${op.path} (${op.collection}): ${op.errorMessage}`;
-        await op.save();
-        // Stop pushing on conflict or repeated failure to keep order.
-        if (op.status === 'failed' || op.errorMessage?.includes('CONFLICT')) {
-          break;
+    const operations: SyncOperationPayload[] = pending.map((op) => ({
+      operationId: op.operationId,
+      documentId: op.documentId as string,
+      collection: op.collection,
+      method: op.method as any,
+      baseSequence: op.baseSequence,
+      baseUpdatedAt: op.baseUpdatedAt,
+      body: op.body,
+      path: op.path,
+    }));
+
+    const request: SyncPushRequest = { operations };
+
+    try {
+      const response = await this.request<SyncPushResponse>(
+        this.targetHostId,
+        'POST',
+        '/api/v1/sync/v2/push',
+        request,
+      );
+
+      for (const result of response.results) {
+        const op = pending.find((p) => p.operationId === result.operationId);
+        if (!op) continue;
+
+        if (result.status === 'applied' || result.status === 'duplicate') {
+          op.status = 'resolved';
+          op.errorMessage = undefined;
+          // If the server returned a document snapshot, update our local copy
+          // so ids and server-side computed fields stay in sync.
+          if (result.doc && result.status === 'applied') {
+            await this.applyLocalDoc(op.collection, result.doc);
+          }
+        } else if (result.status === 'conflict') {
+          await this.recordConflict(op, result.conflict?.remoteDoc);
+          op.status = 'pending';
+          op.errorMessage = 'CONFLICT';
+        } else {
+          op.retryCount += 1;
+          op.status = op.retryCount >= 5 ? 'failed' : 'pending';
+          op.errorMessage = result.error || `PUSH_ERROR_${result.status}`;
+          this.lastError = `[sync:v2] push failed ${op.operationId}: ${op.errorMessage}`;
         }
+        await op.save();
       }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      for (const op of pending) {
+        op.retryCount += 1;
+        op.status = op.retryCount >= 5 ? 'failed' : 'pending';
+        op.errorMessage = message;
+        await op.save();
+      }
+      this.lastError = `[sync:v2] push batch failed: ${message}`;
+      throw error;
     }
 
     this.lastPushAt = new Date();
@@ -217,71 +268,19 @@ export class SyncEngine {
     this.broadcastStatus();
   }
 
-  private async pushOperation(op: any): Promise<void> {
-    const envelope: RequestEnvelope = {
-      kind: 'request',
-      requestId: crypto.randomUUID(),
-      method: op.method,
-      path: op.path,
-      headers: op.headers || {},
-      body: op.body,
-    };
-
-    const response = await this.request(this.targetHostId, envelope);
-
-    if (response.kind === 'error') {
-      throw new Error(response.message || 'PUSH_FAILED');
-    }
-
-    if (response.kind !== 'response') {
-      throw new Error('UNEXPECTED_ENVELOPE');
-    }
-
-    const body = this.parseBody(response.body);
-
-    if (response.status === 409 && body?.conflict) {
-      await this.recordConflict(op, body.remoteDoc);
-      throw new Error('CONFLICT');
-    }
-
-    if (response.status >= 400) {
-      throw new Error(body?.message || `HTTP_${response.status}`);
-    }
-  }
-
-  private async recordConflict(operation: any, remoteDoc: any): Promise<void> {
-    let localDoc: any = {};
-    const Model = this.getLocalModel(operation.collection);
-    if (Model && operation.documentId) {
-      localDoc = (await Model.findById(operation.documentId).lean()) || {};
-    }
-
-    await SyncConflict.create({
-      collection: operation.collection,
-      documentId: operation.documentId,
-      operationId: operation._id,
-      localDoc,
-      remoteDoc,
-      status: 'pending',
-    });
-
-    operation.conflictId = (await SyncConflict.findOne({ operationId: operation._id }))?._id;
-    await operation.save();
-  }
-
   private async pullAll(): Promise<void> {
     if (!this.online || !this.relay || !this.targetHostId) return;
     this.currentStatus = 'pulling';
     this.broadcastStatus();
 
     const state = await this.ensureState();
-    const since = state.lastPullAt;
+    const cursors = state.collectionCursors || {};
 
     for (const collection of SYNC_COLLECTIONS) {
       try {
-        await this.pullCollection(collection, since);
+        await this.pullCollection(collection, cursors[collection.name] ?? 0);
       } catch (error) {
-        const message = `[sync] pull failed for ${collection.name}: ${error instanceof Error ? error.message : String(error)}`;
+        const message = `[sync:v2] pull failed for ${collection.name}: ${error instanceof Error ? error.message : String(error)}`;
         console.error(message);
         this.lastError = message;
       }
@@ -293,42 +292,27 @@ export class SyncEngine {
     this.broadcastStatus();
   }
 
-  private async pullCollection(collection: SyncCollectionConfig, since?: Date): Promise<void> {
+  private async pullCollection(collection: SyncCollectionConfig, cursor: number): Promise<void> {
     const Model = this.getLocalModel(collection.model);
     if (!Model) {
-      console.warn(`[sync] local model ${collection.model} not found`);
+      console.warn(`[sync:v2] local model ${collection.model} not found`);
       return;
     }
 
     const pageSize = 200;
-    let page = 1;
+    let currentCursor = cursor;
     let hasMore = true;
 
     while (hasMore) {
-      const query: Record<string, string> = { limit: String(pageSize), page: String(page) };
-      if (since) query.since = since.toISOString();
-      if (collection.syncAuthFields) query.includeAuth = 'true';
+      const response = await this.request<SyncPullResponse>(
+        this.targetHostId,
+        'GET',
+        `/api/v1/sync/v2/pull/${collection.name}?cursor=${currentCursor}&limit=${pageSize}`,
+      );
 
-      const queryString = new URLSearchParams(query).toString();
-      const envelope: RequestEnvelope = {
-        kind: 'request',
-        requestId: crypto.randomUUID(),
-        method: 'GET',
-        path: `/api/v1/sync/pull/${collection.name}?${queryString}`,
-        headers: {},
-      };
-
-      const response = await this.request(this.targetHostId, envelope);
-      if (response.kind !== 'response') {
-        throw new Error('UNEXPECTED_ENVELOPE');
-      }
-      const body = this.parseBody(response.body);
-      if (response.status >= 400) {
-        throw new Error(body?.message || `HTTP_${response.status}`);
-      }
-      const docs = body?.docs || [];
-      hasMore = body?.hasMore ?? false;
-      page += 1;
+      const docs = response.docs || [];
+      hasMore = response.hasMore ?? false;
+      currentCursor = response.nextCursor ?? response.maxSequence ?? currentCursor;
 
       // Skip documents that have pending local changes or unresolved conflicts.
       const pendingIds = await SyncOperation.find({
@@ -348,6 +332,8 @@ export class SyncEngine {
         if (!id || skipIds.has(String(id))) continue;
         await this.applyLocalDoc(collection.name, doc);
       }
+
+      await this.updateCollectionCursor(collection.name, currentCursor);
     }
   }
 
@@ -360,8 +346,14 @@ export class SyncEngine {
     const id = doc._id || doc.id;
     if (!id) return;
 
+    if (doc.__deleted) {
+      await Model.findByIdAndDelete(id);
+      return;
+    }
+
     const cleanDoc = { ...doc };
     delete cleanDoc.__v;
+    delete cleanDoc.sequence;
 
     try {
       await Model.findByIdAndUpdate(id, cleanDoc, { upsert: true, new: true, setDefaultsOnInsert: true });
@@ -394,7 +386,7 @@ export class SyncEngine {
       documentId: localId,
     });
     if (hasPendingLocalChange) {
-      console.log('[sync] skipping pulled doc, local copy has pending changes', cfg.name, dupKey);
+      console.log('[sync:v2] skipping pulled doc, local copy has pending changes', cfg.name, dupKey);
       return true;
     }
 
@@ -403,15 +395,14 @@ export class SyncEngine {
 
     if (remoteUpdatedAt > localUpdatedAt) {
       // Remote is newer: remove the local duplicate and insert the remote version.
+      // This preserves the remote _id because it is the same logical record.
       await Model.findByIdAndDelete(localId);
       await Model.create(remoteDoc);
-      console.log('[sync] resolved duplicate key by keeping remote', cfg.name, dupKey);
+      console.log('[sync:v2] resolved duplicate key by keeping remote', cfg.name, dupKey);
       return true;
     }
 
-    // Local is newer or equal: keep local. If the remote _id differs, the host
-    // will receive the local version on the next push and update its copy.
-    console.log('[sync] resolved duplicate key by keeping local', cfg.name, dupKey);
+    console.log('[sync:v2] resolved duplicate key by keeping local', cfg.name, dupKey);
     return true;
   }
 
@@ -423,17 +414,55 @@ export class SyncEngine {
     const match = message.match(/dup key:\s*(\{.*?\})\s*$/);
     if (!match) return null;
     try {
-      // The driver prints unquoted keys: { type: "DELIVERY", orderId: "505" }
       return JSON.parse(match[1].replace(/([a-zA-Z0-9_]+):/g, '"$1":'));
     } catch {
       return null;
     }
   }
 
-  private async request(targetHostId: string, envelope: RequestEnvelope): Promise<RelayEnvelope> {
+  private async recordConflict(operation: any, remoteDoc: any): Promise<void> {
+    const localDoc = operation.body || {};
+    await SyncConflict.findOneAndUpdate(
+      { collection: operation.collection, documentId: operation.documentId, status: 'pending' },
+      {
+        collection: operation.collection,
+        documentId: operation.documentId,
+        operationId: operation._id,
+        operationUuid: operation.operationId,
+        localDoc,
+        remoteDoc,
+        status: 'pending',
+      },
+      { upsert: true, new: true },
+    );
+  }
+
+  private async request<T>(targetHostId: string, method: string, path: string, body?: unknown): Promise<T> {
     if (!this.relay) throw new Error('RELAY_NOT_AVAILABLE');
     await this.waitForRegistered(10000);
-    return this.relay.request(targetHostId, envelope, REQUEST_TIMEOUT_MS);
+
+    const envelope: RequestEnvelope = {
+      kind: 'request',
+      requestId: crypto.randomUUID(),
+      method,
+      path,
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    };
+
+    const response = await this.relay.request(targetHostId, envelope, REQUEST_TIMEOUT_MS);
+
+    if (response.kind === 'error') {
+      throw new Error(response.message || 'REQUEST_FAILED');
+    }
+    if (response.kind !== 'response') {
+      throw new Error('UNEXPECTED_ENVELOPE');
+    }
+    if (response.status >= 400) {
+      const bodyData = this.parseBody(response.body);
+      throw new Error(bodyData?.message || `HTTP_${response.status}`);
+    }
+    return this.parseBody(response.body) as T;
   }
 
   private async waitForRegistered(timeoutMs: number): Promise<void> {
@@ -468,13 +497,20 @@ export class SyncEngine {
   }
 
   private async ensureState(): Promise<any> {
-    // Atomic upsert avoids duplicate-key races when several sync operations
-    // run concurrently at startup.
     return SyncState.findOneAndUpdate(
       { _id: 'global' },
       {},
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
+  }
+
+  private async updateCollectionCursor(collection: string, cursor: number): Promise<void> {
+    const state = await this.ensureState();
+    const cursors = state.collectionCursors || {};
+    cursors[collection] = Math.max(cursor, cursors[collection] ?? 0);
+    state.collectionCursors = cursors;
+    state.updatedAt = new Date();
+    await state.save();
   }
 
   private async updateState(): Promise<void> {
@@ -496,4 +532,4 @@ export class SyncEngine {
   }
 }
 
-export default SyncEngine;
+export default SyncEngineV2;

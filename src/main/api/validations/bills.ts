@@ -5,6 +5,7 @@ import { array, date, mongooseId, number, object, string } from './schema';
 const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createBillSchema = Joi.object({
+  _id: mongooseId,
   billDate: date.required(),
   orderId: string.optional().allow(''),
   category: mongooseId,

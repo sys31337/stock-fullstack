@@ -3,6 +3,12 @@ import queryClient from "@web/shared/services/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Payload } from "../types/payload";
 
+function generateObjectId(): string {
+  // 24-character hex string compatible with MongoDB ObjectIds.
+  const hex = crypto.randomUUID().replace(/-/g, '');
+  return hex.slice(0, 24);
+}
+
 const useGetAllBills = () => useQuery(
   ['Get all bills'],
   async () => axiosInstance
@@ -43,11 +49,17 @@ const useGetBillInfo = (id: string, options?: any) => useQuery(
   options
 );
 
-const useCreateBill = () => useMutation((data: Payload) => axiosInstance.request({
-  method: 'POST',
-  url: 'bills',
-  data,
-}), {
+const useCreateBill = () => useMutation((data: Payload) => {
+  const existingId = typeof data._id === 'string' ? data._id : undefined;
+  return axiosInstance.request({
+    method: 'POST',
+    url: 'bills',
+    data: {
+      _id: existingId || generateObjectId(),
+      ...data,
+    },
+  });
+}, {
   onSuccess: () => {
     queryClient.invalidateQueries(['Get all bills']);
     queryClient.invalidateQueries(['Get all bills of type']);

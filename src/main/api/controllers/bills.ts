@@ -13,6 +13,14 @@ import { IProduct } from '@api/types/IProducts';
 import { createAuditLog } from '@api/utils/auditLog';
 import { checkWarehouseAccess } from '@api/middlewares/warehouseAccess';
 
+async function ensureStockMovementReference(reference: string): Promise<void> {
+  // Make bill-related stock movement creation idempotent: replaying the same
+  // bill (via sync) must not create duplicate movements.
+  if (reference) {
+    await StockMovement.deleteMany({ reference });
+  }
+}
+
 const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { body, userId } = req;
@@ -28,6 +36,16 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const finalOrderId = orderId && String(orderId).trim()
       ? String(orderId).trim()
       : String(parseInt(await getLatestBill(type), 10) + 1);
+
+    // Idempotent sync: if the same document id is being replayed, return the
+    // existing record instead of creating a duplicate.
+    const incomingId = body._id || body.id;
+    if (incomingId) {
+      const existingById = await Bill.findById(incomingId);
+      if (existingById) {
+        return res.status(200).send(existingById);
+      }
+    }
 
     const existing = await Bill.findOne({ type, orderId: finalOrderId });
     if (existing) {
@@ -54,6 +72,8 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
+          const reference = `BUY-${finalOrderId}`;
+          await ensureStockMovementReference(reference);
           await StockMovement.create({
             product: dbProduct._id,
             warehouse: payload.warehouse,
@@ -61,7 +81,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             quantity: product.quantity,
             unitPrice: product.buyPrice,
             totalPrice: Number(product.buyPrice) * Number(product.quantity),
-            reference: `BUY-${finalOrderId}`,
+            reference,
             relatedBill: undefined,
             createdBy: userId,
           });
@@ -75,12 +95,14 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
+          const reference = `ORDER-${finalOrderId}`;
+          await ensureStockMovementReference(reference);
           await StockMovement.create({
             product: dbProduct._id,
             warehouse: payload.warehouse,
             type: 'OUT',
             quantity: -Number(product.quantity),
-            reference: `ORDER-${finalOrderId}`,
+            reference,
             createdBy: userId,
           });
         }
@@ -93,12 +115,14 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
+          const reference = `${type}-${finalOrderId}`;
+          await ensureStockMovementReference(reference);
           await StockMovement.create({
             product: dbProduct._id,
             warehouse: payload.warehouse,
             type: 'OUT',
             quantity: -Number(product.quantity),
-            reference: `${type}-${finalOrderId}`,
+            reference,
             createdBy: userId,
           });
         }
@@ -109,12 +133,14 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
+          const reference = `${type}-CONV-${body.convertFromOrder}-${finalOrderId}`;
+          await ensureStockMovementReference(reference);
           await StockMovement.create({
             product: dbProduct._id,
             warehouse: payload.warehouse,
             type: 'OUT',
             quantity: -Number(product.quantity),
-            reference: `${type}-CONV-${body.convertFromOrder}-${finalOrderId}`,
+            reference,
             createdBy: userId,
           });
         }
@@ -180,6 +206,11 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       const skipStockCheck = settings?.allowOutOfStockSales ?? false;
       await deliveryProductUpdateHandler(oldProductsArr, newProductsArr, skipStockCheck);
 
+      const revertReference = `${oldBill.type}-UPDATE-REVERT-${oldBill.orderId}`;
+      const updateReference = `${oldBill.type}-UPDATE-${oldBill.orderId}`;
+      await ensureStockMovementReference(revertReference);
+      await ensureStockMovementReference(updateReference);
+
       for (const product of oldProducts) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
@@ -190,7 +221,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             quantity: Number(product.quantity),
             unitPrice: Number(product.buyPrice),
             totalPrice: Number(product.buyPrice) * Number(product.quantity),
-            reference: `${oldBill.type}-UPDATE-REVERT-${oldBill.orderId}`,
+            reference: revertReference,
             relatedBill: oldBill._id,
             createdBy: userId,
           });
@@ -207,7 +238,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
             quantity: -Number(product.quantity),
             unitPrice: Number(product.buyPrice),
             totalPrice: Number(product.buyPrice) * Number(product.quantity),
-            reference: `${oldBill.type}-UPDATE-${oldBill.orderId}`,
+            reference: updateReference,
             relatedBill: oldBill._id,
             createdBy: userId,
           });

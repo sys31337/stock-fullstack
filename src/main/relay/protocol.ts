@@ -47,7 +47,13 @@ export interface ErrorEnvelope {
   message: string;
 }
 
-export type RelayEnvelope = RequestEnvelope | ResponseEnvelope | ErrorEnvelope;
+export interface BroadcastEnvelope {
+  kind: 'broadcast';
+  topic: string;
+  payload?: unknown;
+}
+
+export type RelayEnvelope = RequestEnvelope | ResponseEnvelope | ErrorEnvelope | BroadcastEnvelope;
 
 export interface RegisterPayload {
   role: 'host' | 'client';

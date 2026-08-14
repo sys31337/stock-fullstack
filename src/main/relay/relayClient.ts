@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import {
   Ack,
+  ErrorEnvelope,
   PeerStatusPayload,
   ReceivePayload,
   RegisterPayload,
@@ -8,6 +9,8 @@ import {
   RELAY_TOKEN_KEY,
   RelayEnvelope,
   RelayHostInfo,
+  RequestEnvelope,
+  ResponseEnvelope,
   SendPayload,
 } from './protocol';
 
@@ -202,13 +205,14 @@ export class RelayClient {
    * matching response envelope (or reject on relay error / timeout).
    */
   request(target: string, envelope: RelayEnvelope, timeoutMs?: number): Promise<RelayEnvelope> {
-    if (typeof envelope.requestId !== 'string' || envelope.requestId.length === 0) {
+    const routable = envelope as RequestEnvelope | ResponseEnvelope | ErrorEnvelope;
+    if (typeof routable.requestId !== 'string' || routable.requestId.length === 0) {
       return Promise.reject(new Error('INVALID_REQUEST_ID'));
     }
     if (this.state !== 'registered') {
       return Promise.reject(new Error('NOT_CONNECTED'));
     }
-    const requestId = envelope.requestId;
+    const requestId = routable.requestId;
     const timeout = timeoutMs ?? this.opts.requestTimeoutMs ?? 60000;
 
     return new Promise<RelayEnvelope>((resolve, reject) => {
@@ -279,21 +283,23 @@ export class RelayClient {
     const { envelope } = payload;
     if (!envelope) return;
     if (envelope.kind === 'response' || envelope.kind === 'error') {
-      const requestId = envelope.requestId;
+      const responseOrError = envelope as ResponseEnvelope | ErrorEnvelope;
+      const requestId = responseOrError.requestId;
       if (typeof requestId === 'string') {
         const pending = this.pending.get(requestId);
         if (pending) {
           this.pending.delete(requestId);
           clearTimeout(pending.timer);
-          if (envelope.kind === 'response') {
-            pending.resolve(envelope);
+          if (responseOrError.kind === 'response') {
+            pending.resolve(responseOrError);
           } else {
-            pending.reject(new Error(envelope.message));
+            pending.reject(new Error(responseOrError.message));
           }
           return;
         }
       }
     }
+    // Broadcasts and unmatched responses are forwarded to the application.
     this.onReceive(payload);
   }
 

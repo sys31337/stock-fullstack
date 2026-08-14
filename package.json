@@ -12,6 +12,7 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "seed": "ts-node -P tsconfig.node.json -r tsconfig-paths/register scripts/seed.ts",
+    "verify:sync": "ts-node -P tsconfig.node.json -r tsconfig-paths/register scripts/verify-sync.ts",
     "start": "electron-vite preview",
     "dev": "concurrently \"nodemon\" \"electron-vite dev\"",
     "build": "npm run typecheck && electron-vite build",

@@ -18,10 +18,12 @@ import transactionsRouter from './helpers/transactions';
 import reportsRouter from './helpers/reports';
 import deliveryReturnsRouter from './helpers/deliveryReturns';
 import syncRouter from './helpers/sync';
+import syncV2Router from './helpers/syncV2';
 
 const router = express.Router();
 
 router.use('/sync', syncRouter);
+router.use('/sync/v2', syncV2Router);
 router.use('/users', usersRouter);
 router.use('/users-enhanced', usersEnhancedRouter);
 router.use('/customers', customersRouter);

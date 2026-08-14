@@ -8,6 +8,11 @@ import Warehouse from '@api/models/warehouse';
 import User from '@api/models/user';
 import Role from '@api/models/role';
 import { ALL_PERMISSIONS } from '@api/constants/permissions';
+import {
+  setHostChangeTracking,
+  registerHostChangeTracking,
+} from '@api/plugins/syncChangeTracking';
+import { seedChangeLogFromExistingData } from '@api/services/syncChangeLogService';
 
 let skipDefaultSeeding = false;
 
@@ -84,6 +89,16 @@ const connectDB = async (dbName?: string): Promise<boolean> => {
 
         log('Default admin user created (admin / admin)');
       }
+    }
+
+    // Enable host-side change tracking so local mutations are broadcast to
+    // linked clients. Client mode pulls from the host instead.
+    if (!skipDefaultSeeding) {
+      setHostChangeTracking(true);
+      registerHostChangeTracking();
+      seedChangeLogFromExistingData().then((count) => {
+        if (count > 0) log(`Seeded sync change log with ${count} existing documents`);
+      }).catch(() => {});
     }
 
     log('Database Connected');
