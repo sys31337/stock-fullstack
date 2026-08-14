@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import Customer from '@api/models/customers';
 import Transaction from '@api/models/transactions';
 
@@ -36,7 +37,19 @@ export async function adjustCustomerCredit({
   customer.credit = newFunds;
   await customer.save();
 
-  await Transaction.create({
+  // Use a deterministic transaction id for bill-related adjustments so client
+  // and host create the same document and sync does not duplicate ledger
+  // entries. Manual FUND transactions keep random ids because they have no
+  // stable bill association.
+  const deterministicId = billId
+    ? crypto.createHash('md5').update(`credit:${billId}:${type}`).digest('hex').slice(0, 24)
+    : undefined;
+
+  if (deterministicId) {
+    await Transaction.findByIdAndDelete(deterministicId);
+  }
+
+  const txDoc: any = {
     customer: customer._id,
     type,
     addedAmount: Number(addedAmount),
@@ -44,5 +57,9 @@ export async function adjustCustomerCredit({
     newFunds,
     bill: billId || null,
     description: description || undefined,
-  });
+  };
+  if (deterministicId) {
+    txDoc._id = deterministicId;
+  }
+  await Transaction.create(txDoc);
 }
