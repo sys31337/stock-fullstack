@@ -305,11 +305,10 @@ export class SyncEngine {
       if (response.kind !== 'response') {
         throw new Error('UNEXPECTED_ENVELOPE');
       }
-      if (response.status >= 400) {
-        throw new Error(`HTTP_${response.status}`);
-      }
-
       const body = this.parseBody(response.body);
+      if (response.status >= 400) {
+        throw new Error(body?.message || `HTTP_${response.status}`);
+      }
       const docs = body?.docs || [];
       hasMore = body?.hasMore ?? false;
       page += 1;
