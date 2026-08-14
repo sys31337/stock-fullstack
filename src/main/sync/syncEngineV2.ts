@@ -304,10 +304,11 @@ export class SyncEngineV2 {
     let hasMore = true;
 
     while (hasMore) {
+      const authParam = collection.syncAuthFields ? '&includeAuth=true' : '';
       const response = await this.request<SyncPullResponse>(
         this.targetHostId,
         'GET',
-        `/api/v1/sync/v2/pull/${collection.name}?cursor=${currentCursor}&limit=${pageSize}`,
+        `/api/v1/sync/v2/pull/${collection.name}?cursor=${currentCursor}&limit=${pageSize}${authParam}`,
       );
 
       const docs = response.docs || [];
