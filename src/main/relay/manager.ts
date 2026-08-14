@@ -65,7 +65,7 @@ class RelayManager {
     this.syncEngine = new SyncEngineV2();
     this.syncEngine.onStatusChange = (snapshot) => this.onSyncStatusChange(snapshot);
     setOnOperationRecorded(() => {
-      this.syncEngine?.triggerSync().catch(() => {});
+      this.syncEngine?.notifyOperationRecorded();
     });
   }
 
