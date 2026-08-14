@@ -32,7 +32,7 @@ export const pullV2 = async (req: IUserIdRequest, res: Response, next: NextFunct
   }
 };
 
-export const diagnosticsV2 = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+export const diagnosticsV2 = async (_req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const counts: Record<string, number> = {};
     for (const cfg of SYNC_COLLECTIONS) {
