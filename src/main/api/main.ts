@@ -6,6 +6,7 @@ import logger from 'morgan';
 import path from 'path';
 import cors from 'cors';
 import { connectDB } from '@api/config/mongoose';
+import '@api/models'; // register all synced Mongoose models
 import { errorHandler, notFound } from '@api/middlewares/error';
 import { syncRecorderMiddleware, setSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
 import api from '@api/routes';
