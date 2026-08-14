@@ -4,6 +4,7 @@ import type { RelayClient } from '../relay/relayClient';
 import type { RequestEnvelope } from '../relay/protocol';
 import SyncOperation from '../api/models/syncOperation';
 import SyncConflict from '../api/models/syncConflict';
+import SyncAppliedOperation from '../api/models/syncAppliedOperation';
 import SyncState from '../api/models/syncState';
 import { SYNC_COLLECTIONS, SyncCollectionConfig } from './collectionConfig';
 import type {
@@ -211,6 +212,12 @@ export class SyncEngineV2 {
         }
       }
 
+      // Clear pending local operations and conflicts so we do not re-push
+      // mutations that refer to documents we just wiped.
+      await SyncOperation.deleteMany({});
+      await SyncConflict.deleteMany({});
+      await SyncAppliedOperation.deleteMany({});
+
       const state = await this.ensureState();
       state.collectionCursors = {};
       state.lastPullAt = undefined;
@@ -247,6 +254,54 @@ export class SyncEngineV2 {
         const message = error instanceof Error ? error.message : String(error);
         console.warn(`[sync:v2] reconcile failed for ${cfg.name}: ${message}`);
       }
+    }
+  }
+
+  /**
+   * Fetches the host's per-collection counts and compares them with the local
+   * counts. Returns a report of mismatches (useful for debugging stats drift).
+   */
+  async compareWithHost(): Promise<{
+    ok: boolean;
+    hostCounts?: Record<string, number>;
+    localCounts?: Record<string, number>;
+    mismatches?: Array<{ collection: string; host: number; local: number }>;
+    error?: string;
+  }> {
+    if (!this.online || !this.relay || !this.targetHostId) {
+      return { ok: false, error: 'NOT_ONLINE' };
+    }
+
+    try {
+      const response = await this.request<{ counts: Record<string, number> }>(
+        this.targetHostId,
+        'GET',
+        '/api/v1/sync/v2/diagnostics',
+      );
+      const hostCounts = response.counts || {};
+      const localCounts: Record<string, number> = {};
+      const mismatches: Array<{ collection: string; host: number; local: number }> = [];
+
+      for (const cfg of SYNC_COLLECTIONS) {
+        const Model = this.getLocalModel(cfg.model);
+        const local = Model ? await Model.estimatedDocumentCount() : -1;
+        const host = hostCounts[cfg.name] ?? -1;
+        localCounts[cfg.name] = local;
+        if (local !== host) {
+          mismatches.push({ collection: cfg.name, host, local });
+        }
+      }
+
+      if (mismatches.length > 0) {
+        console.log('[sync:v2] collection count mismatches:', mismatches);
+      } else {
+        console.log('[sync:v2] all collection counts match host');
+      }
+
+      return { ok: true, hostCounts, localCounts, mismatches };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { ok: false, error: message };
     }
   }
 

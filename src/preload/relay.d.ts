@@ -73,6 +73,13 @@ export interface RelayPreloadApi {
   resolveSyncConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) => Promise<{ ok: boolean; error?: string }>;
   resetAndFullSync: () => Promise<{ ok: boolean; error?: string }>;
   reconcileWithHost: () => Promise<{ ok: boolean; error?: string }>;
+  compareWithHost: () => Promise<{
+    ok: boolean;
+    hostCounts?: Record<string, number>;
+    localCounts?: Record<string, number>;
+    mismatches?: Array<{ collection: string; host: number; local: number }>;
+    error?: string;
+  }>;
   onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => () => void;
   onSyncDataChange: (cb: (message: SyncBroadcastMessage) => void) => () => void;
 }

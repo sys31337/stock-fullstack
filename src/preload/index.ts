@@ -46,6 +46,7 @@ const api: ElectronWindow['api'] = {
       ipcRenderer.invoke('sync:resolve-conflict', conflictId, resolution, mergedDoc),
     resetAndFullSync: () => ipcRenderer.invoke('sync:reset-and-full-sync'),
     reconcileWithHost: () => ipcRenderer.invoke('sync:reconcile'),
+    compareWithHost: () => ipcRenderer.invoke('sync:compare'),
     onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => {
       const listener = (_e: IpcRendererEvent, snapshot: SyncStatusSnapshot): void => cb(snapshot);
       ipcRenderer.on('sync:status-change', listener);

@@ -204,6 +204,19 @@ class RelayManager {
     }
   }
 
+  async compareWithHost(): Promise<{
+    ok: boolean;
+    hostCounts?: Record<string, number>;
+    localCounts?: Record<string, number>;
+    mismatches?: Array<{ collection: string; host: number; local: number }>;
+    error?: string;
+  }> {
+    if (this.config.mode !== 'client') {
+      return { ok: false, error: 'NOT_CLIENT_MODE' };
+    }
+    return this.syncEngine?.compareWithHost() ?? { ok: false, error: 'SYNC_ENGINE_UNAVAILABLE' };
+  }
+
   shutdown(): void {
     this.stopClient();
   }
