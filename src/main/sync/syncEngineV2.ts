@@ -27,6 +27,8 @@ export interface SyncStatusSnapshot {
 
 const POLL_INTERVAL_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 120_000;
+/** Bump this when the sync protocol changes in a way that requires clients to re-pull everything. */
+const CURRENT_SYNC_VERSION = 2;
 
 export class SyncEngineV2 {
   private relay: RelayClient | null = null;
@@ -69,12 +71,24 @@ export class SyncEngineV2 {
   start(): void {
     if (this.active) return;
     this.active = true;
-    this.migrateLegacyOperations().catch(() => {});
+    this.runMigrations().catch(() => {});
     this.scheduleNextPoll();
     this.broadcastStatus();
   }
 
-  private async migrateLegacyOperations(): Promise<void> {
+  private async runMigrations(): Promise<void> {
+    const state = await this.ensureState();
+
+    // If the local sync protocol version is older than the current code, reset
+    // all collection cursors so the next pull re-fetches every document with
+    // the new apply logic (e.g. preserving createdAt on fresh devices).
+    if ((state.syncVersion || 0) < CURRENT_SYNC_VERSION) {
+      console.log(`[sync:v2] upgrading sync version ${state.syncVersion || 0} -> ${CURRENT_SYNC_VERSION}; resetting pull cursors`);
+      state.collectionCursors = {};
+      state.syncVersion = CURRENT_SYNC_VERSION;
+      await state.save();
+    }
+
     // Legacy SyncOperation records created before the v2 protocol did not have
     // a unique operation id. Assign one to each so they can be pushed.
     const legacyOps = await SyncOperation.find({ operationId: { $exists: false } }).lean();
@@ -357,7 +371,15 @@ export class SyncEngineV2 {
     delete cleanDoc.sequence;
 
     try {
-      await Model.findByIdAndUpdate(id, cleanDoc, { upsert: true, new: true, setDefaultsOnInsert: true });
+      const existing = await Model.findById(id).lean();
+      if (!existing) {
+        // Use create/save for new documents so Mongoose preserves the server
+        // timestamps (especially createdAt). findByIdAndUpdate with upsert
+        // would overwrite createdAt with the local clock.
+        await new Model(cleanDoc).save();
+      } else {
+        await Model.findByIdAndUpdate(id, cleanDoc, { new: true });
+      }
     } catch (error: any) {
       if (error?.code === 11000) {
         const resolved = await this.resolveDuplicateKeyConflict(Model, cfg, cleanDoc, error);
