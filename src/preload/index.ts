@@ -49,6 +49,11 @@ const api: ElectronWindow['api'] = {
       ipcRenderer.on('sync:status-change', listener);
       return () => { ipcRenderer.removeListener('sync:status-change', listener); };
     },
+    onSyncDataChange: (cb: (message: import('./relay').SyncBroadcastMessage) => void) => {
+      const listener = (_e: IpcRendererEvent, message: import('./relay').SyncBroadcastMessage): void => cb(message);
+      ipcRenderer.on('sync:data-change', listener);
+      return () => { ipcRenderer.removeListener('sync:data-change', listener); };
+    },
   },
 };
 
