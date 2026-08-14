@@ -93,6 +93,7 @@ async function run(): Promise<void> {
     body: {
       _id: stableBillId,
       billDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       type: 'SALE',
       orderId,
       orderTotalHT: 100,
@@ -122,6 +123,7 @@ async function run(): Promise<void> {
   assert(push1.results[0].status === 'applied', 'First push applies the bill');
   assert(push1.results[0].sequence !== undefined, 'Applied change gets a sequence number');
   assert(push1.results[0].doc?._id === stableBillId, 'Applied bill preserves the client-supplied _id');
+  assert(push1.results[0].doc?.createdAt === createOp.body.billDate, 'Applied bill preserves the client-created createdAt');
 
   // Retry the exact same operation.
   const push2 = await pushOperations(req, [createOp]);

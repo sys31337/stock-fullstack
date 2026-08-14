@@ -1,11 +1,13 @@
 import Joi from 'joi';
 import expressJoiValidation from 'express-joi-validation';
-import { boolean, mongooseId, number, string } from './schema';
+import { boolean, date, mongooseId, number, string } from './schema';
 
 const validator = expressJoiValidation.createValidator({ passError: true });
 
 const createProductSchema = Joi.object({
   _id: mongooseId,
+  createdAt: date,
+  updatedAt: date,
   id: string.required(),
   barCode: string.required(),
   productName: string.required(),
@@ -22,6 +24,8 @@ const createProductSchema = Joi.object({
 
 const updateProductSchema = Joi.object({
   _id: mongooseId,
+  createdAt: date,
+  updatedAt: date,
   id: string,
   barCode: string,
   productName: string,

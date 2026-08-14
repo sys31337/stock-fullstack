@@ -56,12 +56,13 @@ function normalizeBody(body: unknown, keepId: boolean): unknown {
   const clone = JSON.parse(JSON.stringify(body));
   // Strip runtime-only fields that should not be replayed to the host.
   // Keep updatedAt so the host can detect conflicts.
+  // Keep createdAt so timestamps (and therefore date-based statistics) remain
+  // identical across all peers.
   // Preserve the stable _id when replaying creates so the server uses the
   // same document id instead of minting a new one.
   if (!keepId) {
     delete clone._id;
   }
-  delete clone.createdAt;
   delete clone.__v;
   return clone;
 }
