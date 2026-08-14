@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import crypto from 'node:crypto';
 import Customer from '@api/models/customers';
 import Transaction from '@api/models/transactions';
 import StockMovement from '@api/models/stockMovement';
@@ -7,6 +8,10 @@ import { IUserIdRequest } from '@api/types/common';
 import { DEFAULT_CUSTOMER_ID } from '@api/functions/transactions';
 import { deliveryProductUpdateHandler, buyBillproductUpdateHandler } from '@api/functions/products';
 import { createAuditLog } from '@api/utils/auditLog';
+
+function deterministicMovementId(reference: string, barCode: string): string {
+  return crypto.createHash('md5').update(`${reference}:${barCode}`).digest('hex').slice(0, 24);
+}
 
 const createFund = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
@@ -102,11 +107,12 @@ const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
         await deliveryProductUpdateHandler(bill.products || [], []);
         await StockMovement.create(
           (bill.products || []).map((p: any) => ({
+            _id: deterministicMovementId(`DEL_REVERT_${bill._id}`, p.barCode || p.id),
             product: p.id,
             warehouse: bill.warehouse,
             type: 'RETURN',
             quantity: p.quantity,
-            reference: `DEL_REVERT_${bill.orderId}`,
+            reference: `DEL_REVERT_${bill._id}`,
             relatedBill: bill._id,
             notes: `Delivery ${bill.orderId} deleted; stock restored`,
             createdBy: req.userId,
@@ -116,11 +122,12 @@ const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
         await buyBillproductUpdateHandler(bill.products || [], []);
         await StockMovement.create(
           (bill.products || []).map((p: any) => ({
+            _id: deterministicMovementId(`BUY_REVERT_${bill._id}`, p.barCode || p.id),
             product: p.id,
             warehouse: bill.warehouse,
             type: 'OUT',
             quantity: p.quantity,
-            reference: `BUY_REVERT_${bill.orderId}`,
+            reference: `BUY_REVERT_${bill._id}`,
             relatedBill: bill._id,
             notes: `Purchase bill ${bill.orderId} deleted; stock removed`,
             createdBy: req.userId,
