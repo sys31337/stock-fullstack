@@ -83,6 +83,13 @@ export function syncRecorderMiddleware(req: Request, res: Response, next: NextFu
     return;
   }
 
+  // Capture request details here; req.url/path may be mutated by routers
+  // before the response finishes and queueOperation runs.
+  const requestMethod = req.method;
+  const requestPath = req.path;
+  const requestHeaders = req.headers;
+  const requestBody = req.body;
+
   const originalEnd = res.end.bind(res);
   const originalJson = res.json.bind(res);
 
@@ -97,7 +104,7 @@ export function syncRecorderMiddleware(req: Request, res: Response, next: NextFu
     if (!res.writableEnded) {
       originalEnd(chunk, encoding, cb);
     }
-    queueOperation(req, res, pathInfo, responseBody).catch((err) => {
+    queueOperation(requestMethod, requestPath, requestHeaders, res, pathInfo, responseBody, requestBody).catch((err) => {
       console.error('[syncRecorder] failed to queue operation', err);
     });
     return res;
@@ -107,10 +114,13 @@ export function syncRecorderMiddleware(req: Request, res: Response, next: NextFu
 }
 
 async function queueOperation(
-  req: Request,
+  method: string,
+  path: string,
+  reqHeaders: Request['headers'],
   res: Response,
   pathInfo: { endpoint: string; documentId?: string },
   responseBody: any,
+  requestBody: unknown,
 ): Promise<void> {
   if (res.statusCode >= 400) return;
 
@@ -120,9 +130,11 @@ async function queueOperation(
   let documentId = pathInfo.documentId;
 
   // For POST requests the local DB generated the _id; capture it from the
-  // response body so the host can receive the same id.
-  if (req.method === 'POST' && responseBody && typeof responseBody === 'object') {
-    const bodyId = responseBody._id || responseBody.id;
+  // response body so the host can receive the same id. Some controllers wrap
+  // the result in a `data` or `result` field.
+  if (method === 'POST' && responseBody && typeof responseBody === 'object') {
+    const unwrap = (responseBody as any).data ?? (responseBody as any).result ?? responseBody;
+    const bodyId = unwrap?._id || unwrap?.id;
     if (typeof bodyId === 'string' && bodyId.length === 24) {
       documentId = bodyId;
     }
@@ -130,10 +142,10 @@ async function queueOperation(
 
   // If a document was deleted locally there is no body to replay; send an
   // empty payload so the host can delete by id.
-  const body = req.method === 'DELETE' ? undefined : normalizeBody(req.body);
+  const body = method === 'DELETE' ? undefined : normalizeBody(requestBody);
 
   const headers: Record<string, string> = {};
-  const authHeader = req.headers.authorization;
+  const authHeader = reqHeaders.authorization;
   if (authHeader) headers.authorization = String(authHeader);
 
   // De-duplicate: if there is already a pending operation for the same
@@ -144,22 +156,23 @@ async function queueOperation(
     documentId,
   }).sort({ createdAt: -1 });
 
-  if (existing && req.method !== 'POST') {
-    existing.method = req.method as any;
+  if (existing && method !== 'POST') {
+    existing.method = method as any;
     existing.body = body;
     existing.headers = headers;
-    existing.path = req.path;
+    existing.path = path;
     existing.retryCount = 0;
     existing.errorMessage = undefined;
     await existing.save();
+    console.log('[syncRecorder] updated existing', existing._id, existing.method, existing.path, existing.documentId);
     onOperationRecorded?.();
     return;
   }
 
   const op = await new SyncOperation({
-    method: req.method,
+    method,
     collection: cfg.name,
-    path: req.path,
+    path,
     documentId,
     body,
     headers,
