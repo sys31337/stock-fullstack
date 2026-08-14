@@ -334,7 +334,10 @@ export async function pullCollectionChanges(
   });
 
   // Hydrate create/update snapshots from the actual document collection so the
-  // peer always receives the full current document.
+  // peer always receives the full current document. If a document no longer
+  // exists, emit a delete marker instead of a stale snapshot — this prevents
+  // deleted records from reappearing on clients when the change log is missing
+  // the corresponding delete entry.
   const Model = getModel(collection);
   const docs: any[] = [];
   if (Model) {
@@ -347,13 +350,15 @@ export async function pullCollectionChanges(
       if (current) {
         const normalized = normalizeDoc(current, includeAuth && collection === 'users');
         docs.push({ ...normalized, sequence: change.sequence });
-      } else if (change.doc) {
-        docs.push({ ...change.doc, sequence: change.sequence });
+      } else {
+        docs.push({ _id: change.documentId, __deleted: true, sequence: change.sequence });
       }
     }
   } else {
     for (const change of changes) {
-      if (change.doc) {
+      if (change.operation === 'delete' || change.doc?.__deleted) {
+        docs.push({ _id: change.documentId, __deleted: true, sequence: change.sequence });
+      } else if (change.doc) {
         docs.push({ ...change.doc, sequence: change.sequence });
       }
     }
