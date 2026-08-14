@@ -51,6 +51,12 @@ export interface SyncConflictSnapshot {
   createdAt: string;
 }
 
+export interface SyncBroadcastMessage {
+  topic: 'sync:change';
+  maxSequence: number;
+  sourceClientId?: string;
+}
+
 export interface RelayPreloadApi {
   getState: () => Promise<RelayStateSnapshot>;
   getConfig: () => Promise<RelayConfigDto>;
@@ -66,4 +72,5 @@ export interface RelayPreloadApi {
   getSyncConflicts: () => Promise<SyncConflictSnapshot[]>;
   resolveSyncConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) => Promise<{ ok: boolean; error?: string }>;
   onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => () => void;
+  onSyncDataChange: (cb: (message: SyncBroadcastMessage) => void) => () => void;
 }
