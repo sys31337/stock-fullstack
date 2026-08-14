@@ -179,7 +179,7 @@ export class SyncEngine {
         op.retryCount += 1;
         op.status = op.retryCount >= 3 ? 'failed' : 'pending';
         op.errorMessage = error instanceof Error ? error.message : String(error);
-        this.lastError = `[sync] push failed for ${op.collection}/${op.documentId || op.path}: ${op.errorMessage}`;
+        this.lastError = `[sync] push failed for ${op.method} ${op.path} (${op.collection}): ${op.errorMessage}`;
         await op.save();
         // Stop pushing on conflict or repeated failure to keep order.
         if (op.status === 'failed' || op.errorMessage?.includes('CONFLICT')) {

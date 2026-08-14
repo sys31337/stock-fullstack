@@ -77,6 +77,7 @@ export function syncRecorderMiddleware(req: Request, res: Response, next: NextFu
   }
 
   const pathInfo = extractEndpointAndId(req.path);
+  console.log('[syncRecorder]', req.method, req.path, '->', pathInfo);
   if (!pathInfo || shouldSkip(req.path)) {
     next();
     return;
@@ -155,7 +156,7 @@ async function queueOperation(
     return;
   }
 
-  await new SyncOperation({
+  const op = await new SyncOperation({
     method: req.method,
     collection: cfg.name,
     path: req.path,
@@ -165,5 +166,6 @@ async function queueOperation(
     status: 'pending',
     retryCount: 0,
   }).save();
+  console.log('[syncRecorder] queued', op._id, op.method, op.path, op.documentId);
   onOperationRecorded?.();
 }

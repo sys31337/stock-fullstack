@@ -84,8 +84,9 @@ export const pushOperation = async (req: IUserIdRequest, res: Response, next: Ne
       return res.status(403).send({ message: 'NOT_A_RELAY_REQUEST' });
     }
     const { method, path, body, headers } = req.body;
+    console.log('[sync:push] replay', method, path, 'from', req.headers['x-relay-origin']);
     if (!method || !path) {
-      return res.status(400).send({ message: 'Missing method or path' });
+      return res.status(400).send({ message: `Missing method or path (method=${method}, path=${path})` });
     }
 
     // Conflict detection: for updates/deletes compare the target document's
