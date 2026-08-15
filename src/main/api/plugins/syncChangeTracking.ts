@@ -92,6 +92,7 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('save', function recordSave(this: mongoose.Document) {
+      if ((this as any).$isSubdocument) return;
       const docId = this._id?.toString();
       if (!docId) return;
       const wasNew = (this as any).__sync_wasNew ?? false;
