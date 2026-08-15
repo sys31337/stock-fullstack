@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { AsyncLocalStorage } from 'node:async_hooks';
 import { recordChange } from '@api/services/syncChangeLogService';
 import type { SyncChangeOperation } from '@api/models/syncChangeLog';
 import { SYNC_COLLECTIONS } from '../../sync/collectionConfig';
@@ -22,29 +21,42 @@ export interface CapturedChange {
 }
 
 /**
- * Async-local storage for changes captured during a sync replay.
- * Using AsyncLocalStorage keeps captures scoped to the replay's async call
- * stack, so concurrent host-local mutations are never mixed up with a client
- * operation's side effects.
- */
-const replayStorage = new AsyncLocalStorage<CapturedChange[]>();
-
-/**
- * Runs `fn` inside a sync-replay context. While inside this context, host-side
- * change-tracking hooks do not write to the change log directly; instead they
- * capture the change so the caller can record all side-effects with the
- * originating client's metadata.
+ * Marks the current async context as a sync replay so the host-side change
+ * tracker does not write to the change log directly. Instead it captures
+ * side-effects so they can be logged with the originating client's metadata.
  *
- * Returns both the function result and the captured changes.
+ * pushOperations replays one operation at a time, so a simple global array is
+ * sufficient. AsyncLocalStorage cannot be used here because the replayed
+ * request crosses the local HTTP boundary to the Express server.
  */
-export async function withSyncReplay<T>(fn: () => Promise<T>): Promise<{ result: T; captures: CapturedChange[] }> {
-  const captures: CapturedChange[] = [];
-  const result = await replayStorage.run(captures, fn);
-  return { result, captures };
+let syncReplayDepth = 0;
+let capturedChanges: CapturedChange[] = [];
+
+export function isInsideSyncReplay(): boolean {
+  return syncReplayDepth > 0;
 }
 
-function getCurrentCaptures(): CapturedChange[] | undefined {
-  return replayStorage.getStore();
+export async function withSyncReplay<T>(fn: () => Promise<T>): Promise<{ result: T; captures: CapturedChange[] }> {
+  const isOuterReplay = syncReplayDepth === 0;
+  syncReplayDepth += 1;
+  if (isOuterReplay) {
+    capturedChanges = [];
+  }
+
+  try {
+    const result = await fn();
+    return { result, captures: isOuterReplay ? capturedChanges : [] };
+  } catch (error) {
+    if (isOuterReplay) {
+      capturedChanges = [];
+    }
+    throw error;
+  } finally {
+    syncReplayDepth -= 1;
+    if (isOuterReplay) {
+      capturedChanges = [];
+    }
+  }
 }
 
 function normalizeSnapshot(doc: any): any {
@@ -56,9 +68,8 @@ function normalizeSnapshot(doc: any): any {
 
 function recordOrCaptureChange(change: CapturedChange): void {
   if (!hostChangeTrackingEnabled) return;
-  const captures = getCurrentCaptures();
-  if (captures) {
-    captures.push(change);
+  if (isInsideSyncReplay()) {
+    capturedChanges.push(change);
     return;
   }
   recordChange({ ...change, isHostOrigin: true }).catch(() => {});
@@ -75,13 +86,19 @@ export function registerHostChangeTracking(): void {
     const Model = mongoose.connection.models[cfg.model];
     if (!Model) continue;
 
+    // isNew is reset to false before post('save') runs, so capture it in pre('save').
+    Model.schema.pre('save', function preSave(this: mongoose.Document) {
+      (this as any).__sync_wasNew = this.isNew;
+    });
+
     Model.schema.post('save', function recordSave(this: mongoose.Document) {
       const docId = this._id?.toString();
       if (!docId) return;
+      const wasNew = (this as any).__sync_wasNew ?? false;
       recordOrCaptureChange({
         collection: cfg.name,
         documentId: docId,
-        operation: this.isNew ? 'create' : 'update',
+        operation: wasNew ? 'create' : 'update',
         docSnapshot: normalizeSnapshot(this),
       });
     });

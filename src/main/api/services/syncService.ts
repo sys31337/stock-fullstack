@@ -292,6 +292,9 @@ export async function pushOperations(
         const derivedChanges = captures.filter(
           (c: CapturedChange) => !(c.collection === op.collection && c.documentId === op.documentId),
         );
+        if (derivedChanges.length > 0) {
+          console.log(`[sync:push] recording ${derivedChanges.length} captured side-effect(s) for ${op.collection}/${op.documentId}`);
+        }
         for (const captured of derivedChanges) {
           await recordChange({
             ...captured,

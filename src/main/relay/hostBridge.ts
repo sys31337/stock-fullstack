@@ -40,9 +40,14 @@ export class HostBridge {
     const ownClientId = this.relay.getPayload().clientId;
     const originalHostsChange = this.relay.onHostsChange;
     this.relay.onHostsChange = (hosts: RelayHostInfo[]) => {
-      this.connectedClients = hosts
-        .filter((h) => h.clientId === ownClientId)
-        .flatMap((h) => h.clients || []);
+      const ownHost = hosts.find((h) => h.clientId === ownClientId);
+      // Prefer this host's own linked clients. Some relay implementations only
+      // return the requesting host's entry; others return every host. If our
+      // own entry is missing, fall back to all clients in the list so broadcasts
+      // do not silently stop working.
+      this.connectedClients = ownHost
+        ? (ownHost.clients || [])
+        : hosts.flatMap((h) => h.clients || []);
       originalHostsChange(hosts);
     };
   }
@@ -57,9 +62,10 @@ export class HostBridge {
     const ownClientId = this.relay.getPayload().clientId;
     try {
       const hosts = await this.relay.listHosts();
-      this.connectedClients = hosts
-        .filter((h) => h.clientId === ownClientId)
-        .flatMap((h) => h.clients || []);
+      const ownHost = hosts.find((h) => h.clientId === ownClientId);
+      this.connectedClients = ownHost
+        ? (ownHost.clients || [])
+        : hosts.flatMap((h) => h.clients || []);
     } catch {
       // keep cached list if the relay is momentarily unreachable
     }
