@@ -52,12 +52,13 @@ export const snapshotV2 = async (req: IUserIdRequest, res: Response, next: NextF
     const maxSequence = await getGlobalMaxSequence();
 
     if (full) {
+      const includeAuth = cfg.syncAuthFields && req.query.includeAuth === 'true';
       const docs = await Model.find({}).skip(offset).limit(limit + 1).lean();
       const hasMore = docs.length > limit;
       if (hasMore) docs.pop();
       return res.status(200).send({
         collection,
-        docs: docs.map((d: any) => normalizeDoc(d)),
+        docs: docs.map((d: any) => normalizeDoc(d, includeAuth)),
         offset,
         limit,
         hasMore,
