@@ -52,7 +52,9 @@ export async function recordChange(options: RecordChangeOptions): Promise<number
   // changes are broadcast by the sync push handler so the source peer can be
   // excluded from the broadcast.
   if (options.isHostOrigin) {
-    syncBroadcaster.emitChange(sequence).catch(() => {});
+    syncBroadcaster
+      .emitChange(options.collection, options.documentId, options.operation, sequence, options.sourceClientId)
+      .catch(() => {});
   }
   return sequence;
 }

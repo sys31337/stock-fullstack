@@ -14,6 +14,11 @@
 
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
+
+const VERIFY_PORT = parseInt(process.env.VERIFY_PORT || '3501', 10);
+process.env.VERIFY_PORT = String(VERIFY_PORT);
+process.env.RELAY_LOCAL_API = `http://127.0.0.1:${VERIFY_PORT}`;
+
 import { startMongoDB, stopMongoDB } from '../src/main/api/config/mongodb';
 import '../src/main/api/models/bills';
 import '../src/main/api/models/products';
@@ -55,10 +60,12 @@ async function run(): Promise<void> {
   mongoose.set('strictQuery', true);
 
   // Start a local API server so the sync service can replay mutations.
+  const port = parseInt(process.env.VERIFY_PORT || '3500', 10);
+  process.env.RELAY_LOCAL_API = `http://127.0.0.1:${port}`;
   const server = createApiServer({ clientMode: false, dbName: 'stock-sync-verify' });
   await new Promise<void>((resolve, reject) => {
-    server.listen(3500, () => {
-      console.log('[verify] API server listening on port 3500');
+    server.listen(port, () => {
+      console.log(`[verify] API server listening on port ${port}`);
       resolve();
     });
     server.on('error', reject);
@@ -66,6 +73,8 @@ async function run(): Promise<void> {
 
   setHostChangeTracking(true);
   registerHostChangeTracking();
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log('[verify] default connection:', mongoose.connection.name, mongoose.connection.readyState);
 
   // Clean slate for the test database.
   await Promise.all([
@@ -120,6 +129,7 @@ async function run(): Promise<void> {
   const req = { headers: { 'x-relay-origin': 'client-a' }, query: {} };
 
   const push1 = await pushOperations(req, [createOp]);
+  console.log('[verify] push1 doc _id:', push1.results[0].doc?._id, 'raw collection count:', await mongoose.connection.db!.collection('bills').countDocuments());
   assert(push1.results.length === 1, 'Push returns one result');
   assert(push1.results[0].status === 'applied', 'First push applies the bill');
   assert(push1.results[0].sequence !== undefined, 'Applied change gets a sequence number');
@@ -132,6 +142,11 @@ async function run(): Promise<void> {
   assert(push2.results[0].doc?._id === stableBillId, 'Duplicate result keeps the same _id');
 
   const billCount = await Bill.countDocuments({ _id: stableBillId });
+  const billDoc = await Bill.findById(stableBillId).lean();
+  const billModel2 = mongoose.connection.models['Bill'];
+  const billDoc2 = await billModel2.findById(stableBillId).lean();
+  const appliedOps = await SyncAppliedOperation.find({}).lean();
+  console.log('[verify] billCount after retry:', billCount, 'findById:', billDoc?._id, 'model2:', (billDoc2 as any)?._id, 'appliedOps:', appliedOps.length, appliedOps.map((o) => o.operationId));
   assert(billCount === 1, 'Only one bill exists after retry');
 
   // 2. Change log and cursor-based pull.

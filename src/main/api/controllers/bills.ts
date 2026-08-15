@@ -169,6 +169,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     delete payload.convertFromOrder;
     const createBill = await new Bill(payload).save();
+    console.log('[bills:createOne] saved bill on db', (mongoose as any).connection.name, 'count after save', await Bill.countDocuments());
 
     if (!clientMode && (type === 'BUY' || type === 'DELIVERY') && customer) {
       await adjustCustomerCredit({

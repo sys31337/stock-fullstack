@@ -157,11 +157,13 @@ export class SyncEngineV2 {
     this.broadcastStatus();
 
     try {
-      // Pull first: if the server has newer state, learn it before pushing our
-      // own changes. This reduces the chance of conflicts and ensures our base
-      // sequence is as fresh as possible.
-      await this.pullAll();
-      await this.pushPending();
+      // Push local changes first so the user's own edits reach the host quickly.
+      // Sequence-based conflict detection on the host correctly flags any
+      // documents that changed remotely since the last sync.
+      const pendingCount = await SyncOperation.countDocuments({ status: 'pending' });
+      if (pendingCount > 0) {
+        await this.pushPending();
+      }
       await this.pullAll();
       await this.updateState();
     } catch (error) {
@@ -173,6 +175,78 @@ export class SyncEngineV2 {
       this.running = false;
       // If an operation was recorded while we were busy, sync again right away
       // so the change is propagated immediately.
+      if (this.queuedTrigger) {
+        this.queuedTrigger = false;
+        this.triggerSync().catch(() => {});
+      }
+    }
+  }
+
+  /**
+   * Pulls only the collections mentioned in a remote change notification and
+   * only when the local cursor is behind the notified sequence. This avoids
+   * pulling every collection on every change.
+   */
+  async triggerPull(changes: Array<{ collection: string; sequence: number }>): Promise<void> {
+    if (!this.online || !this.relay || !this.targetHostId) {
+      return;
+    }
+    if (this.running) {
+      this.queuedTrigger = true;
+      return;
+    }
+    if (this.relay.getState() !== 'registered') {
+      const becameRegistered = await this.waitForRegistered(3000);
+      if (!becameRegistered) {
+        return;
+      }
+    }
+
+    this.running = true;
+    this.lastError = '';
+    this.currentStatus = 'pulling';
+    this.broadcastStatus();
+
+    try {
+      const state = await this.ensureState();
+      const cursors = state.collectionCursors || {};
+      let anyApplied = false;
+      let pullMaxSequence = 0;
+
+      for (const change of changes) {
+        const cfg = SYNC_COLLECTIONS.find((c) => c.name === change.collection);
+        if (!cfg) continue;
+        const cursor = cursors[cfg.name] ?? 0;
+        if (cursor >= change.sequence) {
+          console.log(`[sync:v2] skipping pull, cursor up to date for ${cfg.name}`);
+          continue;
+        }
+        const result = await this.pullCollection(cfg, cursor);
+        if (result.applied) {
+          anyApplied = true;
+        }
+        if (result.maxSequence > pullMaxSequence) {
+          pullMaxSequence = result.maxSequence;
+        }
+      }
+
+      this.lastPullAt = new Date();
+      this.currentStatus = 'idle';
+      await this.updateGlobalSequence(pullMaxSequence);
+      await this.updateState();
+
+      if (anyApplied) {
+        syncBroadcaster.emitLocalChange(pullMaxSequence);
+      }
+
+      this.broadcastStatus();
+    } catch (error) {
+      this.lastError = error instanceof Error ? error.message : String(error);
+      this.currentStatus = 'error';
+      await this.updateState();
+      this.broadcastStatus();
+    } finally {
+      this.running = false;
       if (this.queuedTrigger) {
         this.queuedTrigger = false;
         this.triggerSync().catch(() => {});
@@ -193,6 +267,86 @@ export class SyncEngineV2 {
       conflictCount,
       isOnline: this.online,
     };
+  }
+
+  async getHealth(): Promise<{
+    status: SyncStatusSnapshot;
+    collections: Array<{
+      collection: string;
+      hostCount: number;
+      localCount: number;
+      hostMaxSequence: number;
+      localCursor: number;
+      pendingCount: number;
+      conflictCount: number;
+      stale: boolean;
+    }>;
+  }> {
+    const status = await this.getStatusSnapshot();
+    const state = await this.ensureState();
+    const cursors = state.collectionCursors || {};
+
+    const localCounts: Record<string, number> = {};
+    for (const cfg of SYNC_COLLECTIONS) {
+      const Model = this.getLocalModel(cfg.model);
+      localCounts[cfg.name] = Model ? await Model.estimatedDocumentCount() : -1;
+    }
+
+    const pendingAgg = await SyncOperation.aggregate([
+      { $match: { status: 'pending' } },
+      { $group: { _id: '$collection', count: { $sum: 1 } } },
+    ]);
+    const pendingByCollection = Object.fromEntries(pendingAgg.map((r) => [r._id, r.count]));
+
+    const conflictAgg = await SyncConflict.aggregate([
+      { $match: { status: 'pending' } },
+      { $group: { _id: '$collection', count: { $sum: 1 } } },
+    ]);
+    const conflictByCollection = Object.fromEntries(conflictAgg.map((r) => [r._id, r.count]));
+
+    let hostMaxSequences: Record<string, number> = {};
+    let hostCounts: Record<string, number> = {};
+
+    if (this.clientMode && this.online && this.relay && this.targetHostId) {
+      try {
+        const remote = await this.request<{
+          maxSequence: number;
+          collectionMaxSequences: Record<string, number>;
+          counts: Record<string, number>;
+        }>(this.targetHostId, 'GET', '/api/v1/sync/v2/health');
+        hostMaxSequences = remote.collectionMaxSequences || {};
+        hostCounts = remote.counts || {};
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn('[sync:v2] failed to fetch host health:', message);
+      }
+    }
+
+    // In host mode the local DB is the host DB.
+    if (!this.clientMode) {
+      hostMaxSequences = { ...cursors };
+      for (const cfg of SYNC_COLLECTIONS) {
+        hostMaxSequences[cfg.name] = Math.max(hostMaxSequences[cfg.name] ?? 0, cursors[cfg.name] ?? 0);
+      }
+      hostCounts = localCounts;
+    }
+
+    const collections = SYNC_COLLECTIONS.map((cfg) => {
+      const localCursor = cursors[cfg.name] ?? 0;
+      const hostMaxSequence = hostMaxSequences[cfg.name] ?? 0;
+      return {
+        collection: cfg.name,
+        hostCount: hostCounts[cfg.name] ?? -1,
+        localCount: localCounts[cfg.name] ?? -1,
+        hostMaxSequence,
+        localCursor,
+        pendingCount: pendingByCollection[cfg.name] ?? 0,
+        conflictCount: conflictByCollection[cfg.name] ?? 0,
+        stale: localCursor < hostMaxSequence,
+      };
+    });
+
+    return { status, collections };
   }
 
   /**
@@ -460,12 +614,13 @@ export class SyncEngineV2 {
 
     this.lastPushAt = new Date();
     this.currentStatus = 'idle';
+    await this.updateGlobalSequence(pushMaxSequence);
     await this.updateState();
 
     // Notify the local renderer that synced data changed (host confirmed our
     // changes or we received new data from the host).
     if (anyApplied) {
-      syncBroadcaster.emitChange(pushMaxSequence).catch(() => {});
+      syncBroadcaster.emitLocalChange(pushMaxSequence);
     }
 
     this.broadcastStatus();
@@ -504,12 +659,13 @@ export class SyncEngineV2 {
 
     this.lastPullAt = new Date();
     this.currentStatus = 'idle';
+    await this.updateGlobalSequence(pullMaxSequence);
     await this.updateState();
 
     // Notify the local renderer that synced data changed (we received updates
     // from the host or another client).
     if (anyApplied) {
-      syncBroadcaster.emitChange(pullMaxSequence).catch(() => {});
+      syncBroadcaster.emitLocalChange(pullMaxSequence);
     }
 
     this.broadcastStatus();
@@ -524,44 +680,81 @@ export class SyncEngineV2 {
 
     const pageSize = 200;
     let currentCursor = cursor;
-    let hasMore = true;
     let totalPulled = 0;
     let totalApplied = 0;
 
-    while (hasMore) {
-      const authParam = collection.syncAuthFields ? '&includeAuth=true' : '';
-      const response = await this.request<SyncPullResponse>(
-        this.targetHostId,
-        'GET',
-        `/api/v1/sync/v2/pull/${collection.name}?cursor=${currentCursor}&limit=${pageSize}${authParam}`,
-      );
+    // Skip documents that have pending local changes or unresolved conflicts.
+    const pendingIds = await SyncOperation.find({
+      status: { $in: ['pending', 'syncing'] },
+      collection: collection.name,
+    }).distinct('documentId');
 
-      const docs = response.docs || [];
-      hasMore = response.hasMore ?? false;
-      currentCursor = response.nextCursor ?? response.maxSequence ?? currentCursor;
-      totalPulled += docs.length;
+    const conflictIds = await SyncConflict.find({
+      status: 'pending',
+      collection: collection.name,
+    }).distinct('documentId');
 
-      // Skip documents that have pending local changes or unresolved conflicts.
-      const pendingIds = await SyncOperation.find({
-        status: { $in: ['pending', 'syncing'] },
-        collection: collection.name,
-      }).distinct('documentId');
+    const skipIds = new Set([...pendingIds, ...conflictIds].filter(Boolean));
 
-      const conflictIds = await SyncConflict.find({
-        status: 'pending',
-        collection: collection.name,
-      }).distinct('documentId');
+    if (cursor === 0) {
+      // Initial sync: load a paginated snapshot so large collections do not
+      // time out or exceed the relay message buffer.
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const authParam = collection.syncAuthFields ? '&includeAuth=true' : '';
+        const response = await this.request<{
+          docs: any[];
+          hasMore: boolean;
+          nextOffset?: number;
+          maxSequence: number;
+        }>(
+          this.targetHostId,
+          'GET',
+          `/api/v1/sync/v2/snapshot/${collection.name}?full=1&offset=${offset}&limit=${pageSize}${authParam}`,
+        );
 
-      const skipIds = new Set([...pendingIds, ...conflictIds].filter(Boolean));
+        const docs = response.docs || [];
+        hasMore = response.hasMore ?? false;
+        offset = response.nextOffset ?? offset + docs.length;
+        totalPulled += docs.length;
 
-      for (const doc of docs) {
-        const id = doc._id || doc.id;
-        if (!id || skipIds.has(String(id))) continue;
-        await this.applyLocalDoc(collection.name, doc);
-        totalApplied += 1;
+        for (const doc of docs) {
+          const id = doc._id || doc.id;
+          if (!id || skipIds.has(String(id))) continue;
+          await this.applyLocalDoc(collection.name, doc);
+          totalApplied += 1;
+        }
+
+        currentCursor = response.maxSequence ?? currentCursor;
+        if (!hasMore) break;
       }
-
       await this.updateCollectionCursor(collection.name, currentCursor);
+    } else {
+      // Incremental sync: pull only the change-log entries after our cursor.
+      let hasMore = true;
+      while (hasMore) {
+        const authParam = collection.syncAuthFields ? '&includeAuth=true' : '';
+        const response = await this.request<SyncPullResponse>(
+          this.targetHostId,
+          'GET',
+          `/api/v1/sync/v2/pull/${collection.name}?cursor=${currentCursor}&limit=${pageSize}${authParam}`,
+        );
+
+        const docs = response.docs || [];
+        hasMore = response.hasMore ?? false;
+        currentCursor = response.nextCursor ?? response.maxSequence ?? currentCursor;
+        totalPulled += docs.length;
+
+        for (const doc of docs) {
+          const id = doc._id || doc.id;
+          if (!id || skipIds.has(String(id))) continue;
+          await this.applyLocalDoc(collection.name, doc);
+          totalApplied += 1;
+        }
+
+        await this.updateCollectionCursor(collection.name, currentCursor);
+      }
     }
 
     if (totalPulled > 0 || cursor === 0) {
@@ -759,6 +952,15 @@ export class SyncEngineV2 {
     state.markModified('collectionCursors');
     state.updatedAt = new Date();
     await state.save();
+  }
+
+  private async updateGlobalSequence(sequence: number): Promise<void> {
+    if (!sequence || sequence <= 0) return;
+    const state = await this.ensureState();
+    if (!state.syncSequence || state.syncSequence < sequence) {
+      state.syncSequence = sequence;
+      await state.save();
+    }
   }
 
   private async updateState(): Promise<void> {

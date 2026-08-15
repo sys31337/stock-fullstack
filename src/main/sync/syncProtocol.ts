@@ -78,6 +78,16 @@ export interface SyncChangeNotification {
   sequence: number;
 }
 
+export interface SyncBatchNotification {
+  topic: 'sync:change';
+  /** Highest global sequence number at the time of the batch. */
+  maxSequence: number;
+  /** Changed collections with their newest sequence. */
+  changes: SyncChangeNotification[];
+  /** Originating client id, if the change came from a client. */
+  sourceClientId?: string;
+}
+
 export interface SyncCursorState {
   [collection: string]: number;
 }

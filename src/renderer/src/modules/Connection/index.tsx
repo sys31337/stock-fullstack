@@ -29,7 +29,7 @@ import {
   DialogTitle,
 } from '@web/shared/components/ui/dialog';
 import { cn } from '@web/shared/utils/cn';
-import type { RelayConfigDto, RelayHostInfo, RelayStateSnapshot, SyncStatusSnapshot, SyncConflictSnapshot } from '../../../../preload/relay';
+import type { RelayConfigDto, RelayHostInfo, RelayStateSnapshot, SyncStatusSnapshot, SyncConflictSnapshot, SyncHealthSnapshot } from '../../../../preload/relay';
 
 const STATE_LABEL: Record<string, string> = {
   idle: 'Idle',
@@ -58,6 +58,8 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
   const [config, setConfig] = useState<RelayConfigDto | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatusSnapshot | null>(null);
   const [conflicts, setConflicts] = useState<SyncConflictSnapshot[]>([]);
+  const [health, setHealth] = useState<SyncHealthSnapshot | null>(null);
+  const [loadingHealth, setLoadingHealth] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [resolvingConflict, setResolvingConflict] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -80,12 +82,14 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
     api.getHosts().then((h) => mounted && setHosts(h)).catch(() => {});
     api.getSyncStatus().then((s) => mounted && setSyncStatus(s)).catch(() => {});
     refreshConflicts();
+    refreshHealth();
     const offState = api.onStateChange((s) => mounted && setState(s));
     const offHosts = api.onHosts((h) => mounted && setHosts(h));
     const offSync = api.onSyncStatusChange((s) => {
       if (!mounted) return;
       setSyncStatus(s);
       refreshConflicts();
+      refreshHealth();
     });
     return () => {
       mounted = false;
@@ -150,6 +154,18 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
       setConflicts(await window.api.relay.getSyncConflicts());
     } catch {
       setConflicts([]);
+    }
+  };
+
+  const refreshHealth = async () => {
+    try {
+      setLoadingHealth(true);
+      const h = await window.api.relay.getSyncHealth();
+      setHealth(h);
+    } catch {
+      setHealth(null);
+    } finally {
+      setLoadingHealth(false);
     }
   };
 
@@ -532,6 +548,68 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
                     )}
                   </div>
                 )}
+
+                <SectionHeading
+                  icon={<MonitorSmartphone className="h-4 w-4" />}
+                  title="Sync health"
+                  description="Per-collection alignment between this device and the host."
+                />
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={refreshHealth} disabled={loadingHealth} size="sm">
+                      {loadingHealth ? (
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                      )}
+                      Refresh
+                    </Button>
+                  </div>
+                  {health ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-border text-xs text-muted-foreground">
+                            <th className="py-2 pr-3">Collection</th>
+                            <th className="py-2 pr-3 text-right">Host</th>
+                            <th className="py-2 pr-3 text-right">Local</th>
+                            <th className="py-2 pr-3 text-right">Cursor</th>
+                            <th className="py-2 pr-3 text-right">Host seq</th>
+                            <th className="py-2 pr-3 text-right">Pending</th>
+                            <th className="py-2 pr-3 text-right">Conflicts</th>
+                            <th className="py-2 pl-3">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {health.collections.map((c) => (
+                            <tr key={c.collection} className="border-b border-border last:border-0">
+                              <td className="py-2 pr-3 font-medium capitalize">{c.collection}</td>
+                              <td className="py-2 pr-3 text-right">{c.hostCount}</td>
+                              <td className="py-2 pr-3 text-right">{c.localCount}</td>
+                              <td className="py-2 pr-3 text-right font-mono text-xs">{c.localCursor}</td>
+                              <td className="py-2 pr-3 text-right font-mono text-xs">{c.hostMaxSequence}</td>
+                              <td className="py-2 pr-3 text-right">{c.pendingCount}</td>
+                              <td className="py-2 pr-3 text-right">{c.conflictCount}</td>
+                              <td className="py-2 pl-3">
+                                {c.stale ? (
+                                  <span className="inline-flex items-center gap-1 text-amber-600">
+                                    <WifiOff className="h-3 w-3" /> Stale
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                                    <Check className="h-3 w-3" /> Synced
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Health data unavailable.</div>
+                  )}
+                </div>
 
                 {activeSection === 'settings' && (
                   <div className="space-y-6">

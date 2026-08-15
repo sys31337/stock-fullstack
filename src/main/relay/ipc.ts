@@ -34,6 +34,7 @@ export function registerRelayIpc(): void {
   ipcMain.handle('relay:restart', () => manager.restartApp());
 
   ipcMain.handle('sync:get-status', () => manager.getSyncStatus());
+  ipcMain.handle('sync:get-health', () => manager.getSyncHealth());
   ipcMain.handle('sync:trigger', () => manager.triggerSync());
   ipcMain.handle('sync:get-conflicts', () => manager.getSyncConflicts());
   ipcMain.handle('sync:resolve-conflict', (_event, conflictId: string, resolution: 'local' | 'remote' | 'merged', mergedDoc?: any) =>

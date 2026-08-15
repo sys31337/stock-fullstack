@@ -4,10 +4,12 @@ import { URL } from 'node:url';
 import { SYNC_COLLECTIONS } from '../../sync/collectionConfig';
 import SyncAppliedOperation from '@api/models/syncAppliedOperation';
 import SyncConflict from '@api/models/syncConflict';
+import SyncChangeLog from '@api/models/syncChangeLog';
 import {
   recordChange,
   pullChanges,
   getGlobalMaxSequence,
+  getLatestChangeForDocument,
 } from './syncChangeLogService';
 import { withSyncReplay, type CapturedChange } from '@api/plugins/syncChangeTracking';
 import syncBroadcaster from '../../sync/syncBroadcaster';
@@ -32,7 +34,7 @@ function getModel(collectionName: string): mongoose.Model<any> | null {
   return mongoose.connection.models[cfg.model] || null;
 }
 
-function normalizeDoc(doc: any, includeAuthFields = false): any {
+export function normalizeDoc(doc: any, includeAuthFields = false): any {
   if (!doc) return doc;
   const obj = doc.toObject ? doc.toObject() : doc;
   delete obj.__v;
@@ -105,28 +107,43 @@ function isRelayRequest(req: { headers: http.IncomingHttpHeaders }): boolean {
 
 /**
  * Detects whether applying `op` on the server would conflict with a more
- * recent server-side change. Conflicts are based on the base sequence/updatedAt
- * carried by the peer.
+ * recent server-side change.
+ *
+ * Primary check: the client sends the host sequence number it knew when it
+ * made the change (`baseSequence`). If the document's latest change-log
+ * sequence is greater, the host has newer state and we flag a conflict. This
+ * is robust against clock skew across devices.
+ *
+ * Fallback check: if `baseSequence` is missing we compare `updatedAt`.
  */
 async function detectConflict(op: SyncOperationPayload): Promise<{ conflict: boolean; remoteDoc?: any; message?: string }> {
+  const useSequence = op.baseSequence !== undefined && op.baseSequence > 0;
+
   if (op.method === 'POST') {
-    // Creating a document whose _id already exists is a conflict if the content
-    // differs from what is already stored.
     const Model = getModel(op.collection);
     if (!Model) return { conflict: false };
     const existing = await Model.findById(op.documentId).lean();
     if (!existing) return { conflict: false };
 
-    const incoming = op.body || {};
-    const incomingUpdatedAt = incoming.updatedAt ? new Date(incoming.updatedAt).getTime() : 0;
-    const existingUpdatedAt = (existing as any).updatedAt ? new Date((existing as any).updatedAt).getTime() : 0;
-
-    // Same originating operation replayed: not a conflict (idempotency).
-    if (incomingUpdatedAt && existingUpdatedAt && incomingUpdatedAt === existingUpdatedAt) {
+    if (useSequence) {
+      const latest = await getLatestChangeForDocument(op.collection, op.documentId);
+      if (latest && latest.sequence > op.baseSequence!) {
+        return {
+          conflict: true,
+          remoteDoc: normalizeDoc(existing),
+          message: 'Document already exists on the host and was modified after the base version',
+        };
+      }
       return { conflict: false };
     }
 
-    // If the existing document is newer than the base the peer used, flag conflict.
+    // Fallback timestamp-based detection for operations without a base sequence.
+    const incoming = op.body || {};
+    const incomingUpdatedAt = incoming.updatedAt ? new Date(incoming.updatedAt).getTime() : 0;
+    const existingUpdatedAt = (existing as any).updatedAt ? new Date((existing as any).updatedAt).getTime() : 0;
+    if (incomingUpdatedAt && existingUpdatedAt && incomingUpdatedAt === existingUpdatedAt) {
+      return { conflict: false };
+    }
     const baseUpdatedAt = op.baseUpdatedAt ? new Date(op.baseUpdatedAt).getTime() : 0;
     if (baseUpdatedAt && existingUpdatedAt > baseUpdatedAt) {
       return {
@@ -135,8 +152,6 @@ async function detectConflict(op: SyncOperationPayload): Promise<{ conflict: boo
         message: 'Document already exists on the host and was modified after the base version',
       };
     }
-
-    // If no base information and content is identical, treat as duplicate.
     return { conflict: false };
   }
 
@@ -156,9 +171,21 @@ async function detectConflict(op: SyncOperationPayload): Promise<{ conflict: boo
     return { conflict: true, remoteDoc: null, message: 'Document does not exist on host' };
   }
 
+  if (useSequence) {
+    const latest = await getLatestChangeForDocument(op.collection, op.documentId);
+    if (latest && latest.sequence > op.baseSequence!) {
+      return {
+        conflict: true,
+        remoteDoc: normalizeDoc(current),
+        message: 'Document was modified on the host since the last sync',
+      };
+    }
+    return { conflict: false };
+  }
+
+  // Fallback timestamp-based detection.
   const baseUpdatedAt = op.baseUpdatedAt ? new Date(op.baseUpdatedAt).getTime() : 0;
   const currentUpdatedAt = (current as any).updatedAt ? new Date((current as any).updatedAt).getTime() : 0;
-
   if (baseUpdatedAt && currentUpdatedAt > baseUpdatedAt) {
     return {
       conflict: true,
@@ -275,6 +302,7 @@ export async function pushOperations(
       //    side-effects are captured by the Mongoose hooks and recorded here so
       //    clients pull the complete state, not just the main document.
       let sequence: number | undefined;
+      const notifications: Array<{ collection: string; documentId: string; operation: 'create' | 'update' | 'delete'; sequence: number }> = [];
       if (response.status >= 200 && response.status < 300) {
         const operation = methodToOperation(op.method);
         const docSnapshot = operation === 'delete' ? undefined : (await fetchCurrentDoc(op.collection, op.documentId));
@@ -288,6 +316,7 @@ export async function pushOperations(
           docSnapshot,
           isHostOrigin: false,
         });
+        notifications.push({ collection: op.collection, documentId: op.documentId, operation, sequence });
 
         const derivedChanges = captures.filter(
           (c: CapturedChange) => !(c.collection === op.collection && c.documentId === op.documentId),
@@ -296,20 +325,36 @@ export async function pushOperations(
           console.log(`[sync:push] recording ${derivedChanges.length} captured side-effect(s) for ${op.collection}/${op.documentId}`);
         }
         for (const captured of derivedChanges) {
-          await recordChange({
+          const derivedSequence = await recordChange({
             ...captured,
             operationId: op.operationId,
             sourceClientId: effectiveSourceClientId,
             isHostOrigin: false,
-          }).catch(() => {});
+          }).catch(() => undefined);
+          if (derivedSequence !== undefined) {
+            notifications.push({
+              collection: captured.collection,
+              documentId: captured.documentId,
+              operation: captured.operation,
+              sequence: derivedSequence,
+            });
+          }
         }
       }
 
       await recordPushResult(op, response.status, response.body, sequence);
 
       // Notify other peers that new changes are available.
-      if (sequence !== undefined) {
-        syncBroadcaster.emitChange(sequence, sourceClientId).catch(() => {});
+      for (const notification of notifications) {
+        syncBroadcaster
+          .emitChange(
+            notification.collection,
+            notification.documentId,
+            notification.operation,
+            notification.sequence,
+            sourceClientId,
+          )
+          .catch(() => {});
       }
 
       results.push({
@@ -352,18 +397,6 @@ export async function pullCollectionChanges(
   const Model = getModel(collection);
   const maxSequence = await getGlobalMaxSequence();
 
-  // Full-sync shortcut: when cursor is 0, return the host's current collection
-  // contents directly instead of replaying the change log. This guarantees a
-  // fresh client mirrors the host exactly even if the change log has gaps.
-  if (safeCursor === 0 && Model) {
-    const allDocs = await Model.find({}).lean();
-    const docs = allDocs.map((d: any) => ({
-      ...normalizeDoc(d, includeAuth && collection === 'users'),
-      sequence: 0,
-    }));
-    return { docs, hasMore: false, maxSequence, nextCursor: maxSequence };
-  }
-
   const { changes, hasMore, nextCursor } = await pullChanges({
     collection,
     cursor: safeCursor,
@@ -401,6 +434,39 @@ export async function pullCollectionChanges(
   }
 
   return { docs, hasMore, maxSequence, nextCursor };
+}
+
+export interface SyncHealthResponse {
+  maxSequence: number;
+  collectionMaxSequences: Record<string, number>;
+  counts: Record<string, number>;
+}
+
+/**
+ * Returns a point-in-time health snapshot of every synced collection on this
+ * peer: document counts and the highest change-log sequence per collection.
+ * The client combines this with its own local cursors to detect stale data.
+ */
+export async function getSyncHealth(): Promise<SyncHealthResponse> {
+  const counts: Record<string, number> = {};
+  const collectionMaxSequences: Record<string, number> = {};
+
+  for (const cfg of SYNC_COLLECTIONS) {
+    const Model = getModel(cfg.name);
+    counts[cfg.name] = Model ? await Model.estimatedDocumentCount() : -1;
+
+    const latest = await SyncChangeLog.findOne({ collection: cfg.name })
+      .sort({ sequence: -1 })
+      .select('sequence')
+      .lean();
+    collectionMaxSequences[cfg.name] = latest?.sequence ?? 0;
+  }
+
+  return {
+    maxSequence: await getGlobalMaxSequence(),
+    collectionMaxSequences,
+    counts,
+  };
 }
 
 /**

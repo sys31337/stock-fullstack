@@ -51,10 +51,32 @@ export interface SyncConflictSnapshot {
   createdAt: string;
 }
 
+export interface SyncChangeNotification {
+  collection: string;
+  documentId: string;
+  operation: 'create' | 'update' | 'delete';
+  sequence: number;
+}
+
 export interface SyncBroadcastMessage {
   topic: 'sync:change';
   maxSequence: number;
+  changes: SyncChangeNotification[];
   sourceClientId?: string;
+}
+
+export interface SyncHealthSnapshot {
+  status: SyncStatusSnapshot;
+  collections: Array<{
+    collection: string;
+    hostCount: number;
+    localCount: number;
+    hostMaxSequence: number;
+    localCursor: number;
+    pendingCount: number;
+    conflictCount: number;
+    stale: boolean;
+  }>;
 }
 
 export interface RelayPreloadApi {
@@ -80,6 +102,7 @@ export interface RelayPreloadApi {
     mismatches?: Array<{ collection: string; host: number; local: number }>;
     error?: string;
   }>;
+  getSyncHealth: () => Promise<SyncHealthSnapshot | null>;
   onSyncStatusChange: (cb: (snapshot: SyncStatusSnapshot) => void) => () => void;
   onSyncDataChange: (cb: (message: SyncBroadcastMessage) => void) => () => void;
 }

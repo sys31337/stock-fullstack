@@ -173,6 +173,10 @@ class RelayManager {
     return this.syncEngine?.getStatusSnapshot() ?? null;
   }
 
+  async getSyncHealth(): Promise<ReturnType<SyncEngineV2['getHealth']> | null> {
+    return this.syncEngine?.getHealth() ?? null;
+  }
+
   async getSyncConflicts(): Promise<any[]> {
     return this.syncEngine?.getConflicts() ?? [];
   }
@@ -296,10 +300,22 @@ class RelayManager {
       envelope.path === '/__sync__/notify' &&
       envelope.headers?.['x-sync-topic'] === 'sync:change'
     ) {
-      console.log(`[relay:manager] received sync:change notification from ${from}`);
-      // A peer (host or another client via the host) reported a change.
-      // Trigger a pull to catch up.
-      this.syncEngine?.triggerSync().catch(() => {});
+      const body = (envelope.body || {}) as {
+        maxSequence?: number;
+        changes?: Array<{ collection?: string; sequence?: number }>;
+      };
+      const changes = body.changes
+        ?.filter((c): c is { collection: string; sequence: number } =>
+          typeof c.collection === 'string' && typeof c.sequence === 'number',
+        ) ?? [];
+      console.log(`[relay:manager] received sync:change notification from ${from} collections=${changes.map((c) => c.collection).join(',')}`);
+      if (changes.length > 0) {
+        // Pull only the collections that are behind.
+        this.syncEngine?.triggerPull(changes).catch(() => {});
+      } else {
+        // Legacy / fallback notification without collection details.
+        this.syncEngine?.triggerSync().catch(() => {});
+      }
     }
   }
 
