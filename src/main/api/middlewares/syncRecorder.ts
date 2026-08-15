@@ -41,13 +41,18 @@ function shouldSkip(path: string): boolean {
 }
 
 function extractEndpointAndId(path: string): { endpoint: string; documentId?: string } | null {
-  const match = path.match(/^\/api\/v1\/([^/]+)(?:\/([^/]+))?/);
+  const match = path.match(/^\/api\/v1\/([^/]+)/);
   if (!match) return null;
   const endpoint = match[1];
-  const maybeId = match[2];
   const cfg = getSyncCollectionByEndpoint(endpoint);
   if (!cfg) return null;
-  return { endpoint: cfg.endpoint, documentId: maybeId && maybeId.length === 24 ? maybeId : undefined };
+
+  // Nested routes such as /api/v1/bills/info/:id or /api/v1/bills/order/:id/complete
+  // keep the document id at the end of the path. Find the last 24-char hex segment.
+  const idMatches = path.match(/\/([a-fA-F0-9]{24})(?=\/|$)/g);
+  const documentId = idMatches ? idMatches[idMatches.length - 1].replace(/\//g, '') : undefined;
+
+  return { endpoint: cfg.endpoint, documentId };
 }
 
 function normalizeBody(body: unknown, keepId: boolean): unknown {
@@ -151,20 +156,19 @@ async function queueOperation(
 
   let documentId = pathInfo.documentId;
 
-  // For POST requests the local DB generated the _id; capture it from the
-  // response body so the host can receive the same id. Some controllers wrap
-  // the result in a `data` or `result` field. Also honor an _id sent by the
-  // client in the request body.
-  if (method === 'POST') {
-    const reqId = (requestBody as any)?._id || (requestBody as any)?.id;
-    if (typeof reqId === 'string' && reqId.length === 24) {
-      documentId = reqId;
-    } else if (responseBody && typeof responseBody === 'object') {
-      const unwrap = (responseBody as any).data ?? (responseBody as any).result ?? responseBody;
-      const bodyId = unwrap?._id || unwrap?.id;
-      if (typeof bodyId === 'string' && bodyId.length === 24) {
-        documentId = bodyId;
-      }
+  // The document id may come from the URL (handled above), the request body,
+  // or the response body. This covers nested routes such as
+  // /api/v1/bills/info/:id and singleton endpoints such as /api/v1/settings.
+  const reqId = (requestBody as any)?._id || (requestBody as any)?.id;
+  if (typeof reqId === 'string' && reqId.length === 24) {
+    documentId = reqId;
+  }
+
+  if (!documentId && responseBody && typeof responseBody === 'object') {
+    const unwrap = (responseBody as any).data ?? (responseBody as any).result ?? responseBody;
+    const bodyId = unwrap?._id || unwrap?.id;
+    if (typeof bodyId === 'string' && bodyId.length === 24) {
+      documentId = bodyId;
     }
   }
 
