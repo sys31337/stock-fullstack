@@ -9,7 +9,7 @@ import {
   pullChanges,
   getGlobalMaxSequence,
 } from './syncChangeLogService';
-import { withSyncReplay } from '@api/plugins/syncChangeTracking';
+import { withSyncReplay, type CapturedChange } from '@api/plugins/syncChangeTracking';
 import syncBroadcaster from '../../sync/syncBroadcaster';
 import type {
   SyncOperationPayload,
@@ -267,22 +267,39 @@ export async function pushOperations(
         'x-relay-origin': relayOrigin,
       };
 
-      const response = await withSyncReplay(() => replayLocalRequest(op.method, apiPath, op.body, replayHeaders));
+      const { result: response, captures } = await withSyncReplay(() => replayLocalRequest(op.method, apiPath, op.body, replayHeaders));
 
       // 4. Record the change log entry for broadcast / cursor-based pull.
+      //    During replay host business logic also updates related documents
+      //    (product quantities, stock movements, customer credit, etc.). Those
+      //    side-effects are captured by the Mongoose hooks and recorded here so
+      //    clients pull the complete state, not just the main document.
       let sequence: number | undefined;
       if (response.status >= 200 && response.status < 300) {
         const operation = methodToOperation(op.method);
         const docSnapshot = operation === 'delete' ? undefined : (await fetchCurrentDoc(op.collection, op.documentId));
+        const effectiveSourceClientId = sourceClientId || relayOrigin;
         sequence = await recordChange({
           collection: op.collection,
           documentId: op.documentId,
           operation,
           operationId: op.operationId,
-          sourceClientId: sourceClientId || relayOrigin,
+          sourceClientId: effectiveSourceClientId,
           docSnapshot,
           isHostOrigin: false,
         });
+
+        const derivedChanges = captures.filter(
+          (c: CapturedChange) => !(c.collection === op.collection && c.documentId === op.documentId),
+        );
+        for (const captured of derivedChanges) {
+          await recordChange({
+            ...captured,
+            operationId: op.operationId,
+            sourceClientId: effectiveSourceClientId,
+            isHostOrigin: false,
+          }).catch(() => {});
+        }
       }
 
       await recordPushResult(op, response.status, response.body, sequence);
