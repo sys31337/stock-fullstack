@@ -99,13 +99,14 @@ class SyncBroadcaster extends EventEmitter {
   /**
    * Emits a local data-change event without attempting a remote broadcast.
    * Used by the client sync engine to refresh its own renderer after applying
-   * pulled changes.
+   * pulled changes. The optional changes list lets the renderer invalidate
+   * only the affected screens.
    */
-  emitLocalChange(maxSequence: number): void {
+  emitLocalChange(maxSequence: number, changes: SyncChangeNotification[] = []): void {
     this.emit('change', {
       topic: 'sync:change',
       maxSequence,
-      changes: [],
+      changes,
       sourceClientId: undefined,
     });
   }

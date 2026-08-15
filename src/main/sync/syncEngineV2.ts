@@ -13,6 +13,7 @@ import type {
   SyncPushRequest,
   SyncPushResponse,
   SyncPullResponse,
+  SyncChangeNotification,
 } from './syncProtocol';
 
 export type SyncEngineStatus = 'idle' | 'pulling' | 'pushing' | 'error';
@@ -212,6 +213,7 @@ export class SyncEngineV2 {
       const cursors = state.collectionCursors || {};
       let anyApplied = false;
       let pullMaxSequence = 0;
+      const appliedChanges = new Map<string, SyncChangeNotification>();
 
       for (const change of changes) {
         const cfg = SYNC_COLLECTIONS.find((c) => c.name === change.collection);
@@ -225,6 +227,12 @@ export class SyncEngineV2 {
         if (result.applied) {
           anyApplied = true;
         }
+        for (const applied of result.changes) {
+          const existing = appliedChanges.get(applied.collection);
+          if (!existing || applied.sequence > existing.sequence) {
+            appliedChanges.set(applied.collection, applied);
+          }
+        }
         if (result.maxSequence > pullMaxSequence) {
           pullMaxSequence = result.maxSequence;
         }
@@ -236,7 +244,7 @@ export class SyncEngineV2 {
       await this.updateState();
 
       if (anyApplied) {
-        syncBroadcaster.emitLocalChange(pullMaxSequence);
+        syncBroadcaster.emitLocalChange(pullMaxSequence, [...appliedChanges.values()]);
       }
 
       this.broadcastStatus();
@@ -557,6 +565,7 @@ export class SyncEngineV2 {
 
     let pushMaxSequence = 0;
     let anyApplied = false;
+    const appliedChanges: SyncChangeNotification[] = [];
 
     try {
       const response = await this.request<SyncPushResponse>(
@@ -578,8 +587,23 @@ export class SyncEngineV2 {
           // If the server returned a document snapshot, update our local copy
           // so ids and server-side computed fields stay in sync.
           if (result.doc && result.status === 'applied') {
-            await this.applyLocalDoc(op.collection, result.doc);
+            const appliedOperation = await this.applyLocalDoc(op.collection, result.doc);
             anyApplied = true;
+            if (appliedOperation) {
+              const change: SyncChangeNotification = {
+                collection: op.collection,
+                documentId: op.documentId as string,
+                operation: appliedOperation,
+                sequence: result.sequence ?? pushMaxSequence,
+              };
+              const existing = appliedChanges.find((c) => c.collection === op.collection);
+              if (existing) {
+                const index = appliedChanges.indexOf(existing);
+                appliedChanges[index] = change;
+              } else {
+                appliedChanges.push(change);
+              }
+            }
           }
         } else if (result.status === 'conflict') {
           await this.recordConflict(op, result.conflict?.remoteDoc);
@@ -620,7 +644,7 @@ export class SyncEngineV2 {
     // Notify the local renderer that synced data changed (host confirmed our
     // changes or we received new data from the host).
     if (anyApplied) {
-      syncBroadcaster.emitLocalChange(pushMaxSequence);
+      syncBroadcaster.emitLocalChange(pushMaxSequence, appliedChanges);
     }
 
     this.broadcastStatus();
@@ -635,12 +659,19 @@ export class SyncEngineV2 {
     const cursors = state.collectionCursors || {};
     let anyApplied = false;
     let pullMaxSequence = 0;
+    const appliedChanges = new Map<string, SyncChangeNotification>();
 
     for (const collection of SYNC_COLLECTIONS) {
       try {
         const result = await this.pullCollection(collection, cursors[collection.name] ?? 0);
         if (result.applied) {
           anyApplied = true;
+        }
+        for (const applied of result.changes) {
+          const existing = appliedChanges.get(applied.collection);
+          if (!existing || applied.sequence > existing.sequence) {
+            appliedChanges.set(applied.collection, applied);
+          }
         }
         if (result.maxSequence > pullMaxSequence) {
           pullMaxSequence = result.maxSequence;
@@ -665,23 +696,37 @@ export class SyncEngineV2 {
     // Notify the local renderer that synced data changed (we received updates
     // from the host or another client).
     if (anyApplied) {
-      syncBroadcaster.emitLocalChange(pullMaxSequence);
+      syncBroadcaster.emitLocalChange(pullMaxSequence, [...appliedChanges.values()]);
     }
 
     this.broadcastStatus();
   }
 
-  private async pullCollection(collection: SyncCollectionConfig, cursor: number): Promise<{ applied: boolean; maxSequence: number }> {
+  private async pullCollection(collection: SyncCollectionConfig, cursor: number): Promise<{ applied: boolean; maxSequence: number; changes: SyncChangeNotification[] }> {
     const Model = this.getLocalModel(collection.model);
     if (!Model) {
       console.warn(`[sync:v2] local model ${collection.model} not found`);
-      return { applied: false, maxSequence: 0 };
+      return { applied: false, maxSequence: 0, changes: [] };
     }
 
     const pageSize = 200;
     let currentCursor = cursor;
     let totalPulled = 0;
     let totalApplied = 0;
+    const appliedChanges: SyncChangeNotification[] = [];
+
+    const recordChange = (documentId: string, operation: SyncChangeNotification['operation'], sequence: number): void => {
+      const existing = appliedChanges.find((c) => c.collection === collection.name);
+      if (!existing || sequence > existing.sequence) {
+        const change: SyncChangeNotification = { collection: collection.name, documentId, operation, sequence };
+        if (existing) {
+          const index = appliedChanges.indexOf(existing);
+          appliedChanges[index] = change;
+        } else {
+          appliedChanges.push(change);
+        }
+      }
+    };
 
     // Skip documents that have pending local changes or unresolved conflicts.
     const pendingIds = await SyncOperation.find({
@@ -722,8 +767,11 @@ export class SyncEngineV2 {
         for (const doc of docs) {
           const id = doc._id || doc.id;
           if (!id || skipIds.has(String(id))) continue;
-          await this.applyLocalDoc(collection.name, doc);
-          totalApplied += 1;
+          const operation = await this.applyLocalDoc(collection.name, doc);
+          if (operation) {
+            totalApplied += 1;
+            recordChange(String(id), operation, doc.sequence ?? currentCursor);
+          }
         }
 
         currentCursor = response.maxSequence ?? currentCursor;
@@ -749,8 +797,11 @@ export class SyncEngineV2 {
         for (const doc of docs) {
           const id = doc._id || doc.id;
           if (!id || skipIds.has(String(id))) continue;
-          await this.applyLocalDoc(collection.name, doc);
-          totalApplied += 1;
+          const operation = await this.applyLocalDoc(collection.name, doc);
+          if (operation) {
+            totalApplied += 1;
+            recordChange(String(id), operation, doc.sequence ?? currentCursor);
+          }
         }
 
         await this.updateCollectionCursor(collection.name, currentCursor);
@@ -762,21 +813,21 @@ export class SyncEngineV2 {
       console.log(`[sync:v2] pulled ${collection.name}: pulled=${totalPulled} applied=${totalApplied} local=${localCount} cursor=${cursor}->${currentCursor}`);
     }
 
-    return { applied: totalApplied > 0, maxSequence: currentCursor };
+    return { applied: totalApplied > 0, maxSequence: currentCursor, changes: appliedChanges };
   }
 
-  private async applyLocalDoc(collectionName: string, doc: any): Promise<void> {
+  private async applyLocalDoc(collectionName: string, doc: any): Promise<SyncChangeNotification['operation'] | null> {
     const cfg = SYNC_COLLECTIONS.find((c) => c.name === collectionName);
-    if (!cfg) return;
+    if (!cfg) return null;
     const Model = this.getLocalModel(cfg.model);
-    if (!Model) return;
+    if (!Model) return null;
 
     const id = doc._id || doc.id;
-    if (!id) return;
+    if (!id) return null;
 
     if (doc.__deleted) {
       await Model.findByIdAndDelete(id);
-      return;
+      return 'delete';
     }
 
     const cleanDoc = { ...doc };
@@ -790,13 +841,15 @@ export class SyncEngineV2 {
         // timestamps (especially createdAt). findByIdAndUpdate with upsert
         // would overwrite createdAt with the local clock.
         await new Model(cleanDoc).save();
+        return 'create';
       } else {
         await Model.findByIdAndUpdate(id, cleanDoc, { new: true });
+        return 'update';
       }
     } catch (error: any) {
       if (error?.code === 11000) {
         const resolved = await this.resolveDuplicateKeyConflict(Model, cfg, cleanDoc, error);
-        if (resolved) return;
+        if (resolved) return null;
       }
       throw error;
     }
