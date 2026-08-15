@@ -53,11 +53,6 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
-    const existing = await Bill.findOne({ type, orderId: finalOrderId });
-    if (existing) {
-      return res.status(409).send({ message: `Order ID ${finalOrderId} already exists for type ${type}` });
-    }
-
     const payload: any = {
       ...body,
       orderId: finalOrderId,
@@ -421,22 +416,11 @@ const updateContent = async (req: IUserIdRequest, res: Response, next: NextFunct
   }
 };
 
-const checkOrderIdExists = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
-  try {
-    const { type, orderId } = req.params;
-    const existing = await Bill.findOne({ type, orderId });
-    return res.status(200).send({ exists: !!existing });
-  } catch (error) {
-    return next(error);
-  }
-};
-
 export {
   createOne,
   updateOne,
   getBillsOfType,
   getAllBills,
   getSingleBill,
-  checkOrderIdExists,
   updateContent,
 };

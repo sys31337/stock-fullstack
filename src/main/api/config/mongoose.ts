@@ -13,11 +13,37 @@ import {
   registerHostChangeTracking,
 } from '@api/plugins/syncChangeTracking';
 import { seedChangeLogFromExistingData, repairChangeLog } from '@api/services/syncChangeLogService';
+import Bill from '@api/models/bills';
 
 let skipDefaultSeeding = true;
 
 export function setSkipDefaultSeeding(skip: boolean): void {
   skipDefaultSeeding = skip;
+}
+
+/**
+ * Drops the legacy unique compound index on bills { type, orderId } so duplicate
+ * order IDs are allowed. A non-unique compound index is recreated by Mongoose
+ * from the schema definition.
+ */
+async function migrateBillOrderIdIndex(): Promise<void> {
+  try {
+    const collection = Bill.collection;
+    const indexes = await collection.indexes();
+    const legacyUnique = indexes.find(
+      (idx: any) =>
+        idx.key &&
+        idx.key.type === 1 &&
+        idx.key.orderId === 1 &&
+        idx.unique === true,
+    );
+    if (legacyUnique && legacyUnique.name) {
+      await collection.dropIndex(legacyUnique.name);
+      log('Dropped legacy unique bill orderId index');
+    }
+  } catch (error) {
+    logError('Failed to migrate bill orderId index:', error);
+  }
 }
 
 const connectDB = async (dbName?: string): Promise<boolean> => {
@@ -90,6 +116,10 @@ const connectDB = async (dbName?: string): Promise<boolean> => {
         log('Default admin user created (admin / admin)');
       }
     }
+
+    // Remove the legacy unique index on bills { type, orderId } so duplicate
+    // order IDs are allowed. This runs in both host and client modes.
+    await migrateBillOrderIdIndex();
 
     // Enable host-side change tracking so local mutations are broadcast to
     // linked clients. Client mode pulls from the host instead.

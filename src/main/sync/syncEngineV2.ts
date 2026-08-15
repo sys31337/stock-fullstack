@@ -7,6 +7,7 @@ import SyncConflict from '../api/models/syncConflict';
 import SyncAppliedOperation from '../api/models/syncAppliedOperation';
 import SyncState from '../api/models/syncState';
 import { SYNC_COLLECTIONS, SyncCollectionConfig } from './collectionConfig';
+import syncBroadcaster from './syncBroadcaster';
 import type {
   SyncOperationPayload,
   SyncPushRequest,
@@ -400,6 +401,9 @@ export class SyncEngineV2 {
 
     const request: SyncPushRequest = { operations };
 
+    let pushMaxSequence = 0;
+    let anyApplied = false;
+
     try {
       const response = await this.request<SyncPushResponse>(
         this.targetHostId,
@@ -407,6 +411,8 @@ export class SyncEngineV2 {
         '/api/v1/sync/v2/push',
         request,
       );
+
+      pushMaxSequence = response.maxSequence ?? 0;
 
       for (const result of response.results) {
         const op = pending.find((p) => p.operationId === result.operationId);
@@ -419,6 +425,7 @@ export class SyncEngineV2 {
           // so ids and server-side computed fields stay in sync.
           if (result.doc && result.status === 'applied') {
             await this.applyLocalDoc(op.collection, result.doc);
+            anyApplied = true;
           }
         } else if (result.status === 'conflict') {
           await this.recordConflict(op, result.conflict?.remoteDoc);
@@ -454,6 +461,13 @@ export class SyncEngineV2 {
     this.lastPushAt = new Date();
     this.currentStatus = 'idle';
     await this.updateState();
+
+    // Notify the local renderer that synced data changed (host confirmed our
+    // changes or we received new data from the host).
+    if (anyApplied) {
+      syncBroadcaster.emitChange(pushMaxSequence).catch(() => {});
+    }
+
     this.broadcastStatus();
   }
 
@@ -464,10 +478,18 @@ export class SyncEngineV2 {
 
     const state = await this.ensureState();
     const cursors = state.collectionCursors || {};
+    let anyApplied = false;
+    let pullMaxSequence = 0;
 
     for (const collection of SYNC_COLLECTIONS) {
       try {
-        await this.pullCollection(collection, cursors[collection.name] ?? 0);
+        const result = await this.pullCollection(collection, cursors[collection.name] ?? 0);
+        if (result.applied) {
+          anyApplied = true;
+        }
+        if (result.maxSequence > pullMaxSequence) {
+          pullMaxSequence = result.maxSequence;
+        }
       } catch (error) {
         const rawMessage = error instanceof Error ? error.message : String(error);
         // NOT_REGISTERED is expected during brief disconnects; do not spam logs.
@@ -483,14 +505,21 @@ export class SyncEngineV2 {
     this.lastPullAt = new Date();
     this.currentStatus = 'idle';
     await this.updateState();
+
+    // Notify the local renderer that synced data changed (we received updates
+    // from the host or another client).
+    if (anyApplied) {
+      syncBroadcaster.emitChange(pullMaxSequence).catch(() => {});
+    }
+
     this.broadcastStatus();
   }
 
-  private async pullCollection(collection: SyncCollectionConfig, cursor: number): Promise<void> {
+  private async pullCollection(collection: SyncCollectionConfig, cursor: number): Promise<{ applied: boolean; maxSequence: number }> {
     const Model = this.getLocalModel(collection.model);
     if (!Model) {
       console.warn(`[sync:v2] local model ${collection.model} not found`);
-      return;
+      return { applied: false, maxSequence: 0 };
     }
 
     const pageSize = 200;
@@ -539,6 +568,8 @@ export class SyncEngineV2 {
       const localCount = await Model.estimatedDocumentCount();
       console.log(`[sync:v2] pulled ${collection.name}: pulled=${totalPulled} applied=${totalApplied} local=${localCount} cursor=${cursor}->${currentCursor}`);
     }
+
+    return { applied: totalApplied > 0, maxSequence: currentCursor };
   }
 
   private async applyLocalDoc(collectionName: string, doc: any): Promise<void> {

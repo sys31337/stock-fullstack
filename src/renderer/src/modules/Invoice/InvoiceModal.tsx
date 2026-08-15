@@ -10,7 +10,7 @@ import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useSalespeople } from '@web/shared/hooks/useReports';
-import { useCreateBill, useGetLatestBillNumber, useCheckBillOrderId } from '@web/shared/hooks/useBill';
+import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
@@ -198,21 +198,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
     }
   }
 
-  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue, setFieldError } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
-  const { mutateAsync: checkOrderId } = useCheckBillOrderId();
-
-  const handleOrderIdBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    handleBlur(e);
-    const id = e.target.value.trim();
-    if (!id) return;
-    try {
-      const exists = await checkOrderId({ type: 'SALE', orderId: id });
-      if (exists) {
-        setFieldError('orderId', 'orderIdExists');
-      }
-    } catch {
-    }
-  };
+  const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
 
   const handleMinimize = () => {
     holdReceipt({
@@ -307,7 +293,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
                         <CustomInput
                           name="orderId"
                           handleChange={handleChange}
-                          handleBlur={handleOrderIdBlur}
+                          handleBlur={handleBlur}
                           value={values.orderId}
                           className="[&_input]:rounded-lg [&_input]:bg-gray-50 [&_input]:font-semibold [&_input]:h-8 [&_input]:text-xs"
                         />

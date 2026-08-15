@@ -6,6 +6,7 @@ import AppSection from '@web/shared/components/AppSection';
 import CustomTitleBar from '@web/shared/components/CustomTitleBar';
 import { ToastProvider, ToastStateProvider } from '@web/shared/components/ui/use-toast';
 import { ThemeProvider } from '@web/shared/contexts/ThemeContext';
+import { useSyncDataChange } from '@web/shared/hooks/useSyncDataChange';
 import './App.css';
 
 const shortcuts = new Shortcuts({
@@ -25,6 +26,8 @@ const App = () => {
   React.useEffect(() => {
     shortcuts.start();
   }, []);
+
+  useSyncDataChange();
 
   return (
     <ThemeProvider>

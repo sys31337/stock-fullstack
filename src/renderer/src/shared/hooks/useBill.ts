@@ -123,8 +123,4 @@ const useUpdateBillContent = (id?: string) => useMutation((data: { content: stri
   }
 });
 
-const useCheckBillOrderId = () => useMutation(({ type, orderId }: { type: string, orderId: string }) => axiosInstance.request({
-  url: `bills/${type}/check-id/${orderId}`,
-}).then(({ data }) => data.exists));
-
-export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, useCancelOrder, useCompleteOrder, useCheckBillOrderId, useUpdateBillContent, };
+export { useGetAllBills, useGetAllBillsOfType, useGetLatestBillNumber, useGetBillInfo, useCreateBill, useUpdateBill, useCancelOrder, useCompleteOrder, useUpdateBillContent, };

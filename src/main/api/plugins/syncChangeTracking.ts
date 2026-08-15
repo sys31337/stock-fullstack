@@ -37,6 +37,10 @@ function normalizeSnapshot(doc: any): any {
   return obj;
 }
 
+function shouldSkipHook(): boolean {
+  return !hostChangeTrackingEnabled || isInsideSyncReplay();
+}
+
 /**
  * Attaches post-save and post-remove hooks to every synced Mongoose model so
  * host-local mutations are recorded in the change log and broadcast to peers.
@@ -49,7 +53,7 @@ export function registerHostChangeTracking(): void {
     if (!Model) continue;
 
     Model.schema.post('save', function recordSave(this: mongoose.Document) {
-      if (!hostChangeTrackingEnabled || isInsideSyncReplay()) return;
+      if (shouldSkipHook()) return;
       const docId = this._id?.toString();
       if (!docId) return;
       const isNew = this.isNew;
@@ -63,7 +67,7 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('findOneAndUpdate', async function recordUpdate(doc: any) {
-      if (!hostChangeTrackingEnabled || isInsideSyncReplay()) return;
+      if (shouldSkipHook()) return;
       if (!doc) return;
       const docId = doc._id?.toString();
       if (!docId) return;
@@ -77,7 +81,7 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('findOneAndDelete', async function recordDelete(doc: any) {
-      if (!hostChangeTrackingEnabled || isInsideSyncReplay()) return;
+      if (shouldSkipHook()) return;
       if (!doc) return;
       const docId = doc._id?.toString();
       if (!docId) return;
@@ -87,6 +91,136 @@ export function registerHostChangeTracking(): void {
         operation: 'delete',
         isHostOrigin: true,
       }).catch(() => {});
+    });
+
+    // updateOne (query middleware) — controllers sometimes use updateOne or
+    // findByIdAndUpdate aliases that resolve to updateOne underneath.
+    Model.schema.pre('updateOne', async function preUpdateOne() {
+      if (shouldSkipHook()) return;
+      try {
+        const filter = this.getFilter();
+        const doc = await Model.findOne(filter).select('_id').lean();
+        if (doc) {
+          (this as any).__sync_docId = String((doc as any)._id);
+        }
+      } catch { /* ignore pre-hook errors */ }
+    });
+
+    Model.schema.post('updateOne', async function postUpdateOne() {
+      if (shouldSkipHook()) return;
+      const docId = (this as any).__sync_docId as string | undefined;
+      if (!docId) return;
+      const current = await Model.findById(docId).lean();
+      if (!current) {
+        await recordChange({
+          collection: cfg.name,
+          documentId: docId,
+          operation: 'delete',
+          isHostOrigin: true,
+        }).catch(() => {});
+      } else {
+        await recordChange({
+          collection: cfg.name,
+          documentId: docId,
+          operation: 'update',
+          docSnapshot: normalizeSnapshot(current),
+          isHostOrigin: true,
+        }).catch(() => {});
+      }
+    });
+
+    // updateMany (query middleware)
+    Model.schema.pre('updateMany', async function preUpdateMany() {
+      if (shouldSkipHook()) return;
+      try {
+        const filter = this.getFilter();
+        const docs = await Model.find(filter).select('_id').lean();
+        (this as any).__sync_docIds = docs.map((d: any) => String(d._id));
+      } catch { /* ignore pre-hook errors */ }
+    });
+
+    Model.schema.post('updateMany', async function postUpdateMany() {
+      if (shouldSkipHook()) return;
+      const docIds = ((this as any).__sync_docIds as string[] | undefined) || [];
+      for (const docId of docIds) {
+        const current = await Model.findById(docId).lean();
+        if (!current) {
+          await recordChange({
+            collection: cfg.name,
+            documentId: docId,
+            operation: 'delete',
+            isHostOrigin: true,
+          }).catch(() => {});
+        } else {
+          await recordChange({
+            collection: cfg.name,
+            documentId: docId,
+            operation: 'update',
+            docSnapshot: normalizeSnapshot(current),
+            isHostOrigin: true,
+          }).catch(() => {});
+        }
+      }
+    });
+
+    // deleteOne as a document method (e.g. doc.deleteOne())
+    Model.schema.post('deleteOne', { document: true, query: false }, async function postDocDeleteOne(this: mongoose.Document) {
+      if (shouldSkipHook()) return;
+      const docId = this._id?.toString();
+      if (!docId) return;
+      await recordChange({
+        collection: cfg.name,
+        documentId: docId,
+        operation: 'delete',
+        isHostOrigin: true,
+      }).catch(() => {});
+    });
+
+    // deleteOne as a query (e.g. Model.deleteOne({ ... }))
+    Model.schema.pre('deleteOne', async function preDeleteOne() {
+      if (shouldSkipHook()) return;
+      try {
+        const filter = this.getFilter();
+        const doc = await Model.findOne(filter).select('_id').lean();
+        if (doc) {
+          (this as any).__sync_docId = String((doc as any)._id);
+        }
+      } catch { /* ignore pre-hook errors */ }
+    });
+
+    Model.schema.post('deleteOne', async function postQueryDeleteOne() {
+      if (shouldSkipHook()) return;
+      const docId = (this as any).__sync_docId as string | undefined;
+      if (!docId) return;
+      await recordChange({
+        collection: cfg.name,
+        documentId: docId,
+        operation: 'delete',
+        isHostOrigin: true,
+      }).catch(() => {});
+    });
+
+    // deleteMany (query middleware)
+    Model.schema.pre('deleteMany', async function preDeleteMany() {
+      if (shouldSkipHook()) return;
+      try {
+        const filter = this.getFilter();
+        const docs = await Model.find(filter).select('_id').lean();
+        (this as any).__sync_docIds = docs.map((d: any) => String(d._id));
+      } catch { /* ignore pre-hook errors */ }
+    });
+
+    Model.schema.post('deleteMany', async function postDeleteMany() {
+      if (shouldSkipHook()) return;
+      const docIds = ((this as any).__sync_docIds as string[] | undefined) || [];
+      for (const docId of docIds) {
+        await recordChange({
+          collection: cfg.name,
+          documentId: docId,
+          operation: 'delete',
+          isHostOrigin: true,
+        }).catch(() => {});
+      }
     });
   }
 }

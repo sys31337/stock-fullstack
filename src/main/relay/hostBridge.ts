@@ -37,9 +37,12 @@ export class HostBridge {
       }
     };
 
+    const ownClientId = this.relay.getPayload().clientId;
     const originalHostsChange = this.relay.onHostsChange;
     this.relay.onHostsChange = (hosts: RelayHostInfo[]) => {
-      this.connectedClients = hosts.flatMap((h) => h.clients || []);
+      this.connectedClients = hosts
+        .filter((h) => h.clientId === ownClientId)
+        .flatMap((h) => h.clients || []);
       originalHostsChange(hosts);
     };
   }
@@ -51,13 +54,14 @@ export class HostBridge {
    * so we encode the notification as a request to a virtual sync endpoint.
    */
   async broadcast(topic: string, payload?: unknown, excludeClientId?: string): Promise<void> {
-    if (this.connectedClients.length === 0) {
-      try {
-        const hosts = await this.relay.listHosts();
-        this.connectedClients = hosts.flatMap((h) => h.clients || []);
-      } catch {
-        // keep empty
-      }
+    const ownClientId = this.relay.getPayload().clientId;
+    try {
+      const hosts = await this.relay.listHosts();
+      this.connectedClients = hosts
+        .filter((h) => h.clientId === ownClientId)
+        .flatMap((h) => h.clients || []);
+    } catch {
+      // keep cached list if the relay is momentarily unreachable
     }
     const targets = this.connectedClients.filter((id) => id && id !== excludeClientId);
     console.log(`[host-bridge] broadcasting topic=${topic} to ${targets.length} client(s)`, targets);

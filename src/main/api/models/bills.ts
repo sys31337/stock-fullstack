@@ -44,7 +44,7 @@ const billsSchema = new Schema({
   }],
 }, { timestamps: true });
 
-billsSchema.index({ type: 1, orderId: 1 }, { unique: true });
+billsSchema.index({ type: 1, orderId: 1 });
 
 const Bill = model('Bill', billsSchema);
 export default Bill;
