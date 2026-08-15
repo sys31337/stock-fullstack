@@ -19,10 +19,11 @@ interface OrderTableRowsProps {
   handleProductSelect: (index: number, product: IProduct) => void;
   priceTier: number;
   showTva: boolean;
+  warehouse?: string;
 }
 
-const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva }) => {
-  const { data: allProducts, isFetched } = useGetAllProducts();
+const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva, warehouse }) => {
+  const { data: allProducts, isFetched } = useGetAllProducts(warehouse ? { warehouse } : undefined);
   const { toast } = useToast();
 
   const sellPriceField = priceTier === 1 ? 'sellPrice_1' : priceTier === 2 ? 'sellPrice_2' : 'sellPrice_3';
@@ -59,8 +60,14 @@ const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, 
     return allProducts.find((p: IProduct) => p.barCode === barCode) || null;
   }, [barCode, allProducts]);
 
+  const warehouseEntry = warehouse && matchedProduct?.warehouseStock
+    ? (matchedProduct as any).warehouseStock.find((s: any) => String(s.warehouse) === warehouse)
+    : undefined;
+
   const isLocked = matchedProduct !== null;
-  const available = isLocked ? Number(matchedProduct.quantity) - Number(matchedProduct.reserved || 0) : 0;
+  const stockQty = warehouseEntry ? Number(warehouseEntry.quantity || 0) : Number((matchedProduct as any)?.quantity || 0);
+  const stockReserved = warehouseEntry ? Number(warehouseEntry.reserved || 0) : Number((matchedProduct as any)?.reserved || 0);
+  const available = isLocked ? stockQty - stockReserved : 0;
   const exceedsStock = isLocked && Number(quantity) > available;
 
   const handleBarcodeBlur = (e: React.FocusEvent<HTMLInputElement>) => {

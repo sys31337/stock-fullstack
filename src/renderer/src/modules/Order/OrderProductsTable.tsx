@@ -13,6 +13,7 @@ interface OrderProductsTableProps {
   productsValues: IProduct[];
   setProductsValues: (v: IProduct[]) => void;
   priceTier: number;
+  warehouse?: string;
 }
 
 const colorMap: Record<number, string> = {
@@ -21,7 +22,7 @@ const colorMap: Record<number, string> = {
   3: 'text-green-600',
 };
 
-const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues, setProductsValues, priceTier }) => {
+const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues, setProductsValues, priceTier, warehouse }) => {
   const { data: settings } = useGetSettings();
   const showTva = settings?.tvaEnabled ?? true;
 
@@ -106,6 +107,7 @@ const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues,
           handleProductSelect={handleProductSelect}
           priceTier={priceTier}
           showTva={showTva}
+          warehouse={warehouse}
         />
       ))}
 

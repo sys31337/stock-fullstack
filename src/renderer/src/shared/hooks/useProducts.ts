@@ -3,11 +3,12 @@ import queryClient from "@web/shared/services/queryClient";
 import { Payload } from "@web/shared/types/payload";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-const useGetAllProducts = () => useQuery(
-  ['Get all products'],
-  async () => axiosInstance
+const useGetAllProducts = (params?: { warehouse?: string }) => useQuery(
+  ['Get all products', params?.warehouse],
+  () => axiosInstance
     .request({
       url: 'products',
+      params: params?.warehouse ? { warehouse: params.warehouse } : undefined,
     })
     .then(({ data }) => data),
 );

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
-import { useGetMyPermissions } from '@web/shared/hooks/useUsersEnhanced';
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useSwitchWarehouse } from '@web/shared/hooks/useUsersEnhanced';
 import { Button } from '@web/shared/components/ui/button';
 import {
@@ -23,16 +22,9 @@ interface WarehouseSelectorProps {
 }
 
 const WarehouseSelector = ({ value, onChange, showAll = true, size = 'default' }: WarehouseSelectorProps) => {
-  const { data: permissions } = useGetMyPermissions();
-  const { data: warehouses } = useGetAllWarehouses();
+  const { allowed, defaultId, accessMode } = useAvailableWarehouses();
   const { mutateAsync: switchWarehouse } = useSwitchWarehouse();
-  const [selected, setSelected] = useState(value || permissions?.defaultWarehouse || '');
-
-  const allowedWarehouses = permissions?.warehouseAccessMode === 'all'
-    ? (warehouses || [])
-    : (warehouses || []).filter((w: any) =>
-        permissions?.assignedWarehouses?.includes(w._id)
-      );
+  const [selected, setSelected] = useState(value || defaultId || '');
 
   useEffect(() => {
     if (value !== undefined) setSelected(value);
@@ -44,7 +36,7 @@ const WarehouseSelector = ({ value, onChange, showAll = true, size = 'default' }
     else await switchWarehouse(warehouseId);
   };
 
-  if (!warehouses?.length) return null;
+  if (!allowed.length) return null;
 
   return (
     <DropdownMenu>
@@ -60,7 +52,7 @@ const WarehouseSelector = ({ value, onChange, showAll = true, size = 'default' }
           <Warehouse className={cn(size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4')} />
           <span className="truncate max-w-[120px]">
             {selected
-              ? (warehouses as any[])?.find((w: any) => w._id === selected)?.name || t('selectWarehouse')
+              ? allowed.find((w: any) => w._id === selected)?.name || t('selectWarehouse')
               : t('selectWarehouse')}
           </span>
         </Button>
@@ -68,7 +60,7 @@ const WarehouseSelector = ({ value, onChange, showAll = true, size = 'default' }
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>{t('warehouses')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {showAll && permissions?.warehouseAccessMode === 'all' && (
+        {showAll && accessMode === 'all' && (
           <DropdownMenuItem onClick={() => handleSelect('')}>
             <div className="flex items-center gap-2 w-full">
               <Warehouse className="h-4 w-4 text-muted-foreground" />
@@ -77,7 +69,7 @@ const WarehouseSelector = ({ value, onChange, showAll = true, size = 'default' }
             </div>
           </DropdownMenuItem>
         )}
-        {allowedWarehouses.map((warehouse: any) => (
+        {allowed.map((warehouse: any) => (
           <DropdownMenuItem key={warehouse._id} onClick={() => handleSelect(warehouse._id)}>
             <div className="flex items-center gap-2 w-full">
               <Warehouse className="h-4 w-4 text-muted-foreground" />

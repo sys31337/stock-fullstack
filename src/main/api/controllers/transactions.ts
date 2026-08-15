@@ -105,7 +105,7 @@ const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     if (bill && !isSyncRecorderClientMode()) {
       await StockMovement.deleteMany({ relatedBill: bill._id, type: { $in: ['OUT', 'IN'] } });
       if (bill.type === 'DELIVERY') {
-        await deliveryProductUpdateHandler(bill.products || [], []);
+        await deliveryProductUpdateHandler(bill.products || [], [], false, bill.warehouse);
         await StockMovement.create(
           (bill.products || []).map((p: any) => ({
             _id: deterministicMovementId(`DEL_REVERT_${bill._id}`, p.barCode || p.id),
@@ -120,7 +120,7 @@ const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
           })),
         );
       } else if (bill.type === 'BUY') {
-        await buyBillproductUpdateHandler(bill.products || [], []);
+        await buyBillproductUpdateHandler(bill.products || [], [], bill.warehouse);
         await StockMovement.create(
           (bill.products || []).map((p: any) => ({
             _id: deterministicMovementId(`BUY_REVERT_${bill._id}`, p.barCode || p.id),

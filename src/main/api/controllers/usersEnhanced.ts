@@ -254,9 +254,9 @@ const getMyPermissions = async (req: IUserIdRequest, res: Response, next: NextFu
       userPermissions: user.userPermissions,
       effectivePermissions: allPermissions,
       isMainAccount: isMain,
-      assignedWarehouses: user.assignedWarehouses,
+      assignedWarehouses: (user.assignedWarehouses || []).map((w: any) => w.toString()),
       warehouseAccessMode: isMain ? 'all' : (user.warehouseAccessMode || 'assigned'),
-      defaultWarehouse: user.defaultWarehouse,
+      defaultWarehouse: user.defaultWarehouse ? user.defaultWarehouse.toString() : undefined,
     });
   } catch (error) {
     return next(error);

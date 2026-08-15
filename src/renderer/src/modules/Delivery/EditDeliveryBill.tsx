@@ -10,9 +10,9 @@ import CustomInput from '@web/shared/components/CustomForm/Input'
 import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
-import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
+import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -58,7 +58,6 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
-  const { data: allWarehouses } = useGetAllWarehouses();
   const { data: billInfo, isFetched } = useGetBillInfo(billId, { enabled: !!isOpen });
   const { mutateAsync: updateBill } = useUpdateBill(billId);
   const { data: settings } = useGetSettings();
@@ -280,6 +279,7 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
                     productsValues={productsValues}
                     setProductsValues={setProductsValues}
                     priceTier={priceTier}
+                    warehouse={values.warehouse}
                   />
                 </CardContent>
               </Card>
@@ -342,21 +342,7 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
                         <CustomerModal />
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('warehouse')}</Label>
-                      <CustomInput
-                        name="warehouse"
-                        setFieldValue={setFieldValue}
-                        handleBlur={handleBlur}
-                        value={values.warehouse}
-                        selectOptions={
-                          allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
-                        }
-                        isSelect={true}
-                        inputSize="sm"
-                        className="[&_>div>div]:rounded-lg"
-                      />
-                    </div>
+                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} prefill={false} />
                   </div>
                 </CardContent>
               </Card>

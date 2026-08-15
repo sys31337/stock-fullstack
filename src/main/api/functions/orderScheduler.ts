@@ -15,7 +15,7 @@ export const startOrderScheduler = () => {
 
       for (const order of expiredOrders) {
         try {
-          await orderReleaseProducts(order.products);
+          await orderReleaseProducts(order.products, order.warehouse);
           order.status = 'cancelled';
           await order.save();
           console.log(`Order #${order.orderId} auto-cancelled (reservation expired)`);

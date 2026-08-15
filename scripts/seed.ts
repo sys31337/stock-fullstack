@@ -1167,13 +1167,19 @@ async function finalizeProducts(
   for (const { p, qty } of adjustTargets) {
     const oldQty = p.quantity;
     if (oldQty === qty) continue;
-    p.quantity = qty;
     const delta = qty - oldQty;
     const mainEntry = p.warehouseStock.find((w: any) => w.warehouse.toString() === mainWh.toString());
-    if (mainEntry) {
+    if (qty === 0) {
+      for (const entry of p.warehouseStock) {
+        entry.quantity = 0;
+        entry.reserved = 0;
+      }
+    } else if (mainEntry) {
       mainEntry.quantity += delta;
       if (mainEntry.quantity < 0) mainEntry.quantity = 0;
     }
+    p.quantity = (p.warehouseStock || []).reduce((sum: number, e: any) => sum + Number(e.quantity || 0), 0);
+    p.reserved = (p.warehouseStock || []).reduce((sum: number, e: any) => sum + Number(e.reserved || 0), 0);
     await p.save();
     if (delta !== 0) {
       await new StockMovement({
@@ -1182,7 +1188,7 @@ async function finalizeProducts(
         type: 'ADJUSTMENT',
         quantity: delta,
         previousStock: oldQty,
-        newStock: qty,
+        newStock: p.quantity,
         notes: qty === 0 ? 'Sold out / stock counted to zero' : 'Stock counted low, notify threshold',
         createdBy: pick(userIds),
         createdAt: randomDate(15, 1),

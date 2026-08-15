@@ -11,9 +11,9 @@ import ProductsTable from '@web/modules/Receipt/components/ProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
-import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
+import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -72,7 +72,6 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: allCategories, refetch: refetchCategories } = useGetAllCategories();
-  const { data: allWarehouses } = useGetAllWarehouses();
   const { data: billInfo, isFetched } = useGetBillInfo(billId, { enabled: !!isOpen });
   const { mutateAsync: updateBill } = useUpdateBill(billId);
   const { data: settings } = useGetSettings();
@@ -323,18 +322,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
                     <CategoryModal />
                   </div>
                   <div>
-                    <CustomInput
-                      name="warehouse"
-                      label={t('warehouse')}
-                      setFieldValue={setFieldValue}
-                      handleBlur={handleBlur}
-                      value={values.warehouse}
-                      selectOptions={
-                        allWarehouses && allWarehouses.map((w: any) => ({ label: `${w.name} (${w.code})`, value: w._id }))
-                      }
-                      isSelect={true}
-                      className="mb-0 w-full"
-                    />
+                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} prefill={false} />
                   </div>
                 </div>
               </CardContent>

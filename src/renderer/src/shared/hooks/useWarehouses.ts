@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@web/shared/services/api';
 import { defaultWarehouseId } from '@web/config';
 import Any from '@web/shared/types/any';
+import { useGetMyPermissions } from '@web/shared/hooks/useUsersEnhanced';
 
 export const useGetAllWarehouses = () => useQuery({
   queryKey: ['warehouses'],
@@ -12,6 +13,28 @@ export const useGetAllWarehouses = () => useQuery({
     return [defaultWarehouse, ...rest];
   }),
 });
+
+export const useAvailableWarehouses = () => {
+  const { data: permissions, isLoading: permissionsLoading } = useGetMyPermissions();
+  const { data: warehouses, isLoading: warehousesLoading } = useGetAllWarehouses();
+
+  const accessMode = permissions?.warehouseAccessMode ?? 'assigned';
+  const assigned = permissions?.assignedWarehouses || [];
+
+  const allowed = ((warehouses || []) as any[]).filter((w) => {
+    if (!w || !w._id) return false;
+    return accessMode === 'all' || assigned.includes(w._id);
+  });
+
+  const defaultId = permissions?.defaultWarehouse || allowed[0]?._id || '';
+
+  return {
+    allowed,
+    defaultId,
+    accessMode,
+    isLoading: permissionsLoading || warehousesLoading,
+  };
+};
 
 export const useGetWarehouse = (id: string) => useQuery({
   queryKey: ['warehouses', id],

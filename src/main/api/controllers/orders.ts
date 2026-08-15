@@ -23,7 +23,7 @@ const cancelOrder = async (req: IUserIdRequest, res: Response, next: NextFunctio
     }
 
     if (!isSyncRecorderClientMode()) {
-      await orderReleaseProducts(bill.products);
+      await orderReleaseProducts(bill.products, bill.warehouse);
     }
 
     bill.status = 'cancelled';
@@ -62,7 +62,7 @@ const completeOrder = async (req: IUserIdRequest, res: Response, next: NextFunct
     }
 
     if (!isSyncRecorderClientMode()) {
-      await orderCompleteProducts(bill.products);
+      await orderCompleteProducts(bill.products, bill.warehouse);
     }
 
     bill.status = 'completed';

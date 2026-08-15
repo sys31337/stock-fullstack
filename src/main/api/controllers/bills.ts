@@ -32,8 +32,12 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const { body, userId } = req;
     const { type, products, category, customer, orderId, warehouse } = body;
 
-    if (warehouse) {
-      const hasAccess = await checkWarehouseAccess(warehouse, userId as string);
+    const effectiveWarehouse = type !== 'SALE' ? (warehouse || req.defaultWarehouse) : undefined;
+    if (type !== 'SALE' && !effectiveWarehouse) {
+      return res.status(400).send({ message: 'A warehouse is required for this bill type' });
+    }
+    if (effectiveWarehouse) {
+      const hasAccess = await checkWarehouseAccess(effectiveWarehouse, userId as string);
       if (!hasAccess) {
         return res.status(403).send({ message: 'Access denied to this warehouse' });
       }
@@ -58,7 +62,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       orderId: finalOrderId,
       manualOrderId: !!(orderId && String(orderId).trim()),
       createBy: userId,
-      ...(type !== 'SALE' && { warehouse: warehouse || req.defaultWarehouse }),
+      ...(type !== 'SALE' && { warehouse: effectiveWarehouse }),
       status: type === 'ORDER' ? 'pending' : 'completed',
     };
 
@@ -79,7 +83,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const billRefId = incomingId || finalOrderId;
 
     if (type === 'BUY') {
-      await buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })));
+      await buyBillProductHandler(products.map((product: IProduct) => ({ ...product, category, customer })), payload.warehouse);
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
@@ -103,7 +107,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     if (type === 'ORDER') {
       const skipStockCheck = settings?.allowOutOfStockOrders ?? false;
-      await orderReserveProducts(products, skipStockCheck);
+      await orderReserveProducts(products, skipStockCheck, payload.warehouse);
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
@@ -125,7 +129,7 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     if (type === 'DELIVERY' && !body.convertFromOrder) {
       const skipStockCheck = settings?.allowOutOfStockSales ?? false;
-      await deliveryDecrementProducts(products, skipStockCheck);
+      await deliveryDecrementProducts(products, skipStockCheck, payload.warehouse);
       for (const product of products) {
         const dbProduct = await Product.findOne({ barCode: product.barCode });
         if (dbProduct) {
@@ -211,6 +215,17 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       return res.status(400).send({ message: `${oldBill.type} bills cannot be updated via this endpoint.` });
     }
 
+    if (oldBill.type !== 'SALE') {
+      const effectiveWarehouse = body.warehouse || oldBill.warehouse;
+      if (!effectiveWarehouse) {
+        return res.status(400).send({ message: 'A warehouse is required for this bill type' });
+      }
+      const hasAccess = await checkWarehouseAccess(String(effectiveWarehouse), String(userId));
+      if (!hasAccess) {
+        return res.status(403).send({ message: 'Access denied to this warehouse' });
+      }
+    }
+
     const { products: oldProducts } = oldBill || { products: [] };
     const { products: newProducts, category, customer } = body;
 
@@ -226,7 +241,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     if (oldBill.type === 'DELIVERY') {
       const settings = await Settings.findOne();
       const skipStockCheck = settings?.allowOutOfStockSales ?? false;
-      await deliveryProductUpdateHandler(oldProductsArr, newProductsArr, skipStockCheck);
+      await deliveryProductUpdateHandler(oldProductsArr, newProductsArr, skipStockCheck, body.warehouse || oldBill.warehouse);
 
       const revertReference = `${oldBill.type}-UPDATE-REVERT-${oldBill._id}`;
       const updateReference = `${oldBill.type}-UPDATE-${oldBill._id}`;
@@ -269,7 +284,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
         }
       }
     } else {
-      await buyBillproductUpdateHandler(oldProductsArr, newProductsArr);
+      await buyBillproductUpdateHandler(oldProductsArr, newProductsArr, body.warehouse || oldBill.warehouse);
     }
     }
 
@@ -322,7 +337,7 @@ const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunc
         reservedUntil: { $lte: now },
       });
       for (const order of expiredOrders) {
-        await orderReleaseProducts(order.products);
+        await orderReleaseProducts(order.products, order.warehouse);
         order.status = 'cancelled';
         await order.save();
       }
