@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { recordChange } from '@api/services/syncChangeLogService';
+import type { SyncChangeOperation } from '@api/models/syncChangeLog';
 import { SYNC_COLLECTIONS } from '../../sync/collectionConfig';
 
 let hostChangeTrackingEnabled = false;
@@ -12,22 +14,37 @@ export function isHostChangeTrackingEnabled(): boolean {
   return hostChangeTrackingEnabled;
 }
 
-/**
- * Marks the current async context as a sync replay so the host-side change
- * tracker does not create duplicate change log entries for changes that were
- * already produced by a client.
- */
-let syncReplayDepth = 0;
-
-export function withSyncReplay<T>(fn: () => Promise<T>): Promise<T> {
-  syncReplayDepth += 1;
-  return fn().finally(() => {
-    syncReplayDepth -= 1;
-  });
+export interface CapturedChange {
+  collection: string;
+  documentId: string;
+  operation: SyncChangeOperation;
+  docSnapshot?: any;
 }
 
-export function isInsideSyncReplay(): boolean {
-  return syncReplayDepth > 0;
+/**
+ * Async-local storage for changes captured during a sync replay.
+ * Using AsyncLocalStorage keeps captures scoped to the replay's async call
+ * stack, so concurrent host-local mutations are never mixed up with a client
+ * operation's side effects.
+ */
+const replayStorage = new AsyncLocalStorage<CapturedChange[]>();
+
+/**
+ * Runs `fn` inside a sync-replay context. While inside this context, host-side
+ * change-tracking hooks do not write to the change log directly; instead they
+ * capture the change so the caller can record all side-effects with the
+ * originating client's metadata.
+ *
+ * Returns both the function result and the captured changes.
+ */
+export async function withSyncReplay<T>(fn: () => Promise<T>): Promise<{ result: T; captures: CapturedChange[] }> {
+  const captures: CapturedChange[] = [];
+  const result = await replayStorage.run(captures, fn);
+  return { result, captures };
+}
+
+function getCurrentCaptures(): CapturedChange[] | undefined {
+  return replayStorage.getStore();
 }
 
 function normalizeSnapshot(doc: any): any {
@@ -37,8 +54,14 @@ function normalizeSnapshot(doc: any): any {
   return obj;
 }
 
-function shouldSkipHook(): boolean {
-  return !hostChangeTrackingEnabled || isInsideSyncReplay();
+function recordOrCaptureChange(change: CapturedChange): void {
+  if (!hostChangeTrackingEnabled) return;
+  const captures = getCurrentCaptures();
+  if (captures) {
+    captures.push(change);
+    return;
+  }
+  recordChange({ ...change, isHostOrigin: true }).catch(() => {});
 }
 
 /**
@@ -53,50 +76,42 @@ export function registerHostChangeTracking(): void {
     if (!Model) continue;
 
     Model.schema.post('save', function recordSave(this: mongoose.Document) {
-      if (shouldSkipHook()) return;
       const docId = this._id?.toString();
       if (!docId) return;
-      const isNew = this.isNew;
-      recordChange({
+      recordOrCaptureChange({
         collection: cfg.name,
         documentId: docId,
-        operation: isNew ? 'create' : 'update',
+        operation: this.isNew ? 'create' : 'update',
         docSnapshot: normalizeSnapshot(this),
-        isHostOrigin: true,
-      }).catch(() => {});
+      });
     });
 
     Model.schema.post('findOneAndUpdate', async function recordUpdate(doc: any) {
-      if (shouldSkipHook()) return;
       if (!doc) return;
       const docId = doc._id?.toString();
       if (!docId) return;
-      await recordChange({
+      recordOrCaptureChange({
         collection: cfg.name,
         documentId: docId,
         operation: 'update',
         docSnapshot: normalizeSnapshot(doc),
-        isHostOrigin: true,
-      }).catch(() => {});
+      });
     });
 
     Model.schema.post('findOneAndDelete', async function recordDelete(doc: any) {
-      if (shouldSkipHook()) return;
       if (!doc) return;
       const docId = doc._id?.toString();
       if (!docId) return;
-      await recordChange({
+      recordOrCaptureChange({
         collection: cfg.name,
         documentId: docId,
         operation: 'delete',
-        isHostOrigin: true,
-      }).catch(() => {});
+      });
     });
 
     // updateOne (query middleware) — controllers sometimes use updateOne or
     // findByIdAndUpdate aliases that resolve to updateOne underneath.
     Model.schema.pre('updateOne', async function preUpdateOne() {
-      if (shouldSkipHook()) return;
       try {
         const filter = this.getFilter();
         const doc = await Model.findOne(filter).select('_id').lean();
@@ -107,31 +122,27 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('updateOne', async function postUpdateOne() {
-      if (shouldSkipHook()) return;
       const docId = (this as any).__sync_docId as string | undefined;
       if (!docId) return;
       const current = await Model.findById(docId).lean();
       if (!current) {
-        await recordChange({
+        recordOrCaptureChange({
           collection: cfg.name,
           documentId: docId,
           operation: 'delete',
-          isHostOrigin: true,
-        }).catch(() => {});
+        });
       } else {
-        await recordChange({
+        recordOrCaptureChange({
           collection: cfg.name,
           documentId: docId,
           operation: 'update',
           docSnapshot: normalizeSnapshot(current),
-          isHostOrigin: true,
-        }).catch(() => {});
+        });
       }
     });
 
     // updateMany (query middleware)
     Model.schema.pre('updateMany', async function preUpdateMany() {
-      if (shouldSkipHook()) return;
       try {
         const filter = this.getFilter();
         const docs = await Model.find(filter).select('_id').lean();
@@ -140,45 +151,39 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('updateMany', async function postUpdateMany() {
-      if (shouldSkipHook()) return;
       const docIds = ((this as any).__sync_docIds as string[] | undefined) || [];
       for (const docId of docIds) {
         const current = await Model.findById(docId).lean();
         if (!current) {
-          await recordChange({
+          recordOrCaptureChange({
             collection: cfg.name,
             documentId: docId,
             operation: 'delete',
-            isHostOrigin: true,
-          }).catch(() => {});
+          });
         } else {
-          await recordChange({
+          recordOrCaptureChange({
             collection: cfg.name,
             documentId: docId,
             operation: 'update',
             docSnapshot: normalizeSnapshot(current),
-            isHostOrigin: true,
-          }).catch(() => {});
+          });
         }
       }
     });
 
     // deleteOne as a document method (e.g. doc.deleteOne())
     Model.schema.post('deleteOne', { document: true, query: false }, async function postDocDeleteOne(this: mongoose.Document) {
-      if (shouldSkipHook()) return;
       const docId = this._id?.toString();
       if (!docId) return;
-      await recordChange({
+      recordOrCaptureChange({
         collection: cfg.name,
         documentId: docId,
         operation: 'delete',
-        isHostOrigin: true,
-      }).catch(() => {});
+      });
     });
 
     // deleteOne as a query (e.g. Model.deleteOne({ ... }))
     Model.schema.pre('deleteOne', async function preDeleteOne() {
-      if (shouldSkipHook()) return;
       try {
         const filter = this.getFilter();
         const doc = await Model.findOne(filter).select('_id').lean();
@@ -189,20 +194,17 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('deleteOne', async function postQueryDeleteOne() {
-      if (shouldSkipHook()) return;
       const docId = (this as any).__sync_docId as string | undefined;
       if (!docId) return;
-      await recordChange({
+      recordOrCaptureChange({
         collection: cfg.name,
         documentId: docId,
         operation: 'delete',
-        isHostOrigin: true,
-      }).catch(() => {});
+      });
     });
 
     // deleteMany (query middleware)
     Model.schema.pre('deleteMany', async function preDeleteMany() {
-      if (shouldSkipHook()) return;
       try {
         const filter = this.getFilter();
         const docs = await Model.find(filter).select('_id').lean();
@@ -211,15 +213,13 @@ export function registerHostChangeTracking(): void {
     });
 
     Model.schema.post('deleteMany', async function postDeleteMany() {
-      if (shouldSkipHook()) return;
       const docIds = ((this as any).__sync_docIds as string[] | undefined) || [];
       for (const docId of docIds) {
-        await recordChange({
+        recordOrCaptureChange({
           collection: cfg.name,
           documentId: docId,
           operation: 'delete',
-          isHostOrigin: true,
-        }).catch(() => {});
+        });
       }
     });
   }
