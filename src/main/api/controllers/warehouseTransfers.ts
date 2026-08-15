@@ -4,6 +4,7 @@ import StockMovement from '@api/models/stockMovement';
 import Product from '@api/models/products';
 import { IUserIdRequest } from '@api/types/common';
 import { createAuditLog } from '@api/utils/auditLog';
+import { isSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
 
 const generateTransferNumber = async (): Promise<string> => {
   const count = await WarehouseTransfer.countDocuments();
@@ -112,56 +113,60 @@ const approve = async (req: IUserIdRequest, res: Response, next: NextFunction) =
       return res.status(400).send({ message: `Transfer is already ${transfer.status}` });
     }
 
-    for (const item of transfer.products) {
-      const product = await Product.findById(item.product);
-      if (!product) continue;
+    const clientMode = isSyncRecorderClientMode();
 
-      const fromStock = product.warehouseStock?.find(
-        (s) => s.warehouse.toString() === transfer.fromWarehouse.toString(),
-      );
-      if (!fromStock || fromStock.quantity < item.quantity) {
-        return res.status(400).send({
-          message: `Insufficient stock for product ${product.productName}`,
+    if (!clientMode) {
+      for (const item of transfer.products) {
+        const product = await Product.findById(item.product);
+        if (!product) continue;
+
+        const fromStock = product.warehouseStock?.find(
+          (s) => s.warehouse.toString() === transfer.fromWarehouse.toString(),
+        );
+        if (!fromStock || fromStock.quantity < item.quantity) {
+          return res.status(400).send({
+            message: `Insufficient stock for product ${product.productName}`,
+          });
+        }
+        fromStock.quantity -= item.quantity;
+
+        let toStock = product.warehouseStock?.find(
+          (s) => s.warehouse.toString() === transfer.toWarehouse.toString(),
+        );
+        if (toStock) {
+          toStock.quantity += item.quantity;
+        } else {
+          product.warehouseStock?.push({
+            warehouse: transfer.toWarehouse,
+            quantity: item.quantity,
+            stack: 0,
+            reserved: 0,
+          });
+        }
+
+        product.quantity = (product.warehouseStock || []).reduce((sum, s) => sum + s.quantity, 0);
+        await product.save();
+
+        await StockMovement.create({
+          product: product._id,
+          warehouse: transfer.fromWarehouse,
+          type: 'TRANSFER_OUT',
+          quantity: -item.quantity,
+          reference: transfer.transferNumber,
+          relatedTransfer: transfer._id,
+          createdBy: req.userId,
         });
-      }
-      fromStock.quantity -= item.quantity;
 
-      let toStock = product.warehouseStock?.find(
-        (s) => s.warehouse.toString() === transfer.toWarehouse.toString(),
-      );
-      if (toStock) {
-        toStock.quantity += item.quantity;
-      } else {
-        product.warehouseStock?.push({
+        await StockMovement.create({
+          product: product._id,
           warehouse: transfer.toWarehouse,
+          type: 'TRANSFER_IN',
           quantity: item.quantity,
-          stack: 0,
-          reserved: 0,
+          reference: transfer.transferNumber,
+          relatedTransfer: transfer._id,
+          createdBy: req.userId,
         });
       }
-
-      product.quantity = (product.warehouseStock || []).reduce((sum, s) => sum + s.quantity, 0);
-      await product.save();
-
-      await StockMovement.create({
-        product: product._id,
-        warehouse: transfer.fromWarehouse,
-        type: 'TRANSFER_OUT',
-        quantity: -item.quantity,
-        reference: transfer.transferNumber,
-        relatedTransfer: transfer._id,
-        createdBy: req.userId,
-      });
-
-      await StockMovement.create({
-        product: product._id,
-        warehouse: transfer.toWarehouse,
-        type: 'TRANSFER_IN',
-        quantity: item.quantity,
-        reference: transfer.transferNumber,
-        relatedTransfer: transfer._id,
-        createdBy: req.userId,
-      });
     }
 
     transfer.status = 'completed';

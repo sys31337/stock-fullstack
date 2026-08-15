@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Customer from '@api/models/customers';
 import { adjustCustomerCredit } from '@api/functions/transactions';
+import { isSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
 
 const DEFAULT_ID = '0a0aaa0a0aa00000aaaaaa0a';
 
@@ -35,7 +36,7 @@ const createNewCustomer = async (req: Request, res: Response, next: NextFunction
     const initialCredit = Number(credit || 0);
     const newCustomer = await new Customer(customerPayload).save();
 
-    if (initialCredit > 0) {
+    if (initialCredit > 0 && !isSyncRecorderClientMode()) {
       await adjustCustomerCredit({
         customerId: String(newCustomer._id),
         addedAmount: initialCredit,

@@ -12,7 +12,7 @@ import {
   setHostChangeTracking,
   registerHostChangeTracking,
 } from '@api/plugins/syncChangeTracking';
-import { seedChangeLogFromExistingData } from '@api/services/syncChangeLogService';
+import { seedChangeLogFromExistingData, repairChangeLog } from '@api/services/syncChangeLogService';
 
 let skipDefaultSeeding = true;
 
@@ -98,6 +98,11 @@ const connectDB = async (dbName?: string): Promise<boolean> => {
       registerHostChangeTracking();
       seedChangeLogFromExistingData().then((count) => {
         if (count > 0) log(`Seeded sync change log with ${count} existing documents`);
+      }).catch(() => {});
+      repairChangeLog().then((result) => {
+        if (result.created > 0 || result.deleted > 0) {
+          log(`Repaired sync change log: +${result.created} creates, +${result.deleted} deletes`);
+        }
       }).catch(() => {});
     }
 

@@ -326,11 +326,28 @@ export async function pullCollectionChanges(
   const cursor = typeof req.query.cursor === 'string' ? parseInt(req.query.cursor, 10) : 0;
   const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 200;
   const includeAuth = req.query.includeAuth === 'true';
+  const safeCursor = Number.isNaN(cursor) ? 0 : cursor;
+  const safeLimit = Number.isNaN(limit) ? 200 : limit;
 
-  const { changes, hasMore, maxSequence, nextCursor } = await pullChanges({
+  const Model = getModel(collection);
+  const maxSequence = await getGlobalMaxSequence();
+
+  // Full-sync shortcut: when cursor is 0, return the host's current collection
+  // contents directly instead of replaying the change log. This guarantees a
+  // fresh client mirrors the host exactly even if the change log has gaps.
+  if (safeCursor === 0 && Model) {
+    const allDocs = await Model.find({}).lean();
+    const docs = allDocs.map((d: any) => ({
+      ...normalizeDoc(d, includeAuth && collection === 'users'),
+      sequence: 0,
+    }));
+    return { docs, hasMore: false, maxSequence, nextCursor: maxSequence };
+  }
+
+  const { changes, hasMore, nextCursor } = await pullChanges({
     collection,
-    cursor: Number.isNaN(cursor) ? 0 : cursor,
-    limit: Number.isNaN(limit) ? 200 : limit,
+    cursor: safeCursor,
+    limit: safeLimit,
   });
 
   // Hydrate create/update snapshots from the actual document collection so the
@@ -338,7 +355,6 @@ export async function pullCollectionChanges(
   // exists, emit a delete marker instead of a stale snapshot — this prevents
   // deleted records from reappearing on clients when the change log is missing
   // the corresponding delete entry.
-  const Model = getModel(collection);
   const docs: any[] = [];
   if (Model) {
     for (const change of changes) {

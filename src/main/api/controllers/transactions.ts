@@ -8,6 +8,7 @@ import { IUserIdRequest } from '@api/types/common';
 import { DEFAULT_CUSTOMER_ID } from '@api/functions/transactions';
 import { deliveryProductUpdateHandler, buyBillproductUpdateHandler } from '@api/functions/products';
 import { createAuditLog } from '@api/utils/auditLog';
+import { isSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
 
 function deterministicMovementId(reference: string, barCode: string): string {
   return crypto.createHash('md5').update(`${reference}:${barCode}`).digest('hex').slice(0, 24);
@@ -101,7 +102,7 @@ const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     }
 
     const bill = transaction.bill as any;
-    if (bill) {
+    if (bill && !isSyncRecorderClientMode()) {
       await StockMovement.deleteMany({ relatedBill: bill._id, type: { $in: ['OUT', 'IN'] } });
       if (bill.type === 'DELIVERY') {
         await deliveryProductUpdateHandler(bill.products || [], []);

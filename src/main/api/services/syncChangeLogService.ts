@@ -180,3 +180,63 @@ export async function seedChangeLogFromExistingData(): Promise<number> {
   }
   return seeded;
 }
+
+/**
+ * Repairs the change log so it always reflects the current state of every
+ * synced collection. This fixes drift caused by operations that bypassed the
+ * host change-tracking hooks (direct DB writes, imports, migrations, etc.).
+ *
+ * - Adds a create entry for every existing document that has no entry.
+ * - Adds a delete entry for every document that has entries but no longer exists.
+ */
+export async function repairChangeLog(): Promise<{ created: number; deleted: number }> {
+  let created = 0;
+  let deleted = 0;
+
+  for (const cfg of SYNC_COLLECTIONS) {
+    const Model = mongoose.connection.models[cfg.model];
+    if (!Model) continue;
+
+    const [docs, loggedIds] = await Promise.all([
+      Model.find({}, '_id').lean(),
+      SyncChangeLog.distinct('documentId', { collection: cfg.name }),
+    ]);
+
+    const docIds = new Set(docs.map((d: any) => String(d._id)));
+    const loggedIdSet = new Set((loggedIds || []).map(String));
+
+    // Existing documents without any change log entry need a create entry.
+    for (const doc of docs) {
+      const docId = String(doc._id);
+      if (loggedIdSet.has(docId)) continue;
+      const fullDoc = await Model.findById(docId).lean();
+      if (!fullDoc) continue;
+      await recordChange({
+        collection: cfg.name,
+        documentId: docId,
+        operation: 'create',
+        docSnapshot: normalizeSnapshot(fullDoc),
+        isHostOrigin: true,
+      });
+      created += 1;
+    }
+
+    // Documents that have change log entries but no longer exist need a delete entry.
+    for (const loggedId of loggedIdSet) {
+      if (docIds.has(loggedId)) continue;
+      const latest = await SyncChangeLog.findOne({ collection: cfg.name, documentId: loggedId })
+        .sort({ sequence: -1 })
+        .lean();
+      if (latest?.operation === 'delete') continue;
+      await recordChange({
+        collection: cfg.name,
+        documentId: loggedId,
+        operation: 'delete',
+        isHostOrigin: true,
+      });
+      deleted += 1;
+    }
+  }
+
+  return { created, deleted };
+}

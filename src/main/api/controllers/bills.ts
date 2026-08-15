@@ -319,7 +319,7 @@ const getBillsOfType = async (req: IUserIdRequest, res: Response, next: NextFunc
     const { type } = req.params;
     const { warehouse } = req.query;
 
-    if (type === 'ORDER') {
+    if (type === 'ORDER' && !isSyncRecorderClientMode()) {
       const now = new Date();
       const expiredOrders = await Bill.find({
         type: 'ORDER',

@@ -3,6 +3,7 @@ import Bill from '@api/models/bills';
 import { IUserIdRequest } from '@api/types/common';
 import { orderReleaseProducts, orderCompleteProducts } from '@api/functions/products';
 import { createAuditLog } from '@api/utils/auditLog';
+import { isSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
 
 const cancelOrder = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
@@ -21,7 +22,9 @@ const cancelOrder = async (req: IUserIdRequest, res: Response, next: NextFunctio
       return res.status(400).send({ message: `Order is already ${bill.status}` });
     }
 
-    await orderReleaseProducts(bill.products);
+    if (!isSyncRecorderClientMode()) {
+      await orderReleaseProducts(bill.products);
+    }
 
     bill.status = 'cancelled';
     (bill as any).cancelledBy = userId;
@@ -58,7 +61,9 @@ const completeOrder = async (req: IUserIdRequest, res: Response, next: NextFunct
       return res.status(400).send({ message: `Order is already ${bill.status}` });
     }
 
-    await orderCompleteProducts(bill.products);
+    if (!isSyncRecorderClientMode()) {
+      await orderCompleteProducts(bill.products);
+    }
 
     bill.status = 'completed';
     await bill.save();
