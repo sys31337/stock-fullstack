@@ -14,6 +14,7 @@
 
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
+import bcrypt from 'bcrypt';
 
 const VERIFY_PORT = parseInt(process.env.VERIFY_PORT || '3501', 10);
 process.env.VERIFY_PORT = String(VERIFY_PORT);
@@ -37,6 +38,7 @@ import SyncAppliedOperation from '../src/main/api/models/syncAppliedOperation';
 import SyncConflict from '../src/main/api/models/syncConflict';
 import SyncState from '../src/main/api/models/syncState';
 import Bill from '../src/main/api/models/bills';
+import User from '../src/main/api/models/user';
 
 let failures = 0;
 
@@ -73,8 +75,6 @@ async function run(): Promise<void> {
 
   setHostChangeTracking(true);
   registerHostChangeTracking();
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log('[verify] default connection:', mongoose.connection.name, mongoose.connection.readyState);
 
   // Clean slate for the test database.
   await Promise.all([
@@ -83,7 +83,25 @@ async function run(): Promise<void> {
     SyncConflict.deleteMany({}),
     SyncState.deleteMany({}),
     Bill.deleteMany({}),
+    User.deleteMany({}),
   ]);
+
+  // The API server auth trusts relay requests by resolving the main admin
+  // account, so a main account must exist for pushes to be authorized.
+  const salt = await bcrypt.genSalt();
+  const hash = await bcrypt.hash('admin123', salt);
+  await new User({
+    username: 'verify-admin',
+    email: 'verify@solustock.local',
+    fullname: 'Verify Admin',
+    password: hash,
+    salt,
+    isMainAccount: true,
+    permissions: ['*'],
+    userPermissions: [],
+    warehouseAccessMode: 'all',
+    status: 'active',
+  }).save();
 
   // The API server seeds the change log from existing reference data on
   // startup. Give it a moment to finish before running assertions.
@@ -129,7 +147,6 @@ async function run(): Promise<void> {
   const req = { headers: { 'x-relay-origin': 'client-a' }, query: {} };
 
   const push1 = await pushOperations(req, [createOp]);
-  console.log('[verify] push1 doc _id:', push1.results[0].doc?._id, 'raw collection count:', await mongoose.connection.db!.collection('bills').countDocuments());
   assert(push1.results.length === 1, 'Push returns one result');
   assert(push1.results[0].status === 'applied', 'First push applies the bill');
   assert(push1.results[0].sequence !== undefined, 'Applied change gets a sequence number');
@@ -142,11 +159,6 @@ async function run(): Promise<void> {
   assert(push2.results[0].doc?._id === stableBillId, 'Duplicate result keeps the same _id');
 
   const billCount = await Bill.countDocuments({ _id: stableBillId });
-  const billDoc = await Bill.findById(stableBillId).lean();
-  const billModel2 = mongoose.connection.models['Bill'];
-  const billDoc2 = await billModel2.findById(stableBillId).lean();
-  const appliedOps = await SyncAppliedOperation.find({}).lean();
-  console.log('[verify] billCount after retry:', billCount, 'findById:', billDoc?._id, 'model2:', (billDoc2 as any)?._id, 'appliedOps:', appliedOps.length, appliedOps.map((o) => o.operationId));
   assert(billCount === 1, 'Only one bill exists after retry');
 
   // 2. Change log and cursor-based pull.
@@ -280,6 +292,7 @@ async function run(): Promise<void> {
     process.exit(1);
   } else {
     console.log('\nAll assertions passed.');
+    process.exit(0);
   }
 }
 
