@@ -126,14 +126,24 @@ const connectDB = async (dbName?: string): Promise<boolean> => {
     if (!skipDefaultSeeding) {
       setHostChangeTracking(true);
       registerHostChangeTracking();
+      const runChangeLogRepair = (): void => {
+        repairChangeLog().then((result) => {
+          if (result.created > 0 || result.deleted > 0) {
+            log(`Repaired sync change log: +${result.created} creates, +${result.deleted} deletes`);
+          }
+        }).catch(() => {});
+      };
       seedChangeLogFromExistingData().then((count) => {
         if (count > 0) log(`Seeded sync change log with ${count} existing documents`);
       }).catch(() => {});
-      repairChangeLog().then((result) => {
-        if (result.created > 0 || result.deleted > 0) {
-          log(`Repaired sync change log: +${result.created} creates, +${result.deleted} deletes`);
-        }
-      }).catch(() => {});
+      runChangeLogRepair();
+      // Data written directly to the DB (seeds, imports, migrations) bypasses
+      // the change-tracking hooks, so without periodic repair the host keeps
+      // answering snapshot requests with maxSequence=0 and linked clients are
+      // forced to re-pull every collection on every poll. Repair on an interval
+      // keeps the change log consistent and the sequence counter advancing.
+      const repairTimer = setInterval(runChangeLogRepair, 5 * 60 * 1000);
+      repairTimer.unref?.();
     }
 
     log('Database Connected');
