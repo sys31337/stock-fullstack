@@ -12,7 +12,6 @@ import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
-import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -77,7 +76,6 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
     orderId: 0,
     description: '',
     customer: '',
-    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -136,12 +134,11 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
 
   useEffect(() => {
     if (isFetched && isOpen && billInfo) {
-      const { orderId, description, customer, warehouse, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
+      const { orderId, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
       setInitialValues({
         orderId,
         description,
         customer: customer?._id,
-        warehouse: warehouse?._id || warehouse,
         orderTotalHT,
         orderTotalTTC,
         orderPaid,
@@ -279,7 +276,6 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
                     productsValues={productsValues}
                     setProductsValues={setProductsValues}
                     priceTier={priceTier}
-                    warehouse={values.warehouse}
                   />
                 </CardContent>
               </Card>
@@ -342,7 +338,6 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
                         <CustomerModal />
                       </div>
                     </div>
-                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} prefill={false} />
                   </div>
                 </CardContent>
               </Card>

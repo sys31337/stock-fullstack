@@ -13,7 +13,6 @@ import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
-import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -90,7 +89,6 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
     category: '',
     description: '',
     customer: '',
-    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -148,13 +146,12 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
 
   useEffect(() => {
     if (isFetched && isOpen && billInfo) {
-      const { orderId, category, description, customer, warehouse, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
+      const { orderId, category, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
       setInitialValues({
         orderId,
         category: category?._id,
         description,
         customer: customer?._id,
-        warehouse: warehouse?._id || warehouse,
         orderTotalHT,
         orderTotalTTC,
         orderPaid,
@@ -192,7 +189,6 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
       const payload = {
         ...values,
         type: 'BUY',
-        warehouse: values.warehouse || undefined,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -320,9 +316,6 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
                       className="mb-0 w-full"
                     />
                     <CategoryModal />
-                  </div>
-                  <div>
-                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} prefill={false} />
                   </div>
                 </div>
               </CardContent>

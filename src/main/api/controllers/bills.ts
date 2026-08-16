@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
 import Bill from '@api/models/bills';
+import Warehouse from '@api/models/warehouse';
 import { isSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
 import StockMovement from '@api/models/stockMovement';
 import Product from '@api/models/products';
@@ -27,16 +28,23 @@ function deterministicMovementId(reference: string, barCode: string): string {
   return crypto.createHash('md5').update(`${reference}:${barCode}`).digest('hex').slice(0, 24);
 }
 
+async function resolveEffectiveWarehouse(warehouse: string | undefined, defaultWarehouse: string | undefined): Promise<string | undefined> {
+  if (warehouse) return warehouse;
+  if (defaultWarehouse) return defaultWarehouse;
+  const first = await Warehouse.findOne({ isActive: true }).sort({ createdAt: 1 }).select('_id').lean();
+  return first ? String(first._id) : undefined;
+}
+
 const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { body, userId } = req;
     const { type, products, category, customer, orderId, warehouse } = body;
 
-    const effectiveWarehouse = type !== 'SALE' ? (warehouse || req.defaultWarehouse) : undefined;
+    const effectiveWarehouse = await resolveEffectiveWarehouse(warehouse, req.defaultWarehouse);
     if (type !== 'SALE' && !effectiveWarehouse) {
       return res.status(400).send({ message: 'A warehouse is required for this bill type' });
     }
-    if (effectiveWarehouse) {
+    if (effectiveWarehouse && type !== 'SALE') {
       const hasAccess = await checkWarehouseAccess(effectiveWarehouse, userId as string);
       if (!hasAccess) {
         return res.status(403).send({ message: 'Access denied to this warehouse' });
@@ -62,13 +70,9 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       orderId: finalOrderId,
       manualOrderId: !!(orderId && String(orderId).trim()),
       createBy: userId,
-      ...(type !== 'SALE' && { warehouse: effectiveWarehouse }),
+      ...(effectiveWarehouse && { warehouse: effectiveWarehouse }),
       status: type === 'ORDER' ? 'pending' : 'completed',
     };
-
-    if (type === 'SALE') {
-      delete payload.warehouse;
-    }
 
     const settings = await Settings.findOne();
     // In client mode we must not create derived data locally. The host is the

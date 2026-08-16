@@ -12,6 +12,7 @@ import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useSalespeople } from '@web/shared/hooks/useReports';
 import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -40,6 +41,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
   const onAlertClose = () => setIsAlertOpen(false);
 
   const { toast } = useToast();
+  const { defaultId: warehouse } = useAvailableWarehouses();
   const { data: allCustomers, refetch } = useGetAllCustomers();
   const { data: salespeople } = useSalespeople();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('SALE');
@@ -136,6 +138,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ isOpen, onClose, initialHel
         pricingCategory: 0,
         paymentMethod: 'CASH',
         type: 'SALE' as const,
+        warehouse,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: '0',

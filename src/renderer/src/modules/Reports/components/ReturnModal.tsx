@@ -8,7 +8,7 @@ import { Label } from '@web/shared/components/ui/label';
 import { Combobox } from '@web/shared/components/ui/combobox';
 import { DatePicker } from '@web/shared/components/ui/date-picker';
 import { useSalespeople } from '@web/shared/hooks/useReports';
-import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses';
 import { useCreateDeliveryReturn, useUpdateDeliveryReturn } from '@web/shared/hooks/useDeliveryReturns';
 import { DeliveryReturnRecord } from '@web/shared/types/reports';
 import { useToast } from '@web/shared/components/ui/use-toast';
@@ -28,7 +28,7 @@ const STATUS_OPTIONS = [
 
 const ReturnModal: React.FC<ReturnModalProps> = ({ isOpen, onClose, record }) => {
   const { data: salespeople } = useSalespeople();
-  const { data: warehouses } = useGetAllWarehouses();
+  const { defaultId: activeWarehouse, allowed, isLoading: warehousesCtxLoading } = useAvailableWarehouses();
   const createMutation = useCreateDeliveryReturn();
   const updateMutation = useUpdateDeliveryReturn();
   const { toast } = useToast();
@@ -56,17 +56,17 @@ const ReturnModal: React.FC<ReturnModalProps> = ({ isOpen, onClose, record }) =>
       setStatus(record.status);
     } else {
       setDeliveryPerson('');
-      setWarehouse('');
+      setWarehouse((prev) => prev || activeWarehouse || '');
       setDeliveryDate(new Date());
       setEnteredAmount('');
       setReturnedAmount('');
       setNotes('');
       setStatus('pending');
     }
-  }, [isOpen, record]);
+  }, [isOpen, record, activeWarehouse]);
 
   const personOptions = (salespeople || []).map((s) => ({ value: s._id, label: s.fullname }));
-  const warehouseOptions = (warehouses || []).map((w: any) => ({ value: w._id, label: w.name || w.code }));
+  const warehouseOptions = (allowed as any[]).filter(Boolean).map((w) => ({ value: w._id, label: w.name || w.code }));
 
   const expectedLabel = useMemo(() => {
     if (!deliveryPerson) return null;
@@ -158,7 +158,7 @@ const ReturnModal: React.FC<ReturnModalProps> = ({ isOpen, onClose, record }) =>
 
         <div className="space-y-1.5">
           <Label>{t('warehouse')}</Label>
-          <Combobox options={warehouseOptions} value={warehouse} onChange={setWarehouse} placeholder={t('selectWarehouse')} loading={!warehouses} />
+          <Combobox options={warehouseOptions} value={warehouse} onChange={setWarehouse} placeholder={t('selectWarehouse')} loading={warehousesCtxLoading} />
         </div>
 
         <div className="space-y-1.5">

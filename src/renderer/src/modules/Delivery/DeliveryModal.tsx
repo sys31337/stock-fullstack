@@ -13,7 +13,6 @@ import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useSalespeople } from '@web/shared/hooks/useReports';
 import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
-import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -64,7 +63,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
     orderId: '',
     description: '',
     customer: '',
-    warehouse: '',
     salesPerson: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
@@ -184,7 +182,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         orderId: String((latestBillNumber ?? 0) + 2),
         description: '',
         customer: '',
-        warehouse: '',
         salesPerson: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
@@ -287,7 +284,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                     productsValues={productsValues}
                     setProductsValues={setProductsValues}
                     priceTier={priceTier}
-                    warehouse={values.warehouse}
                   />
                 </CardContent>
               </Card>
@@ -350,7 +346,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                         <CustomerModal />
                       </div>
                     </div>
-                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} />
                     <div>
                       <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('salesPerson')}</Label>
                       <CustomInput

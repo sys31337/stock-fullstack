@@ -12,17 +12,65 @@ import { AiFillDelete, AiFillEdit } from 'react-icons/ai';
 import CustomModal from '@web/shared/components/CustomModal';
 import showToast from '@web/shared/functions/showToast';
 import ProductEditModal from '@web/modules/Products/ProductEditModal';
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses';
 
 interface ProductRowProps {
   product: IProduct;
 }
 
+interface WarehouseStockEntry {
+  warehouse: string;
+  quantity: number;
+  stack: number;
+  reserved: number;
+}
+
 const ProductRow: React.FC<ProductRowProps> = ({ product }) => {
   const { _id, barCode, productName, buyPrice, quantity, stack, tva, sellPrice_1, sellPrice_2, sellPrice_3, notify, reserved } = product;
+  const { mode, accessMode, defaultId, allowed } = useAvailableWarehouses();
   const { mutateAsync: setNotification } = useUpdateProduct(_id || '');
   const { mutateAsync: deleteProduct } = useDeleteProduct();
   const { toast } = useToast();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const warehouseStock: WarehouseStockEntry[] = (product as unknown as { warehouseStock?: WarehouseStockEntry[] }).warehouseStock || [];
+
+  const renderStock = () => {
+    if (mode !== 'multi') {
+      return reserved && Number(reserved) > 0
+        ? `${quantity} (${reserved}) × ${stack}`
+        : `${quantity} × ${stack}`;
+    }
+
+    if (accessMode === 'all') {
+      if (warehouseStock.length === 0) {
+        return <span className="text-xs text-muted-foreground">{quantity} × {stack}</span>;
+      }
+      return (
+        <div className="flex flex-col gap-0.5">
+          {warehouseStock.map((entry) => {
+            const wh = (allowed as Array<{ _id?: string; name?: string }>).find((w) => w?._id === entry.warehouse);
+            const res = Number(entry.reserved || 0);
+            return (
+              <span key={entry.warehouse} className="text-xs whitespace-nowrap">
+                <span className="font-medium text-foreground">{wh?.name || '—'}:</span>{' '}
+                {Number(entry.quantity) || 0}×{entry.stack ?? 0}{res > 0 ? ` (${res})` : ''}
+              </span>
+            );
+          })}
+        </div>
+      );
+    }
+
+    const active = warehouseStock.find((entry) => entry.warehouse === defaultId);
+    if (!active) {
+      return <span className="text-xs text-muted-foreground">—</span>;
+    }
+    const res = Number(active.reserved || 0);
+    return res > 0
+      ? `${Number(active.quantity) || 0} (${res}) × ${active.stack ?? 0}`
+      : `${Number(active.quantity) || 0} × ${active.stack ?? 0}`;
+  };
 
   const onNotifyChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value: notify } = e.target
@@ -62,11 +110,7 @@ const ProductRow: React.FC<ProductRowProps> = ({ product }) => {
       <TableRow key={_id} className="group">
         <TableCell className="font-mono text-xs text-muted-foreground">{barCode}</TableCell>
         <TableCell className="font-medium">{productName}</TableCell>
-        <TableCell className="text-muted-foreground">
-          {reserved && Number(reserved) > 0
-            ? `${quantity} (${reserved}) × ${stack}`
-            : `${quantity} × ${stack}`}
-        </TableCell>
+        <TableCell className="text-muted-foreground">{renderStock()}</TableCell>
         <TableCell className="text-muted-foreground">{price(buyPrice)} DA</TableCell>
         <TableCell className="text-muted-foreground">%{tva}</TableCell>
         <TableCell className="text-muted-foreground">{price(sellPrice_1)} DA</TableCell>

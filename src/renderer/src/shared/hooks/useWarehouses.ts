@@ -28,10 +28,15 @@ export const useAvailableWarehouses = () => {
 
   const defaultId = permissions?.defaultWarehouse || allowed[0]?._id || '';
 
+  const total = (warehouses || []).length;
+  const mode = total > 1 ? 'multi' : 'single';
+
   return {
     allowed,
     defaultId,
     accessMode,
+    mode,
+    total,
     isLoading: permissionsLoading || warehousesLoading,
   };
 };

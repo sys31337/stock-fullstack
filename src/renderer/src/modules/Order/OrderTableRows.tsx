@@ -3,6 +3,7 @@ import { Input } from "@web/shared/components/ui/input"
 import { Button } from "@web/shared/components/ui/button"
 import { BiTrash } from 'react-icons/bi';
 import { useGetAllProducts } from '@web/shared/hooks/useProducts';
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses';
 import CustomAutoComplete from '@web/shared/components/CustomAutoComplete';
 import { IProduct } from '@web/shared/types/product';
 import { cn } from '@web/shared/utils/cn';
@@ -19,10 +20,10 @@ interface OrderTableRowsProps {
   handleProductSelect: (index: number, product: IProduct) => void;
   priceTier: number;
   showTva: boolean;
-  warehouse?: string;
 }
 
-const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva, warehouse }) => {
+const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva }) => {
+  const { defaultId: warehouse } = useAvailableWarehouses();
   const { data: allProducts, isFetched } = useGetAllProducts(warehouse ? { warehouse } : undefined);
   const { toast } = useToast();
 

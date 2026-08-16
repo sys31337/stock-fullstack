@@ -32,6 +32,25 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { params: { id }, body: payload } = req;
+    const existing = await Product.findById(id);
+    if (!existing) {
+      return res.status(404).send({ message: 'Product not found' });
+    }
+
+    // Keep aggregate == sum(warehouseStock) when editing the aggregate quantity.
+    if (payload.quantity !== undefined && Number(payload.quantity) !== Number(existing.quantity)) {
+      const delta = Number(payload.quantity) - Number(existing.quantity);
+      let stock = Array.isArray(existing.warehouseStock) ? existing.warehouseStock.map((s) => ({ ...s })) : [];
+      if (stock.length === 0 && req.defaultWarehouse) {
+        stock = [{ warehouse: req.defaultWarehouse as any, quantity: 0, stack: existing.stack || 0, reserved: 0 }];
+      }
+      if (stock.length > 0) {
+        const target = stock.find((s) => s.warehouse?.toString() === req.defaultWarehouse) || stock[0];
+        target.quantity = Math.max(0, Number(target.quantity || 0) + delta);
+        payload.warehouseStock = stock;
+      }
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(id, payload, { new: true });
 
     await createAuditLog(req, {

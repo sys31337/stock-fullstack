@@ -910,9 +910,10 @@ async function seedBills(opts: {
     const items = shuffle(products).slice(0, rand(1, 4)).map((p) => ({ p, qty: rand(1, 3) }));
     const customer = Math.random() > 0.3 ? pick(clientIds) : undefined;
     const manual = i === 14;
+    const warehouse = pick(activeWhs);
     await createBill({
       type: 'SALE', orderId: manual ? `INV-2026-${100 + i}` : String(saleNo),
-      date, items, priceField: 'sellPrice_1', customer, createBy: pick(userIds),
+      date, items, priceField: 'sellPrice_1', warehouse, customer, createBy: pick(userIds),
       description: 'Facture de vente',
     });
   }

@@ -32,6 +32,8 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@web/shared/utils/cn'
 import { Wifi, Moon, Sun, Monitor } from 'lucide-react'
 import { useTheme } from '@web/shared/contexts/ThemeContext'
+import WarehouseSelector from '@web/shared/components/WarehouseSelector'
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses'
 
 interface ModalActions {
   openProducts: () => void
@@ -273,6 +275,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const { mutateAsync: logout } = useLogout()
   const navigate = useNavigate()
   const { theme, setTheme, resolvedTheme } = useTheme()
+  const { mode: warehouseMode } = useAvailableWarehouses()
 
   const [openProducts, setOpenProducts] = useState(false)
   const [openReceipt, setOpenReceipt] = useState(false)
@@ -378,9 +381,11 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
           </nav>
 
           <div className="flex items-center gap-1 ml-auto">
-            {/* <div className="hidden md:block">
-              <WarehouseSelector size="sm" />
-            </div> */}
+            {warehouseMode === 'multi' && (
+              <div className="hidden md:block">
+                <WarehouseSelector size="sm" />
+              </div>
+            )}
             <Languages />
             <Button
               variant="ghost"

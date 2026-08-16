@@ -4,6 +4,7 @@ import Loading from '@web/shared/components/Loading';
 import AppTopBar from '@web/shared/components/AppTopBar';
 import { ReceiptHoldProvider } from '@web/shared/contexts/ReceiptHoldContext';
 import HeldReceipts from '@web/shared/components/HeldReceipts';
+import WarehouseChooser from '@web/shared/components/WarehouseChooser';
 import { ToastStateProvider, ToastProvider } from '@web/shared/components/ui/use-toast';
 
 const AppSection: React.FC = () => {
@@ -24,6 +25,7 @@ const AppSection: React.FC = () => {
             </AppTopBar>
           </div>
           <HeldReceipts />
+          <WarehouseChooser />
         </ToastStateProvider>
       </ToastProvider>
     </ReceiptHoldProvider>

@@ -36,7 +36,7 @@ const WarehouseSelector = ({ value, onChange, showAll = true, size = 'default' }
     else await switchWarehouse(warehouseId);
   };
 
-  if (!allowed.length) return null;
+  if (allowed.length <= 1) return null;
 
   return (
     <DropdownMenu>

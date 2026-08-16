@@ -1,5 +1,8 @@
 {
   "accessAllWarehouses": "Access all warehouses",
+  "chooseWarehouse": "Choose warehouse",
+  "chooseWarehouseMessage": "Select the warehouse you want to work in.",
+  "continue": "Continue",
   "account": "Account",
   "accounts": "accounts",
   "action": "Action",

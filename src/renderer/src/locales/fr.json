@@ -1,5 +1,8 @@
 {
   "accessAllWarehouses": "Accès à tous les entrepôts",
+  "chooseWarehouse": "Choisir l'entrepôt",
+  "chooseWarehouseMessage": "Sélectionnez l'entrepôt dans lequel vous souhaitez travailler.",
+  "continue": "Continuer",
   "account": "Compte",
   "accounts": "comptes",
   "action": "Action",

@@ -1,5 +1,8 @@
 {
   "accessAllWarehouses": "الوصول إلى جميع المستودعات",
+  "chooseWarehouse": "اختيار المستودع",
+  "chooseWarehouseMessage": "اختر المستودع الذي تريد العمل فيه.",
+  "continue": "متابعة",
   "account": "الحساب",
   "accounts": "حسابات",
   "action": "إجراء",

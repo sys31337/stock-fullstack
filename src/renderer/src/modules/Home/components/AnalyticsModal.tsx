@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CustomModal from '@web/shared/components/CustomModal';
 import { TrendChart, DonutChart } from '@web/shared/components/Charts';
 import { t } from 'i18next';
@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { cn } from '@web/shared/utils/cn';
 import { price } from '@web/shared/functions/words';
 import { useDashboardAnalytics } from '@web/shared/hooks/useDashboard';
-import { useGetAllWarehouses } from '@web/shared/hooks/useWarehouses';
+import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses';
 import { Combobox } from '@web/shared/components/ui/combobox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@web/shared/components/ui/table';
 import { Button } from '@web/shared/components/ui/button';
@@ -65,11 +65,17 @@ interface AnalyticsModalProps {
 const AnalyticsModal: React.FC<AnalyticsModalProps> = ({ isOpen, onClose }) => {
   const [warehouse, setWarehouse] = useState('');
   const [days, setDays] = useState(30);
-  const { data: warehouses } = useGetAllWarehouses();
+  const { defaultId: activeWarehouse, accessMode, allowed, isLoading: warehousesCtxLoading } = useAvailableWarehouses();
   const { data: analytics, isLoading, isError, refetch } = useDashboardAnalytics({ warehouse, days }, isOpen);
   const blurred = analytics?.statisticsBlurred === true;
 
-  const warehouseOptions = (warehouses || []).map((w: any) => ({ value: w._id, label: w.name }));
+  useEffect(() => {
+    if (!warehousesCtxLoading && accessMode !== 'all' && activeWarehouse) {
+      setWarehouse((prev) => prev || activeWarehouse);
+    }
+  }, [warehousesCtxLoading, accessMode, activeWarehouse]);
+
+  const warehouseOptions = (allowed as any[]).filter(Boolean).map((w) => ({ value: w._id, label: w.name }));
 
   const stats = (analytics as any) || {};
   const revenueTrend = analytics?.revenueTrend || [];

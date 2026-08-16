@@ -11,7 +11,6 @@ import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useCreateBill } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
-import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -59,7 +58,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
     orderId: '',
     description: '',
     customer: '',
-    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -174,7 +172,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
         orderId: '',
         description: '',
         customer: '',
-        warehouse: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -276,7 +273,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                     productsValues={productsValues}
                     setProductsValues={setProductsValues}
                     priceTier={priceTier}
-                    warehouse={values.warehouse}
                   />
                 </CardContent>
               </Card>
@@ -341,7 +337,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                         <CustomerModal />
                       </div>
                     </div>
-                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} />
                   </div>
                 </CardContent>
               </Card>

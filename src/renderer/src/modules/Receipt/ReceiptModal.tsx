@@ -13,7 +13,6 @@ import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
-import BillWarehouseField from '@web/shared/components/BillWarehouseField';
 import CustomerModal from '@web/shared/components/Customer';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
@@ -61,7 +60,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
     category: '',
     description: '',
     customer: '',
-    warehouse: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -138,7 +136,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
       const payload = {
         ...values,
         type: 'BUY',
-        warehouse: values.warehouse,
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -175,7 +172,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         category: '',
         description: '',
         customer: '',
-        warehouse: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -345,7 +341,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                         <CategoryModal />
                       </div>
                     </div>
-                    <BillWarehouseField setFieldValue={setFieldValue} value={values.warehouse} />
                   </div>
                 </CardContent>
               </Card>

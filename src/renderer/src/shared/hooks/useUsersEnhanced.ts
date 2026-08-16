@@ -48,7 +48,10 @@ export const useSwitchWarehouse = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (warehouseId: string) => api.post('users-enhanced/switch-warehouse', { warehouseId }).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['users-enhanced'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['users-enhanced'] });
+      qc.invalidateQueries({ queryKey: ['my-permissions'] });
+    },
   });
 };
 
