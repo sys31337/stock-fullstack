@@ -122,7 +122,7 @@ const UsersModule: React.FC<UsersProps> = ({ isTopBar, open: controlledOpen, onO
         toast({ title: t('passwordRequired'), variant: 'destructive' });
         return;
       }
-      if (editingId) { delete (payload as any).password; }
+      if (editingId && !payload.password) { delete (payload as any).password; }
 
       if (editingId) {
         await updateUser.mutateAsync({ id: editingId, data: payload });
