@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
+  Activity,
   ArrowLeftRight,
   Check,
   Copy,
@@ -41,7 +42,7 @@ const STATE_LABEL: Record<string, string> = {
   closed: 'Closed',
 };
 
-type SectionId = 'status' | 'settings' | 'qr' | 'hosts' | 'mode';
+type SectionId = 'status' | 'health' | 'settings' | 'qr' | 'hosts' | 'mode';
 
 interface ConnectionDrawerProps {
   isOpen: boolean;
@@ -296,6 +297,7 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
     badge?: number;
   }[] = [
     { id: 'status', label: 'Status', icon: Server },
+    { id: 'health', label: 'Sync health', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'qr', label: 'Mobile QR', icon: QrCode, hostOnly: true },
     { id: 'hosts', label: 'Online hosts', icon: MonitorSmartphone, badge: hosts.length },
@@ -549,67 +551,71 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
                   </div>
                 )}
 
-                <SectionHeading
-                  icon={<MonitorSmartphone className="h-4 w-4" />}
-                  title="Sync health"
-                  description="Per-collection alignment between this device and the host."
-                />
-                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={refreshHealth} disabled={loadingHealth} size="sm">
-                      {loadingHealth ? (
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {activeSection === 'health' && (
+                  <div className="space-y-6">
+                    <SectionHeading
+                      icon={<Activity className="h-4 w-4" />}
+                      title="Sync health"
+                      description="Per-collection alignment between this device and the host."
+                    />
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={refreshHealth} disabled={loadingHealth} size="sm">
+                          {loadingHealth ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                          )}
+                          Refresh
+                        </Button>
+                      </div>
+                      {health ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm">
+                            <thead>
+                              <tr className="border-b border-border text-xs text-muted-foreground">
+                                <th className="py-2 pr-3">Collection</th>
+                                <th className="py-2 pr-3 text-right">Host</th>
+                                <th className="py-2 pr-3 text-right">Local</th>
+                                <th className="py-2 pr-3 text-right">Cursor</th>
+                                <th className="py-2 pr-3 text-right">Host seq</th>
+                                <th className="py-2 pr-3 text-right">Pending</th>
+                                <th className="py-2 pr-3 text-right">Conflicts</th>
+                                <th className="py-2 pl-3">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {health.collections.map((c) => (
+                                <tr key={c.collection} className="border-b border-border last:border-0">
+                                  <td className="py-2 pr-3 font-medium capitalize">{c.collection}</td>
+                                  <td className="py-2 pr-3 text-right">{c.hostCount}</td>
+                                  <td className="py-2 pr-3 text-right">{c.localCount}</td>
+                                  <td className="py-2 pr-3 text-right font-mono text-xs">{c.localCursor}</td>
+                                  <td className="py-2 pr-3 text-right font-mono text-xs">{c.hostMaxSequence}</td>
+                                  <td className="py-2 pr-3 text-right">{c.pendingCount}</td>
+                                  <td className="py-2 pr-3 text-right">{c.conflictCount}</td>
+                                  <td className="py-2 pl-3">
+                                    {c.stale ? (
+                                      <span className="inline-flex items-center gap-1 text-amber-600">
+                                        <WifiOff className="h-3 w-3" /> Stale
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-emerald-600">
+                                        <Check className="h-3 w-3" /> Synced
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       ) : (
-                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <div className="text-sm text-muted-foreground">Health data unavailable.</div>
                       )}
-                      Refresh
-                    </Button>
-                  </div>
-                  {health ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-border text-xs text-muted-foreground">
-                            <th className="py-2 pr-3">Collection</th>
-                            <th className="py-2 pr-3 text-right">Host</th>
-                            <th className="py-2 pr-3 text-right">Local</th>
-                            <th className="py-2 pr-3 text-right">Cursor</th>
-                            <th className="py-2 pr-3 text-right">Host seq</th>
-                            <th className="py-2 pr-3 text-right">Pending</th>
-                            <th className="py-2 pr-3 text-right">Conflicts</th>
-                            <th className="py-2 pl-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {health.collections.map((c) => (
-                            <tr key={c.collection} className="border-b border-border last:border-0">
-                              <td className="py-2 pr-3 font-medium capitalize">{c.collection}</td>
-                              <td className="py-2 pr-3 text-right">{c.hostCount}</td>
-                              <td className="py-2 pr-3 text-right">{c.localCount}</td>
-                              <td className="py-2 pr-3 text-right font-mono text-xs">{c.localCursor}</td>
-                              <td className="py-2 pr-3 text-right font-mono text-xs">{c.hostMaxSequence}</td>
-                              <td className="py-2 pr-3 text-right">{c.pendingCount}</td>
-                              <td className="py-2 pr-3 text-right">{c.conflictCount}</td>
-                              <td className="py-2 pl-3">
-                                {c.stale ? (
-                                  <span className="inline-flex items-center gap-1 text-amber-600">
-                                    <WifiOff className="h-3 w-3" /> Stale
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-emerald-600">
-                                    <Check className="h-3 w-3" /> Synced
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
                     </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">Health data unavailable.</div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {activeSection === 'settings' && (
                   <div className="space-y-6">
