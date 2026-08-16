@@ -27,7 +27,7 @@ interface SettingsDrawerProps {
 const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<TabId>('stock');
 
-  const { data: settings, isFetched } = useGetSettings();
+  const { data: settings, isFetched } = useGetSettings(isOpen);
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
   const { toast } = useToast();
 

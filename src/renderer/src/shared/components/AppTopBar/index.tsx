@@ -34,6 +34,7 @@ import { Wifi, Moon, Sun, Monitor } from 'lucide-react'
 import { useTheme } from '@web/shared/contexts/ThemeContext'
 import WarehouseSelector from '@web/shared/components/WarehouseSelector'
 import { useAvailableWarehouses } from '@web/shared/hooks/useWarehouses'
+import { useGetMyPermissions } from '@web/shared/hooks/useUsersEnhanced'
 
 interface ModalActions {
   openProducts: () => void
@@ -276,6 +277,10 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const navigate = useNavigate()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const { mode: warehouseMode } = useAvailableWarehouses()
+  const { data: myPermissions } = useGetMyPermissions()
+  const canManageSettings = myPermissions?.isMainAccount === true
+    || (myPermissions?.effectivePermissions || []).includes('*')
+    || (myPermissions?.effectivePermissions || []).includes('settings.view')
 
   const [openProducts, setOpenProducts] = useState(false)
   const [openReceipt, setOpenReceipt] = useState(false)
@@ -397,14 +402,16 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
             >
               <Wifi className="h-3.5 w-3.5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setOpenSettings(true)}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent gap-1.5 h-8 px-2.5"
-            >
-              <AiOutlineSetting className="h-3.5 w-3.5" />
-            </Button>
+            {canManageSettings && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setOpenSettings(true)}
+                className="text-muted-foreground hover:text-foreground hover:bg-accent gap-1.5 h-8 px-2.5"
+              >
+                <AiOutlineSetting className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

@@ -76,8 +76,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const isUnauthorized = error.response?.status === 401 || error.response?.status === 403;
-    if (isUnauthorized) {
+    if (error.response?.status === 401) {
       authService.resetUserInfo();
       window.location.hash = '#/connexion';
     }
