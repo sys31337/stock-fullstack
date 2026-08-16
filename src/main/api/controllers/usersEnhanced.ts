@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import User from '@api/models/user';
 import Role from '@api/models/role';
+import Warehouse from '@api/models/warehouse';
 import { IUserIdRequest } from '@api/types/common';
 import { createAuditLog } from '@api/utils/auditLog';
 
@@ -223,6 +224,14 @@ const switchWarehouse = async (req: IUserIdRequest, res: Response, next: NextFun
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).send({ message: 'User not found' });
 
+    // Empty value clears the active warehouse (admins can view all warehouses).
+    if (warehouseId) {
+      const target = await Warehouse.findById(warehouseId);
+      if (!target || !target.isActive) {
+        return res.status(400).send({ message: 'Warehouse not available' });
+      }
+    }
+
     if (user.warehouseAccessMode !== 'all') {
       const hasAccess = user.assignedWarehouses.some((w) => w.toString() === warehouseId);
       if (!hasAccess) {
@@ -230,10 +239,10 @@ const switchWarehouse = async (req: IUserIdRequest, res: Response, next: NextFun
       }
     }
 
-    user.defaultWarehouse = warehouseId;
+    user.defaultWarehouse = warehouseId || null;
     await user.save();
 
-    return res.status(200).send({ defaultWarehouse: warehouseId });
+    return res.status(200).send({ defaultWarehouse: user.defaultWarehouse ? String(user.defaultWarehouse) : undefined });
   } catch (error) {
     return next(error);
   }

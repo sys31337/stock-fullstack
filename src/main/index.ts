@@ -115,9 +115,7 @@ app.whenReady().then(async () => {
 
   const clientMode = !relayManager.isHost();
   const clientDb = clientMode ? clientDbName(relayManager.getConfig().targetHostId) : undefined;
-  if (clientMode) {
-    setSkipDefaultSeeding(true);
-  }
+  setSkipDefaultSeeding(clientMode);
 
   const server = createApiServer({ clientMode, dbName: clientDb });
 

@@ -189,28 +189,35 @@ export async function seedChangeLogFromExistingData(): Promise<number> {
  * host change-tracking hooks (direct DB writes, imports, migrations, etc.).
  *
  * - Adds a create entry for every existing document that has no entry.
+ * - Adds an update entry for every document whose latest logged snapshot is
+ *   older than its current updatedAt (e.g. edits made while tracking was off).
  * - Adds a delete entry for every document that has entries but no longer exists.
  */
-export async function repairChangeLog(): Promise<{ created: number; deleted: number }> {
+export async function repairChangeLog(): Promise<{ created: number; deleted: number; updated: number }> {
   let created = 0;
   let deleted = 0;
+  let updated = 0;
 
   for (const cfg of SYNC_COLLECTIONS) {
     const Model = mongoose.connection.models[cfg.model];
     if (!Model) continue;
 
-    const [docs, loggedIds] = await Promise.all([
-      Model.find({}, '_id').lean(),
-      SyncChangeLog.distinct('documentId', { collection: cfg.name }),
+    const [docs, latestByDoc] = await Promise.all([
+      Model.find({}, '_id updatedAt').lean(),
+      SyncChangeLog.aggregate([
+        { $match: { collection: cfg.name } },
+        { $sort: { sequence: -1 } },
+        { $group: { _id: '$documentId', latest: { $first: '$$ROOT' } } },
+      ]),
     ]);
 
-    const docIds = new Set(docs.map((d: any) => String(d._id)));
-    const loggedIdSet = new Set((loggedIds || []).map(String));
+    const docById = new Map(docs.map((d: any) => [String(d._id), d]));
+    const latestEntryById = new Map(latestByDoc.map((e: any) => [String(e._id), e.latest]));
 
     // Existing documents without any change log entry need a create entry.
     for (const doc of docs) {
       const docId = String(doc._id);
-      if (loggedIdSet.has(docId)) continue;
+      if (latestEntryById.has(docId)) continue;
       const fullDoc = await Model.findById(docId).lean();
       if (!fullDoc) continue;
       await recordChange({
@@ -223,16 +230,38 @@ export async function repairChangeLog(): Promise<{ created: number; deleted: num
       created += 1;
     }
 
+    // Documents whose latest logged snapshot is stale (the doc was updated but
+    // the change was never recorded) need an update entry.
+    for (const doc of docs) {
+      const docId = String(doc._id);
+      const latest = latestEntryById.get(docId);
+      if (!latest || !latest.docSnapshot) continue;
+      const docUpdatedAt = doc.updatedAt ? new Date(doc.updatedAt).getTime() : 0;
+      const snapUpdatedAt = latest.docSnapshot.updatedAt
+        ? new Date(latest.docSnapshot.updatedAt).getTime()
+        : 0;
+      if (docUpdatedAt <= snapUpdatedAt) continue;
+      const fullDoc = await Model.findById(docId).lean();
+      if (!fullDoc) continue;
+      await recordChange({
+        collection: cfg.name,
+        documentId: docId,
+        operation: 'update',
+        docSnapshot: normalizeSnapshot(fullDoc),
+        isHostOrigin: true,
+      });
+      updated += 1;
+    }
+
     // Documents that have change log entries but no longer exist need a delete entry.
-    for (const loggedId of loggedIdSet) {
-      if (docIds.has(loggedId)) continue;
-      const latest = await SyncChangeLog.findOne({ collection: cfg.name, documentId: loggedId })
-        .sort({ sequence: -1 })
-        .lean();
+    for (const entry of latestByDoc) {
+      const docId = String(entry._id);
+      if (docById.has(docId)) continue;
+      const latest = entry.latest;
       if (latest?.operation === 'delete') continue;
       await recordChange({
         collection: cfg.name,
-        documentId: loggedId,
+        documentId: docId,
         operation: 'delete',
         isHostOrigin: true,
       });
@@ -240,5 +269,5 @@ export async function repairChangeLog(): Promise<{ created: number; deleted: num
     }
   }
 
-  return { created, deleted };
+  return { created, deleted, updated };
 }

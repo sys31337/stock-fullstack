@@ -23,6 +23,7 @@ export const useAvailableWarehouses = () => {
 
   const allowed = ((warehouses || []) as any[]).filter((w) => {
     if (!w || !w._id) return false;
+    if (w.isActive === false) return false;
     return accessMode === 'all' || assigned.includes(w._id);
   });
 

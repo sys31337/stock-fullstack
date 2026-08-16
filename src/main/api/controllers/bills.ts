@@ -30,7 +30,11 @@ function deterministicMovementId(reference: string, barCode: string): string {
 
 async function resolveEffectiveWarehouse(warehouse: string | undefined, defaultWarehouse: string | undefined): Promise<string | undefined> {
   if (warehouse) return warehouse;
-  if (defaultWarehouse) return defaultWarehouse;
+  if (defaultWarehouse) {
+    // Never target a retired warehouse: fall back to the first active one.
+    const active = await Warehouse.exists({ _id: defaultWarehouse, isActive: true });
+    if (active) return defaultWarehouse;
+  }
   const first = await Warehouse.findOne({ isActive: true }).sort({ createdAt: 1 }).select('_id').lean();
   return first ? String(first._id) : undefined;
 }

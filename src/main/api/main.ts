@@ -28,9 +28,12 @@ function buildApp(clientMode: boolean, dbName?: string): express.Application {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
+  // Host mode seeds defaults, registers host change tracking and runs periodic
+  // change-log repair; client mode skips all of that and records/replicates instead.
+  setSkipDefaultSeeding(clientMode);
+
   if (clientMode) {
     setSyncRecorderClientMode(true);
-    setSkipDefaultSeeding(true);
     app.use(syncRecorderMiddleware);
   }
 

@@ -51,6 +51,8 @@ export const useSwitchWarehouse = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users-enhanced'] });
       qc.invalidateQueries({ queryKey: ['my-permissions'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'], refetchType: 'all' });
+      qc.invalidateQueries({ queryKey: ['dashboard-analytics'], refetchType: 'all' });
     },
   });
 };

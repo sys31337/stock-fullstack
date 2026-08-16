@@ -11,12 +11,25 @@ import { IUserIdRequest } from '@api/types/common';
 
 const SALES_TYPES = ['SALE', 'DELIVERY'];
 
-const getWarehouseFilter = (req: IUserIdRequest): any => {
+const getWarehouseFilter = async (req: IUserIdRequest): Promise<any> => {
   const { warehouse } = req.query;
   const warehouseFilter: any = {};
   if (warehouse) {
     warehouseFilter.warehouse = warehouse;
-  } else if (!req.isMainAccount && req.assignedWarehouses?.length) {
+    return warehouseFilter;
+  }
+  // The dashboard reflects the active warehouse (the one the user selected via
+  // the warehouse switcher), so switching warehouse updates the statistics.
+  // Inactive warehouses are ignored so a retired warehouse cannot zero out the
+  // KPIs.
+  if (req.defaultWarehouse) {
+    const active = await Warehouse.exists({ _id: req.defaultWarehouse, isActive: true });
+    if (active) {
+      warehouseFilter.warehouse = req.defaultWarehouse;
+      return warehouseFilter;
+    }
+  }
+  if (!req.isMainAccount && req.assignedWarehouses?.length) {
     warehouseFilter.warehouse = { $in: req.assignedWarehouses };
   }
   return warehouseFilter;
@@ -160,7 +173,7 @@ const getRecentMovements = (warehouse: any) =>
 
 const getDashboardStats = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
-    const warehouseFilter = getWarehouseFilter(req);
+    const warehouseFilter = await getWarehouseFilter(req);
     const { statisticsEnabled, statisticsBlurred } = await getSettingsFlags();
 
     if (!statisticsEnabled) {
@@ -170,9 +183,10 @@ const getDashboardStats = async (req: IUserIdRequest, res: Response, next: NextF
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const movementWarehouse = typeof warehouseFilter.warehouse === 'string' ? warehouseFilter.warehouse : undefined;
     const [kpis, recentMovements] = await Promise.all([
       computeKpis(warehouseFilter, today),
-      getRecentMovements(req.query.warehouse),
+      getRecentMovements(movementWarehouse),
     ]);
 
     return res.status(200).send({ statisticsEnabled, statisticsBlurred, ...kpis, recentMovements });
@@ -183,7 +197,7 @@ const getDashboardStats = async (req: IUserIdRequest, res: Response, next: NextF
 
 const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
-    const warehouseFilter = getWarehouseFilter(req);
+    const warehouseFilter = await getWarehouseFilter(req);
     const { statisticsEnabled, statisticsBlurred } = await getSettingsFlags();
 
     if (!statisticsEnabled) {
@@ -198,6 +212,7 @@ const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: N
     startDate.setUTCHours(0, 0, 0, 0);
     startDate.setUTCDate(startDate.getUTCDate() - (days - 1));
 
+    const movementWarehouse = typeof warehouseFilter.warehouse === 'string' ? warehouseFilter.warehouse : undefined;
     const [kpis, revenueTrendAgg, productSalesAgg, recentMovements] = await Promise.all([
       computeKpis(warehouseFilter, today),
       Bill.aggregate([
@@ -218,7 +233,7 @@ const getDashboardAnalytics = async (req: IUserIdRequest, res: Response, next: N
         },
         { $sort: { revenue: -1 } },
       ]),
-      getRecentMovements(req.query.warehouse),
+      getRecentMovements(movementWarehouse),
     ]);
 
     const trendMap = new Map(revenueTrendAgg.map((r: any) => [r._id, r.total]));

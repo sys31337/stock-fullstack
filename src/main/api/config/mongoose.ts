@@ -128,8 +128,8 @@ const connectDB = async (dbName?: string): Promise<boolean> => {
       registerHostChangeTracking();
       const runChangeLogRepair = (): void => {
         repairChangeLog().then((result) => {
-          if (result.created > 0 || result.deleted > 0) {
-            log(`Repaired sync change log: +${result.created} creates, +${result.deleted} deletes`);
+          if (result.created > 0 || result.deleted > 0 || result.updated > 0) {
+            log(`Repaired sync change log: +${result.created} creates, +${result.updated} updates, +${result.deleted} deletes`);
           }
         }).catch(() => {});
       };
