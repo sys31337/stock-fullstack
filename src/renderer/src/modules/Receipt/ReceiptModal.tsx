@@ -218,6 +218,32 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
     onClose();
   };
 
+  const handleDiscard = () => {
+    if (heldReceiptId) {
+      removeHeldReceipt(heldReceiptId);
+    }
+    setInitialValues({
+      orderId: String((latestBillNumber ?? 0) + 1),
+      category: '',
+      description: '',
+      customer: '',
+      orderTotalHT: '0.00',
+      orderTotalTTC: '0.00',
+      orderPaid: '0.00',
+      orderDebts: '0.00',
+      billDate: new Date() as unknown as string,
+    });
+    setProductsValues([{
+      id: randomId(), barCode: '', productName: '', quantity: 0, stack: 0, buyPrice: 0, sellPrice_1: 0, sellPrice_2: 0, sellPrice_3: 0, totalHT: 0, totalTTC: 0, tva: 19,
+    }]);
+    updateState({
+      orderTotalHT: '0.00',
+      orderTotalTTC: '0.00',
+      orderPaid: '0.00',
+      orderDebts: '0.00',
+    });
+  };
+
   return (
     <>
       <CustomModal
@@ -234,6 +260,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
         confirmMinimizeLabel={t('saveAndMinimize')}
         confirmDiscardLabel={t('discard')}
         confirmCancelLabel={t('cancel')}
+        onDiscard={handleDiscard}
       >
         <CustomForm handleSubmit={handleSubmit} className="h-full" hideSubmit={true}>
           <div className="flex h-[calc(100vh-100px)] gap-6 p-6 bg-gray-50/50 dark:bg-gray-900/50">

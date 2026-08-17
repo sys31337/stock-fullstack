@@ -37,6 +37,7 @@ interface CustomModalProps {
   confirmMinimizeLabel?: string;
   confirmDiscardLabel?: string;
   confirmCancelLabel?: string;
+  onDiscard?: () => void;
 }
 
 const CustomModal = ({
@@ -49,6 +50,7 @@ const CustomModal = ({
   confirmMinimizeLabel = 'Save & Minimize',
   confirmDiscardLabel = 'Discard',
   confirmCancelLabel = 'Cancel',
+  onDiscard,
 }: CustomModalProps) => {
   const isFull = modalProps?.size === 'full';
   const { className: contentClassName, style: contentStyle, ...restContentProps } = contentProps || {};
@@ -73,16 +75,16 @@ const CustomModal = ({
   }, [showConfirm]);
 
   const handleEscapeKeyDown = (e: Event) => {
-    if (confirmOnClose) {
+    if (confirmOnClose && !showConfirm) {
       e.preventDefault();
-      if (!showConfirm) setShowConfirm(true);
+      setShowConfirm(true);
     }
   };
 
   const handleInteractOutside = (e: Event) => {
-    if (confirmOnClose) {
+    if (confirmOnClose && !showConfirm) {
       e.preventDefault();
-      if (!showConfirm) setShowConfirm(true);
+      setShowConfirm(true);
     }
   };
 
@@ -101,6 +103,7 @@ const CustomModal = ({
 
   const handleConfirmDiscard = () => {
     setShowConfirm(false);
+    if (onDiscard) onDiscard();
     setTimeout(() => onClose(), 50);
   };
 
@@ -195,7 +198,7 @@ const CustomModal = ({
 
       {showConfirm && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 pointer-events-auto"
+          className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 pointer-events-auto"
           onClick={(e) => { if (e.target === e.currentTarget) handleConfirmCancel(); }}
         >
           <div className="bg-popover rounded-xl shadow-2xl border p-6 max-w-sm w-full mx-4">

@@ -132,38 +132,43 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
     });
   }, [productsValues, state.orderPaid, priceTier, tvaEnabled])
 
+  const resetToBillInfo = () => {
+    if (!billInfo) return;
+    const { orderId, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
+    setInitialValues({
+      orderId,
+      description,
+      customer: customer?._id,
+      orderTotalHT,
+      orderTotalTTC,
+      orderPaid,
+      orderDebts,
+      billDate: dayjs(billDate).toDate() as unknown as string,
+    });
+    updateState({
+      orderTotalHT: price(`${orderTotalHT}`),
+      orderTotalTTC: price(`${orderTotalTTC}`),
+      orderPaid: price(`${orderPaid}`),
+      orderDebts: price(`${orderTotalTTC - Number(orderPaid)}`),
+    });
+
+    if (products && Array.isArray(products)) {
+      setProductsValues((products as IProduct[]).map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({
+        ...rest,
+        buyPrice: Number(rest.buyPrice),
+        quantity: Number(rest.quantity),
+        stack: Number(rest.stack),
+        tva: Number(rest.tva),
+        sellPrice_1: Number(rest.sellPrice_1),
+        sellPrice_2: Number(rest.sellPrice_2),
+        sellPrice_3: Number(rest.sellPrice_3),
+      })));
+    }
+  };
+
   useEffect(() => {
     if (isFetched && isOpen && billInfo) {
-      const { orderId, description, customer, orderTotalHT, orderTotalTTC, orderPaid, orderDebts, billDate, products } = billInfo;
-      setInitialValues({
-        orderId,
-        description,
-        customer: customer?._id,
-        orderTotalHT,
-        orderTotalTTC,
-        orderPaid,
-        orderDebts,
-        billDate: dayjs(billDate).toDate() as unknown as string,
-      });
-      updateState({
-        orderTotalHT: price(`${orderTotalHT}`),
-        orderTotalTTC: price(`${orderTotalTTC}`),
-        orderPaid: price(`${orderPaid}`),
-        orderDebts: price(`${orderTotalTTC - Number(orderPaid)}`),
-      });
-
-      if (products && Array.isArray(products)) {
-        setProductsValues((products as IProduct[]).map(({ notify, _id, createdAt, updatedAt, ...rest }) => ({
-          ...rest,
-          buyPrice: Number(rest.buyPrice),
-          quantity: Number(rest.quantity),
-          stack: Number(rest.stack),
-          tva: Number(rest.tva),
-          sellPrice_1: Number(rest.sellPrice_1),
-          sellPrice_2: Number(rest.sellPrice_2),
-          sellPrice_3: Number(rest.sellPrice_3),
-        })));
-      }
+      resetToBillInfo();
     }
   }, [isFetched, billInfo, isOpen]);
 
@@ -215,6 +220,11 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
 
   const { handleSubmit, values, handleChange, errors, touched, handleBlur, setFieldValue } = useFormik({ initialValues, onSubmit, enableReinitialize: true });
 
+  const handleDiscard = () => {
+    setSubmitted(false);
+    resetToBillInfo();
+  };
+
   return (
     <>
       {!hideTrigger && (
@@ -238,6 +248,7 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
         confirmMinimizeLabel={t('saveAndMinimize')}
         confirmDiscardLabel={t('discard')}
         confirmCancelLabel={t('cancel')}
+        onDiscard={handleDiscard}
       >
         <CustomForm handleSubmit={handleSubmit} className="h-full" hideSubmit={true}>
           <div className="flex h-[calc(100vh-100px)] gap-6 p-6 bg-gray-50/50 dark:bg-gray-900/50">
