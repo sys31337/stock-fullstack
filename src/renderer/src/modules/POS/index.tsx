@@ -97,6 +97,14 @@ const SIDEBAR_ITEMS = [
 // ---------------------------------------------------------------------------
 const categoryStyle = (index: number) => PASTELS[index % PASTELS.length];
 
+const parseMoneyInput = (value: string | number | undefined): number => {
+  if (value === undefined || value === null || value === '') return 0;
+  if (typeof value === 'number') return Number.isNaN(value) ? 0 : value;
+  const normalized = String(value).replace(/\s/g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 const categoryCount = (categoryId: string, products: IProduct[]) =>
   products.filter((p) => {
     const cat = p.category as any;
@@ -182,16 +190,17 @@ const POS: React.FC = () => {
     return { subtotal, tax, total };
   }, [cart]);
 
+  const receivedAmount = useMemo(() => parseMoneyInput(received), [received]);
+
   const change = useMemo(() => {
-    const rec = Number(received || 0);
-    if (!rec || rec < totals.total) return 0;
-    return rec - totals.total;
-  }, [received, totals.total]);
+    if (!receivedAmount || receivedAmount < totals.total - 0.001) return 0;
+    return Math.max(0, receivedAmount - totals.total);
+  }, [receivedAmount, totals.total]);
 
   const isPaidEnough = useMemo(() => {
     if (isCredit) return true;
-    return Number(received || 0) >= totals.total;
-  }, [isCredit, received, totals.total]);
+    return receivedAmount >= totals.total - 0.001;
+  }, [isCredit, receivedAmount, totals.total]);
 
   const addToCart = (product: IProduct, qty = 1) => {
     const unitPrice = Number(product.sellPrice_1 || product.buyPrice || 0);
@@ -287,7 +296,7 @@ const POS: React.FC = () => {
     }));
 
     const totalTTC = totals.total;
-    const paid = isCredit ? Number(received || 0) : totalTTC;
+    const paid = isCredit ? parseMoneyInput(received) : totalTTC;
     const debts = totalTTC - paid;
 
     const payload: any = {
@@ -343,7 +352,7 @@ const POS: React.FC = () => {
 
   const handleCloseSession = async () => {
     try {
-      await closeSession({ actualCash: Number(closeActualCash || 0) });
+      await closeSession({ actualCash: parseMoneyInput(closeActualCash) });
       setShowCloseModal(false);
       toast({ title: t('sessionClosed') });
     } catch (error: any) {
@@ -808,13 +817,22 @@ const POS: React.FC = () => {
           {!isCredit && (
             <div className="flex gap-2 mb-4">
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 placeholder={t('receivedAmount')}
                 value={received}
                 onChange={(e) => setReceived(e.target.value)}
                 className="flex-1 h-12 rounded-xl px-4 text-sm outline-none"
                 style={{ backgroundColor: COLORS.surface, color: COLORS.text, border: `1px solid ${COLORS.border}` }}
               />
+              <button
+                onClick={() => setReceived(String(totals.total.toFixed(2)))}
+                className="h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold transition-colors"
+                style={{ backgroundColor: COLORS.surface, color: COLORS.text, border: `1px solid ${COLORS.border}` }}
+                title="Exact amount"
+              >
+                =
+              </button>
               <div
                 className="h-12 px-4 rounded-xl flex items-center justify-center text-sm font-medium min-w-[90px]"
                 style={{ backgroundColor: COLORS.surface, color: COLORS.text }}
@@ -845,7 +863,8 @@ const POS: React.FC = () => {
           >
             <h3 className="text-lg font-semibold mb-4" style={{ color: COLORS.text }}>{t('closeSession')}</h3>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               placeholder={t('actualCash')}
               value={closeActualCash}
               onChange={(e) => setCloseActualCash(e.target.value)}
