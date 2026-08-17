@@ -225,10 +225,13 @@ const POS: React.FC = () => {
   };
 
   const handleOpenSession = async () => {
+    console.log('handleOpenSession clicked');
     try {
-      await openSession({ openingCash: 0 });
+      const res = await openSession({ openingCash: 0 });
+      console.log('openSession success', res);
       toast({ title: t('sessionOpened') });
     } catch (error: any) {
+      console.error('openSession error', error);
       toast({ title: t('error'), description: error?.response?.data?.message || error.message, variant: 'destructive' });
     }
   };
@@ -252,8 +255,8 @@ const POS: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">{t('noOpenPosSession')}</p>
-            <Button onClick={handleOpenSession} disabled={openingSession} className="w-full">
-              {t('openSession')}
+            <Button onClick={handleOpenSession} className="w-full">
+              {openingSession ? t('loading') : t('openSession')}
             </Button>
             <Button variant="outline" onClick={handleLogout} className="w-full">
               <LogOut className="w-4 h-4 mr-2" />
