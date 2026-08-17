@@ -59,7 +59,7 @@ const getByIdEnhanced = async (req: IUserIdRequest, res: Response, next: NextFun
 const createEnhanced = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const {
-      username, email, fullname, phone, password, role,
+      username, email, fullname, phone, password, role, type,
       assignedWarehouses, warehouseAccessMode, defaultWarehouse,
       preferredLanguage, status, notes, profilePicture, userPermissions,
     } = req.body;
@@ -83,6 +83,7 @@ const createEnhanced = async (req: IUserIdRequest, res: Response, next: NextFunc
       password: hashPassword,
       salt,
       status: status || 'active',
+      type: type || 'USER',
       profilePicture: profilePicture || 'default.png',
       preferredLanguage: preferredLanguage || 'fr',
       permissions: effectivePermissions,
@@ -119,7 +120,7 @@ const updateEnhanced = async (req: IUserIdRequest, res: Response, next: NextFunc
   try {
     const { id } = req.params;
     const {
-      fullname, email, phone, password, role,
+      fullname, email, phone, password, role, type,
       assignedWarehouses, warehouseAccessMode, defaultWarehouse,
       preferredLanguage, status, notes, profilePicture, userPermissions,
     } = req.body;
@@ -129,6 +130,7 @@ const updateEnhanced = async (req: IUserIdRequest, res: Response, next: NextFunc
     if (email !== undefined) payload.email = email;
     if (phone !== undefined) payload.phone = phone;
     if (status !== undefined) payload.status = status;
+    if (type !== undefined) payload.type = type;
     if (profilePicture !== undefined) payload.profilePicture = profilePicture;
     if (preferredLanguage !== undefined) payload.preferredLanguage = preferredLanguage;
     if (notes !== undefined) payload.notes = notes;

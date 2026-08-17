@@ -35,6 +35,7 @@ interface UserForm {
   phone: string;
   password: string;
   status: 'active' | 'suspended' | 'disabled';
+  type: 'USER' | 'VENDOR' | 'POS';
   role: string;
   assignedWarehouses: string[];
   warehouseAccessMode: 'all' | 'assigned';
@@ -46,7 +47,7 @@ interface UserForm {
 
 const emptyForm: UserForm = {
   fullname: '', username: '', email: '', phone: '', password: '',
-  status: 'active', role: '', assignedWarehouses: [], warehouseAccessMode: 'assigned',
+  status: 'active', type: 'USER', role: '', assignedWarehouses: [], warehouseAccessMode: 'assigned',
   defaultWarehouse: '', preferredLanguage: 'fr', notes: '', userPermissions: [],
 };
 
@@ -99,6 +100,7 @@ const UsersModule: React.FC<UsersProps> = ({ isTopBar, open: controlledOpen, onO
         phone: user.phone || '',
         password: '',
         status: user.status || 'active',
+        type: user.type || 'USER',
         role: user.role?._id || '',
         assignedWarehouses: user.assignedWarehouses?.map((w: any) => w._id || w) || [],
         warehouseAccessMode: user.warehouseAccessMode || 'assigned',
@@ -335,6 +337,18 @@ const UsersModule: React.FC<UsersProps> = ({ isTopBar, open: controlledOpen, onO
                 <option value="active">{t('active')}</option>
                 <option value="suspended">{t('suspended')}</option>
                 <option value="disabled">{t('disabled')}</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">{t('userType')}</label>
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value as any })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+              >
+                <option value="USER">{t('user')}</option>
+                <option value="VENDOR">{t('vendor')}</option>
+                <option value="POS">{t('posUser')}</option>
               </select>
             </div>
             <div>
