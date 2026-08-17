@@ -9,7 +9,7 @@ export interface IUser {
   salt: string;
   profilePicture: string;
   isMainAccount: boolean;
-  type: string;
+  type: 'USER' | 'VENDOR' | 'POS';
   status: 'active' | 'suspended' | 'disabled';
   role?: ObjectId;
   permissions: string[];

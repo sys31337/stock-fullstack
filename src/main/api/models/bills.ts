@@ -12,7 +12,7 @@ const billsSchema = new Schema({
   salesPerson: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
   type: {
     type: String,
-    enum: ['BUY', 'SALE', 'ORDER', 'DELIVERY'],
+    enum: ['BUY', 'SALE', 'ORDER', 'DELIVERY', 'POS'],
     required: true,
     index: true,
   },

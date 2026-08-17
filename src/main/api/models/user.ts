@@ -10,7 +10,7 @@ const usersSchema = new Schema<IUser>({
   salt: { type: String, required: true },
   profilePicture: { type: String, default: 'default.png' },
   isMainAccount: { type: Boolean, default: false },
-  type: { type: String, enum: ['USER', 'VENDOR'], default: 'USER' },
+  type: { type: String, enum: ['USER', 'VENDOR', 'POS'], default: 'USER' },
   status: { type: String, enum: ['active', 'suspended', 'disabled'], default: 'active' },
   role: { type: Schema.Types.ObjectId, ref: 'Role' },
   permissions: [String],

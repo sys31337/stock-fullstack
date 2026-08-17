@@ -8,13 +8,14 @@ import { useToast } from '@web/shared/components/ui/use-toast';
 import showToast from '@web/shared/functions/showToast';
 import { useGetSettings, useUpdateSettings } from '@web/shared/hooks/useSettings';
 import { t } from 'i18next';
-import { Save, Loader2, Package, Building2, LayoutDashboard, X } from 'lucide-react';
+import { Save, Loader2, Package, Building2, LayoutDashboard, X, Store } from 'lucide-react';
 import { cn } from '@web/shared/utils/cn';
 
 const TABS = [
   { id: 'stock', label: 'stockTab', icon: Package },
   { id: 'company', label: 'companyTab', icon: Building2 },
   { id: 'dashboard', label: 'dashboardTab', icon: LayoutDashboard },
+  { id: 'pos', label: 'posTab', icon: Store },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -52,6 +53,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const [stamp, setStamp] = useState(0);
   const [tva, setTva] = useState(19);
   const [tvaEnabled, setTvaEnabled] = useState(true);
+  const [allowPosCredit, setAllowPosCredit] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -77,6 +79,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       setStamp(settings.stamp ?? 0);
       setTva(settings.tva ?? 19);
       setTvaEnabled(settings.tvaEnabled ?? true);
+      setAllowPosCredit(settings.allowPosCredit ?? false);
       setDirty(false);
     }
   }, [isFetched, settings]);
@@ -90,6 +93,9 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
     }
     if (activeTab === 'company') {
       return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, accountNumber, rib, articleNumber, stamp, tva, tvaEnabled };
+    }
+    if (activeTab === 'pos') {
+      return { allowPosCredit };
     }
     return {};
   };
@@ -219,6 +225,33 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                       checked={dashboardStatsBlurred}
                       disabled={!dashboardStatsEnabled}
                       onCheckedChange={(v) => { setDashboardStatsBlurred(v); setDirty(true); }}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-3">
+                  <Button onClick={handleSave} disabled={!dirty || isPending} className="gap-2">
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {t('save')}
+                  </Button>
+                </div>
+              </div>
+            ) : activeTab === 'pos' ? (
+              <div className="max-w-md space-y-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">{t('posSettings')}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('posSettingsDesc')}</p>
+                </div>
+                <Separator />
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="pos-credit" className="text-sm font-medium">{t('allowPosCredit')}</Label>
+                      <p className="text-xs text-muted-foreground">{t('allowPosCreditDesc')}</p>
+                    </div>
+                    <Switch
+                      id="pos-credit"
+                      checked={allowPosCredit}
+                      onCheckedChange={(v) => { setAllowPosCredit(v); setDirty(true); }}
                     />
                   </div>
                 </div>

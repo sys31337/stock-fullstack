@@ -12,7 +12,7 @@ const createBillSchema = Joi.object({
   orderId: string.optional().allow(''),
   category: mongooseId,
   customer: mongooseId,
-  type: string.required().valid('BUY', 'SALE', 'ORDER', 'DELIVERY'),
+  type: string.required().valid('BUY', 'SALE', 'ORDER', 'DELIVERY', 'POS'),
   products: array.items(object.keys({
     id: string.required(),
     barCode: string.required(),
@@ -55,7 +55,7 @@ const updateBillSchema = Joi.object({
   orderId: string.optional().allow(''),
   category: mongooseId,
   customer: mongooseId,
-  type: string.valid('BUY', 'SALE', 'ORDER', 'DELIVERY'),
+  type: string.valid('BUY', 'SALE', 'ORDER', 'DELIVERY', 'POS'),
   products: array.items(object.keys({
     id: string.required(),
     barCode: string.required(),

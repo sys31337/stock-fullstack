@@ -25,14 +25,15 @@ const refreshUserToken = async (req: Request, res: Response, next: NextFunction)
       }
       const {
         _id: userId, fullname, profilePicture, email, username, permissions,
+        type: userType,
       } = user;
       const accessToken = jwt.sign({
-        userId, fullname, profilePicture, email, username, permissions,
+        userId, fullname, profilePicture, email, username, permissions, type: userType,
       }, ACCESS_TOKEN_SECRET, {
         expiresIn: '1d',
       });
       const newRefreshToken = jwt.sign({
-        userId, fullname, profilePicture, email, username, permissions,
+        userId, fullname, profilePicture, email, username, permissions, type: userType,
       }, REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });
@@ -115,10 +116,11 @@ const updateUser = async (req: IUserIdRequest, res: Response, next: NextFunction
 
     const {
       email, profilePicture, refreshToken: currentRefreshToken,
+      type: userType,
     } = update;
 
     const accessToken = jwt.sign({
-      userId, fullname, profilePicture, email,
+      userId, fullname, profilePicture, email, type: userType,
     }, ACCESS_TOKEN_SECRET, {
       expiresIn: '1d',
     });
@@ -129,7 +131,7 @@ const updateUser = async (req: IUserIdRequest, res: Response, next: NextFunction
       const curTime = Math.ceil(Date.now() / 1000);
       if (curTime > exp) {
         refreshToken = jwt.sign({
-          userId, fullname, profilePicture, email,
+          userId, fullname, profilePicture, email, type: userType,
         }, REFRESH_TOKEN_SECRET, {
           expiresIn: '90d',
         });
@@ -138,7 +140,7 @@ const updateUser = async (req: IUserIdRequest, res: Response, next: NextFunction
       }
     } else {
       refreshToken = jwt.sign({
-        userId, fullname, profilePicture, email,
+        userId, fullname, profilePicture, email, type: userType,
       }, REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });
@@ -198,6 +200,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     const {
       _id: userId, fullname, profilePicture, refreshToken: currentRefreshToken,
       permissions, email, role, assignedWarehouses, warehouseAccessMode, defaultWarehouse,
+      type: userType,
     } = user;
 
     let effectivePermissions = [...(permissions || [])];
@@ -209,7 +212,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     const accessToken = jwt.sign({
-      userId, fullname, profilePicture, username, permissions: effectivePermissions,
+      userId, fullname, profilePicture, username, permissions: effectivePermissions, type: userType,
     }, ACCESS_TOKEN_SECRET, {
       expiresIn: '1d',
     });
@@ -220,7 +223,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       const curTime = Math.ceil(Date.now() / 1000);
       if (curTime > exp) {
         refreshToken = jwt.sign({
-          userId, fullname, profilePicture, username, permissions: effectivePermissions,
+          userId, fullname, profilePicture, username, permissions: effectivePermissions, type: userType,
         }, REFRESH_TOKEN_SECRET, {
           expiresIn: '90d',
         });
@@ -229,7 +232,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       }
     } else {
       refreshToken = jwt.sign({
-        userId, fullname, profilePicture, username, permissions: effectivePermissions,
+        userId, fullname, profilePicture, username, permissions: effectivePermissions, type: userType,
       }, REFRESH_TOKEN_SECRET, {
         expiresIn: '90d',
       });
@@ -255,6 +258,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
         permissions: effectivePermissions,
         assignedWarehouses, warehouseAccessMode, defaultWarehouse,
         role,
+        type: userType,
       },
     });
   } catch (error) {

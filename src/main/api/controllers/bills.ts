@@ -10,7 +10,7 @@ import Settings from '@api/models/settings';
 import { orderReleaseProducts } from '@api/functions/products';
 import { IUserIdRequest } from '@api/types/common';
 import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts, deliveryProductUpdateHandler } from '@api/functions/products';
-import { getLatestBill } from '@api/functions/bills';
+import { getLatestBill, getLatestPosBillNumber } from '@api/functions/bills';
 import { adjustCustomerCredit } from '@api/functions/transactions';
 import { IProduct } from '@api/types/IProducts';
 import { createAuditLog } from '@api/utils/auditLog';
@@ -57,7 +57,9 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     const finalOrderId = orderId && String(orderId).trim()
       ? String(orderId).trim()
-      : String(parseInt(await getLatestBill(type), 10) + 1);
+      : type === 'POS'
+        ? `POS-${String((await getLatestPosBillNumber()) + 1).padStart(4, '0')}`
+        : String(parseInt(await getLatestBill(type), 10) + 1);
 
     // Idempotent sync: if the same document id is being replayed, return the
     // existing record instead of creating a duplicate.
@@ -199,12 +201,34 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
+    if (type === 'POS') {
+      const skipStockCheck = settings?.allowOutOfStockSales ?? false;
+      await deliveryDecrementProducts(products, skipStockCheck, payload.warehouse);
+      for (const product of products) {
+        const dbProduct = await Product.findOne({ barCode: product.barCode });
+        if (dbProduct) {
+          const reference = `${type}-${billRefId}`;
+          await ensureStockMovementReference(reference);
+          await StockMovement.create({
+            _id: deterministicMovementId(reference, product.barCode),
+            product: dbProduct._id,
+            warehouse: payload.warehouse,
+            type: 'OUT',
+            quantity: -Number(product.quantity),
+            reference,
+            relatedBill: incomingId || undefined,
+            createdBy: userId,
+          });
+        }
+      }
+    }
+
     }
 
     delete payload.convertFromOrder;
     const createBill = await new Bill(payload).save();
 
-    if (!clientMode && (type === 'BUY' || type === 'DELIVERY') && customer) {
+    if (!clientMode && (type === 'BUY' || type === 'DELIVERY' || type === 'POS') && customer) {
       await adjustCustomerCredit({
         customerId: String(customer),
         addedAmount: Number(createBill.orderDebts || 0),

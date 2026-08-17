@@ -1,6 +1,6 @@
-import { useAuthenticated } from '@web/shared/hooks/useAuthentication';
+import { useAuthenticated, useIsPOSUser } from '@web/shared/hooks/useAuthentication';
 import React, { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 interface Props {
   element?: ReactNode;
@@ -9,6 +9,16 @@ interface Props {
 
 export const PrivateRoute: React.FC<Props> = ({ element, children }) => {
   const isAuthenticated = useAuthenticated();
-  //   const isAuthenticated = true;
-  return <>{isAuthenticated ? element || children : <Navigate to="/connexion" />}</>;
+  const isPOSUser = useIsPOSUser();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/connexion" />;
+  }
+
+  if (isPOSUser && location.pathname !== '/pos') {
+    return <Navigate to="/pos" replace />;
+  }
+
+  return <>{element || children}</>;
 };

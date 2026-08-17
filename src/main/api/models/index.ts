@@ -13,6 +13,8 @@ import './stockMovement';
 import './warehouseTransfer';
 import './deliveryReturn';
 import './settings';
+import './charges';
+import './posSession';
 import './auditLog';
 import './syncOperation';
 import './syncConflict';

@@ -29,11 +29,12 @@ const Authentication = () => {
       fullname: parsedData.fullname,
       token: res.data.accessToken,
       refreshToken: res.data.refreshToken,
-      permissions: res.data.permissions,
+      permissions: res.data.user?.permissions || parsedData.permissions,
+      type: res.data.user?.type || parsedData.type,
     };
     cacheService.set('PROFILE_PICTURE', parsedData.profilePicture || 'default.png');
     authService.saveUserInfo(userData);
-    navigate('/products');
+    navigate(userData.type === 'POS' ? '/pos' : '/products');
   };
 
   return (

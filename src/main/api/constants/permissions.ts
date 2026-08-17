@@ -15,6 +15,8 @@ export const MODULES = [
   'transfers',
   'orders',
   'deliveries',
+  'charges',
+  'pos',
 ] as const;
 
 export const ACTIONS = [
@@ -190,6 +192,22 @@ export const PERMISSION_GROUPS: { module: string; label: string; actions: { acti
       { action: 'cancel', label: 'Cancel' },
       { action: 'print', label: 'Print' },
       { action: 'export', label: 'Export' },
+    ],
+  },
+  {
+    module: 'charges', label: 'Charges',
+    actions: [
+      { action: 'view', label: 'View' },
+      { action: 'create', label: 'Create' },
+      { action: 'edit', label: 'Edit' },
+      { action: 'delete', label: 'Delete' },
+      { action: 'export', label: 'Export' },
+    ],
+  },
+  {
+    module: 'pos', label: 'Point of Sale',
+    actions: [
+      { action: 'access', label: 'Access POS' },
     ],
   },
 ];

@@ -26,6 +26,23 @@ export function useAuthenticated(): boolean {
   return true;
 }
 
+export function useIsPOSUser(): boolean {
+  const userInfo = authService.loadUserInfo();
+  if (!userInfo?.user_id) return false;
+
+  const token = userInfo.token || userInfo.accessToken;
+  if (token) {
+    try {
+      const decoded = parseJwt(token);
+      return decoded.type === 'POS';
+    } catch {
+      return false;
+    }
+  }
+
+  return userInfo.type === 'POS';
+}
+
 export const useLogout = () => useMutation((token) => axiosInstance.request({
   method: 'POST',
   url: 'users/logout',

@@ -16,6 +16,8 @@ import dashboardRouter from './helpers/dashboard';
 import settingsRouter from './helpers/settings';
 import transactionsRouter from './helpers/transactions';
 import reportsRouter from './helpers/reports';
+import chargesRouter from './helpers/charges';
+import posSessionsRouter from './helpers/posSessions';
 import deliveryReturnsRouter from './helpers/deliveryReturns';
 import syncRouter from './helpers/sync';
 import syncV2Router from './helpers/syncV2';
@@ -40,6 +42,8 @@ router.use('/dashboard', dashboardRouter);
 router.use('/settings', settingsRouter);
 router.use('/transactions', transactionsRouter);
 router.use('/reports', reportsRouter);
+router.use('/charges', chargesRouter);
+router.use('/pos-sessions', posSessionsRouter);
 router.use('/delivery-returns', deliveryReturnsRouter);
 
 export default router;

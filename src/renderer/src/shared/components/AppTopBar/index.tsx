@@ -14,6 +14,7 @@ import Warehouses from '@web/modules/Warehouses'
 import Roles from '@web/modules/Roles'
 import UsersModule from '@web/modules/Users'
 import AuditLogs from '@web/modules/AuditLogs'
+import Charges from '@web/modules/Charges'
 import SettingsDrawer from '@web/modules/Settings'
 import ConnectionDrawer from '@web/modules/Connection'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
@@ -49,6 +50,7 @@ interface ModalActions {
   openRoles: () => void
   openUsers: () => void
   openAuditLogs: () => void
+  openCharges: () => void
 }
 
 const ModalContext = createContext<ModalActions>({
@@ -64,6 +66,7 @@ const ModalContext = createContext<ModalActions>({
   openRoles: () => {},
   openUsers: () => {},
   openAuditLogs: () => {},
+  openCharges: () => {},
 })
 
 interface SubMenuItem {
@@ -125,6 +128,12 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'roles', action: (a) => a.openRoles() },
       { label: 'users', action: (a) => a.openUsers() },
       { label: 'auditLogs', action: (a) => a.openAuditLogs() },
+    ],
+  },
+  {
+    label: 'charges',
+    children: [
+      { label: 'charges', action: (a) => a.openCharges() },
     ],
   },
   {
@@ -297,6 +306,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
   const [openConnection, setOpenConnection] = useState(false)
   const [openInvoice, setOpenInvoice] = useState(false)
   const [openAllInvoices, setOpenAllInvoices] = useState(false)
+  const [openCharges, setOpenCharges] = useState(false)
 
   const modalActions: ModalActions = {
     openProducts: () => setOpenProducts(true),
@@ -314,6 +324,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
     openRoles: () => setOpenRoles(true),
     openUsers: () => setOpenUsers(true),
     openAuditLogs: () => setOpenAuditLogs(true),
+    openCharges: () => setOpenCharges(true),
   }
 
   useEffect(() => {
@@ -458,6 +469,7 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openRoles && <Roles isTopBar open={openRoles} onOpenChange={setOpenRoles} />}
         {openUsers && <UsersModule isTopBar open={openUsers} onOpenChange={setOpenUsers} />}
         {openAuditLogs && <AuditLogs isTopBar open={openAuditLogs} onOpenChange={setOpenAuditLogs} />}
+        {openCharges && <Charges isTopBar open={openCharges} onOpenChange={setOpenCharges} />}
         {openInvoice && <Invoice isTopBar open={openInvoice} onOpenChange={setOpenInvoice} />}
         {openAllInvoices && <AllInvoices isTopBar open={openAllInvoices} onOpenChange={setOpenAllInvoices} />}
         <SettingsDrawer isOpen={openSettings} onClose={() => setOpenSettings(false)} />

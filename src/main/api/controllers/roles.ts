@@ -191,6 +191,19 @@ const PREDEFINED_ROLES = [
       return !['settings', 'roles'].includes(mod) || p === 'roles.view';
     }),
   },
+  {
+    name: 'POS Operator',
+    description: 'Locked to the POS screen: can only create sales',
+    permissions: [
+      'pos.access',
+      'sales.create',
+      'sales.print',
+      'products.view',
+      'customers.view',
+      'customers.create',
+      'dashboard.view',
+    ],
+  },
 ];
 
 const seedRoles = async (_req: IUserIdRequest, res: Response, next: NextFunction) => {

@@ -22,6 +22,7 @@ const settingsSchema = new Schema({
   stamp: { type: Number, default: 0 },
   tva: { type: Number, default: 19 },
   tvaEnabled: { type: Boolean, default: true },
+  allowPosCredit: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const Settings = model('Settings', settingsSchema);

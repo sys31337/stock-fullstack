@@ -6,9 +6,11 @@ import Customer from '@api/models/customers';
 import User from '@api/models/user';
 import Transaction from '@api/models/transactions';
 import DeliveryReturn from '@api/models/deliveryReturn';
+import Charge from '@api/models/charges';
+import PosSession from '@api/models/posSession';
 import { IUserIdRequest } from '@api/types/common';
 
-const SALES_TYPES = ['SALE', 'DELIVERY'];
+const SALES_TYPES = ['SALE', 'DELIVERY', 'POS'];
 
 interface DateRange {
   start?: Date;
@@ -317,7 +319,7 @@ const getCashStatement = async (req: IUserIdRequest, res: Response, next: NextFu
     const active = { status: { $ne: 'cancelled' } };
     const warehouseFilter = getWarehouseFilter(req);
 
-    const [purchasesAgg, salesAgg, deliveryReturnsAgg, otherTxAgg] = await Promise.all([
+    const [purchasesAgg, salesAgg, deliveryReturnsAgg, otherTxAgg, chargesAgg, posSessionsAgg] = await Promise.all([
       Bill.aggregate([
         { $match: { ...warehouseFilter, type: 'BUY', ...active, createdAt: dateFilter } },
         { $group: { _id: null, total: { $sum: '$orderTotalTTC' }, paid: { $sum: '$orderPaid' }, debts: { $sum: '$orderDebts' } } },
@@ -345,15 +347,25 @@ const getCashStatement = async (req: IUserIdRequest, res: Response, next: NextFu
           },
         },
       ]),
+      Charge.aggregate([
+        { $match: { date: { $gte: range.start, $lte: range.end }, ...warehouseFilter } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]),
+      PosSession.aggregate([
+        { $match: { closingDate: { $gte: range.start, $lte: range.end } } },
+        { $group: { _id: null, openingCash: { $sum: '$openingCash' }, actualCash: { $sum: '$actualCash' } } },
+      ]),
     ]);
 
     const purchases = purchasesAgg[0] || { total: 0, paid: 0, debts: 0 };
     const sales = salesAgg[0] || { total: 0, paid: 0, debts: 0 };
     const deliveryReturns = deliveryReturnsAgg[0]?.returned || 0;
     const other = otherTxAgg[0] || { received: 0, spent: 0 };
+    const charges = chargesAgg[0]?.total || 0;
+    const posSessions = posSessionsAgg[0] || { openingCash: 0, actualCash: 0 };
 
     const paidIn = Math.round(sales.paid + deliveryReturns + other.received);
-    const paidOut = Math.round(purchases.paid + Math.abs(other.spent));
+    const paidOut = Math.round(purchases.paid + Math.abs(other.spent) + charges);
     const cashierBalance = paidIn - paidOut;
 
     return res.status(200).send({
@@ -363,6 +375,8 @@ const getCashStatement = async (req: IUserIdRequest, res: Response, next: NextFu
       sales: { total: round2(sales.total), paid: round2(sales.paid), debt: round2(sales.debts) },
       deliveryReturns: round2(deliveryReturns),
       other: { received: round2(other.received), spent: round2(Math.abs(other.spent)) },
+      charges: round2(charges),
+      posSessions: { openingCash: round2(posSessions.openingCash), actualCash: round2(posSessions.actualCash || 0) },
       paidIn,
       paidOut,
       cashierBalance,
