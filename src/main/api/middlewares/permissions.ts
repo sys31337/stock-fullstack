@@ -38,6 +38,36 @@ export const requirePermission = (...permissions: string[]) => {
   };
 };
 
+export const requirePOSAccess = () => {
+  return async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+    try {
+      if (req.isMainAccount) return next();
+
+      const user = await User.findById(req.userId);
+      if (!user) return res.status(404).send({ message: 'User not found' });
+
+      if (user.type === 'POS') return next();
+
+      let effectivePermissions = [...(user.permissions || [])];
+      if (user.role) {
+        const role = await Role.findById(user.role);
+        if (role) {
+          effectivePermissions = [...new Set([...effectivePermissions, ...role.permissions])];
+        }
+      }
+
+      if (!hasPermission(effectivePermissions, 'pos.access')) {
+        return res.status(403).send({ message: 'Insufficient permissions for POS access' });
+      }
+
+      req.permissions = effectivePermissions;
+      return next();
+    } catch (error) {
+      return next(error);
+    }
+  };
+};
+
 export const hasModuleAccess = (moduleName: string, action: string) => {
   return async (req: IUserIdRequest, res: Response, next: NextFunction) => {
     try {
