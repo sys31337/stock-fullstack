@@ -45,10 +45,10 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const { type, products, category, customer, orderId, warehouse } = body;
 
     const effectiveWarehouse = await resolveEffectiveWarehouse(warehouse, req.defaultWarehouse);
-    if (type !== 'SALE' && !effectiveWarehouse) {
+    if (!effectiveWarehouse) {
       return res.status(400).send({ message: 'A warehouse is required for this bill type' });
     }
-    if (effectiveWarehouse && type !== 'SALE') {
+    if (effectiveWarehouse) {
       const hasAccess = await checkWarehouseAccess(effectiveWarehouse, userId as string);
       if (!hasAccess) {
         return res.status(403).send({ message: 'Access denied to this warehouse' });
@@ -177,6 +177,28 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
+    if (type === 'SALE') {
+      const skipStockCheck = settings?.allowOutOfStockSales ?? false;
+      await deliveryDecrementProducts(products, skipStockCheck, payload.warehouse);
+      for (const product of products) {
+        const dbProduct = await Product.findOne({ barCode: product.barCode });
+        if (dbProduct) {
+          const reference = `${type}-${billRefId}`;
+          await ensureStockMovementReference(reference);
+          await StockMovement.create({
+            _id: deterministicMovementId(reference, product.barCode),
+            product: dbProduct._id,
+            warehouse: payload.warehouse,
+            type: 'OUT',
+            quantity: -Number(product.quantity),
+            reference,
+            relatedBill: incomingId || undefined,
+            createdBy: userId,
+          });
+        }
+      }
+    }
+
     }
 
     delete payload.convertFromOrder;
@@ -223,7 +245,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       return res.status(400).send({ message: `${oldBill.type} bills cannot be updated via this endpoint.` });
     }
 
-    if (oldBill.type !== 'SALE') {
+    {
       const effectiveWarehouse = body.warehouse || oldBill.warehouse;
       if (!effectiveWarehouse) {
         return res.status(400).send({ message: 'A warehouse is required for this bill type' });
@@ -246,7 +268,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     const clientMode = isSyncRecorderClientMode();
     if (!clientMode) {
-    if (oldBill.type === 'DELIVERY') {
+    if (oldBill.type === 'DELIVERY' || oldBill.type === 'SALE') {
       const settings = await Settings.findOne();
       const skipStockCheck = settings?.allowOutOfStockSales ?? false;
       await deliveryProductUpdateHandler(oldProductsArr, newProductsArr, skipStockCheck, body.warehouse || oldBill.warehouse);
@@ -298,7 +320,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
 
     const updateBill = await Bill.findByIdAndUpdate(id, payload, { new: true });
 
-    if (!clientMode && (oldBill.type === 'BUY' || oldBill.type === 'DELIVERY')) {
+    if (!clientMode && (oldBill.type === 'BUY' || oldBill.type === 'DELIVERY' || oldBill.type === 'SALE')) {
       if (oldBill.customer) {
         await adjustCustomerCredit({
           customerId: String(oldBill.customer),
@@ -309,7 +331,7 @@ const updateOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
         });
       }
     }
-    if (!clientMode && (updateBill?.type === 'BUY' || updateBill?.type === 'DELIVERY') && updateBill?.customer) {
+    if (!clientMode && (updateBill?.type === 'BUY' || updateBill?.type === 'DELIVERY' || updateBill?.type === 'SALE') && updateBill?.customer) {
       await adjustCustomerCredit({
         customerId: String(updateBill.customer),
         addedAmount: Number(updateBill.orderDebts || 0),

@@ -104,7 +104,7 @@ const deleteOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
     const bill = transaction.bill as any;
     if (bill && !isSyncRecorderClientMode()) {
       await StockMovement.deleteMany({ relatedBill: bill._id, type: { $in: ['OUT', 'IN'] } });
-      if (bill.type === 'DELIVERY') {
+      if (bill.type === 'DELIVERY' || bill.type === 'SALE') {
         await deliveryProductUpdateHandler(bill.products || [], [], false, bill.warehouse);
         await StockMovement.create(
           (bill.products || []).map((p: any) => ({
