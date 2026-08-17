@@ -202,6 +202,7 @@ const PREDEFINED_ROLES = [
       'customers.view',
       'customers.create',
       'dashboard.view',
+      'settings.view',
     ],
   },
 ];
