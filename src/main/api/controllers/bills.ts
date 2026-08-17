@@ -10,7 +10,7 @@ import Settings from '@api/models/settings';
 import { orderReleaseProducts } from '@api/functions/products';
 import { IUserIdRequest } from '@api/types/common';
 import { buyBillProductHandler, buyBillproductUpdateHandler, orderReserveProducts, deliveryDecrementProducts, deliveryProductUpdateHandler } from '@api/functions/products';
-import { getLatestBill, getLatestPosBillNumber } from '@api/functions/bills';
+import { getLatestBill, getLatestPosBillNumber, getLatestPosDeliveryNumber } from '@api/functions/bills';
 import { adjustCustomerCredit } from '@api/functions/transactions';
 import { IProduct } from '@api/types/IProducts';
 import { createAuditLog } from '@api/utils/auditLog';
@@ -59,7 +59,9 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       ? String(orderId).trim()
       : type === 'POS'
         ? `POS-${String((await getLatestPosBillNumber()) + 1).padStart(4, '0')}`
-        : String(parseInt(await getLatestBill(type), 10) + 1);
+        : type === 'DELIVERY' && body.source === 'POS'
+          ? `POS-DEL-${String((await getLatestPosDeliveryNumber()) + 1).padStart(4, '0')}`
+          : String(parseInt(await getLatestBill(type), 10) + 1);
 
     // Idempotent sync: if the same document id is being replayed, return the
     // existing record instead of creating a duplicate.

@@ -43,7 +43,7 @@ const computeExpectedCash = async (sessionId: string, userId: string, openingCas
   const now = new Date();
 
   const posSales = await Bill.find({
-    type: 'POS',
+    source: 'POS',
     status: { $ne: 'cancelled' },
     salesPerson: new mongoose.Types.ObjectId(userId),
     createdAt: { $gte: from, $lte: now },

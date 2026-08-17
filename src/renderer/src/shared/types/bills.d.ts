@@ -16,7 +16,8 @@ export interface IBill {
   manualOrderId?: boolean;
   category: string | ICategory;
   customer: string | ICustomer;
-  type: 'BUY' | 'SALE' | 'ORDER' | 'DELIVERY';
+  type: 'BUY' | 'SALE' | 'ORDER' | 'DELIVERY' | 'POS';
+  source?: 'POS' | 'MANUAL';
   status?: 'pending' | 'cancelled' | 'completed';
   reservedUntil?: string;
   products: IProduct[],

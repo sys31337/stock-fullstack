@@ -291,7 +291,8 @@ const POS: React.FC = () => {
     const debts = totalTTC - paid;
 
     const payload: any = {
-      type: 'POS',
+      type: 'DELIVERY',
+      source: 'POS',
       billDate: new Date().toISOString(),
       products: billProducts,
       orderTotalHT: totals.subtotal,

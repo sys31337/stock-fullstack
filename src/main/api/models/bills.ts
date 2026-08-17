@@ -34,6 +34,7 @@ const billsSchema = new Schema({
   orderDebts: requiredNumber,
   paymentMethod: { type: String, default: '' },
   pricingCategory: { type: Number, default: 0 },
+  source: { type: String, enum: ['POS', 'MANUAL'], default: 'MANUAL', index: true },
   description: String,
   content: { type: String, default: '' },
   contentHistory: [{

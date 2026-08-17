@@ -32,6 +32,7 @@ const createBillSchema = Joi.object({
   orderPaid: number.required(),
   orderDebts: number.required(),
   paymentMethod: string.optional().allow(''),
+  source: string.optional().valid('POS', 'MANUAL').default('MANUAL'),
   pricingCategory: Joi.when('type', {
     is: 'BUY',
     then: Joi.forbidden(),

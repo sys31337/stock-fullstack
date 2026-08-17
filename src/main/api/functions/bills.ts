@@ -20,3 +20,14 @@ export const getLatestPosBillNumber = async (): Promise<number> => {
   const match = String(latest.orderId).match(/POS-(\d+)/);
   return match ? Number(match[1]) : 0;
 };
+
+export const getLatestPosDeliveryNumber = async (): Promise<number> => {
+  const latest = await Bill.findOne(
+    { type: 'DELIVERY', source: 'POS', orderId: { $regex: /^POS-DEL-\d+$/ } },
+    {},
+    { sort: { createdAt: -1 } },
+  );
+  if (!latest) return 0;
+  const match = String(latest.orderId).match(/POS-DEL-(\d+)/);
+  return match ? Number(match[1]) : 0;
+};
