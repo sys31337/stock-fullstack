@@ -21,3 +21,4 @@ import './syncConflict';
 import './syncState';
 import './syncChangeLog';
 import './syncAppliedOperation';
+import './idempotencyRecord';

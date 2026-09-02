@@ -271,10 +271,10 @@ const logout = async (req: Request, res: Response) => {
   if (!refreshToken) {
     return res.status(204).send({ message: USERLOGGEDOUT });
   }
-  const user = await User.find({ refreshToken });
+  const user = await User.findOne({ refreshToken });
   if (!user) return res.status(204).send({ message: USERLOGGEDOUT });
-  const userId = user[0].id;
-  await User.findByIdAndUpdate(userId, { refresh_token: null });
+  const userId = user._id;
+  await User.findByIdAndUpdate(userId, { refreshToken: null });
   res.clearCookie('refreshToken');
 
   await createAuditLog(req as any, {

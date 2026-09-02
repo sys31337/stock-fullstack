@@ -9,6 +9,7 @@ import { connectDB, setSkipDefaultSeeding } from '@api/config/mongoose';
 import '@api/models'; // register all synced Mongoose models
 import { errorHandler, notFound } from '@api/middlewares/error';
 import { syncRecorderMiddleware, setSyncRecorderClientMode } from '@api/middlewares/syncRecorder';
+import { idempotency } from '@api/middlewares/idempotency';
 import api from '@api/routes';
 import socketHelper from '@api/socket';
 import { startOrderScheduler } from '@api/functions/orderScheduler';
@@ -38,6 +39,10 @@ function buildApp(clientMode: boolean, dbName?: string): express.Application {
   }
 
   app.get('/', (_req, res) => res.sendStatus(200));
+
+  // Idempotent writes: honors x-idempotency-key for the mobile app's offline
+  // flush so retries never create duplicate documents or double-apply stock.
+  app.use(idempotency);
 
   /** Initialise mongoose connection */
   connectDB(dbName);

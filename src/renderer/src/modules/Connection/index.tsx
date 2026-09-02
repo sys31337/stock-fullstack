@@ -822,7 +822,7 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
         </div>
       </div>
 
-      <Dialog open={!!dialogHost} onOpenChange={(open) => !open && closeHostDialog()}>
+      {/* <Dialog open={!!dialogHost} onOpenChange={(open) => !open && closeHostDialog()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{dialogHost?.name || dialogHost?.clientId}</DialogTitle>
@@ -857,7 +857,7 @@ const ConnectionDrawer: React.FC<ConnectionDrawerProps> = ({ isOpen, onClose }) 
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 };

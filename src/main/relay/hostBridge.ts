@@ -4,7 +4,14 @@ import crypto from 'node:crypto';
 import { RelayClient } from './relayClient';
 import { ReceivePayload, RelayEnvelope, RequestEnvelope, RelayHostInfo } from './protocol';
 
-const FORWARD_HEADERS = ['authorization', 'accept-language', 'accept', 'content-type', 'x-public'];
+const FORWARD_HEADERS = [
+  'authorization',
+  'accept-language',
+  'accept',
+  'content-type',
+  'x-public',
+  'x-idempotency-key',
+];
 
 /**
  * Host role. Receives request envelopes from the relay and re-issues them

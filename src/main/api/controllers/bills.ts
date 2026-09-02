@@ -16,6 +16,17 @@ import { IProduct } from '@api/types/IProducts';
 import { createAuditLog } from '@api/utils/auditLog';
 import { checkWarehouseAccess } from '@api/middlewares/warehouseAccess';
 
+async function nextNumericOrderId(type: string): Promise<string> {
+  const latest = await getLatestBill(type);
+  let candidate = parseInt(latest, 10) + 1;
+  // Skip over any numeric order ids that already exist (gaps, manual ids or
+  // concurrent devices) so a duplicate number is never minted.
+  while (await Bill.exists({ type, orderId: String(candidate) })) {
+    candidate += 1;
+  }
+  return String(candidate);
+}
+
 async function ensureStockMovementReference(reference: string): Promise<void> {
   // Make bill-related stock movement creation idempotent: replaying the same
   // bill (via sync) must not create duplicate movements.
@@ -55,13 +66,22 @@ const createOne = async (req: IUserIdRequest, res: Response, next: NextFunction)
       }
     }
 
-    const finalOrderId = orderId && String(orderId).trim()
-      ? String(orderId).trim()
-      : type === 'POS'
-        ? `POS-${String((await getLatestPosBillNumber()) + 1).padStart(4, '0')}`
-        : type === 'DELIVERY' && body.source === 'POS'
-          ? `POS-DEL-${String((await getLatestPosDeliveryNumber()) + 1).padStart(4, '0')}`
-          : String(parseInt(await getLatestBill(type), 10) + 1);
+    const requestedOrderId = orderId && String(orderId).trim() ? String(orderId).trim() : '';
+
+    let finalOrderId: string;
+    if (requestedOrderId) {
+      // A client-provided number is only a suggestion: if it already exists for
+      // this type, auto-assign the next free number instead of creating a
+      // duplicate (desktop + mobile can otherwise collide).
+      const exists = await Bill.exists({ type, orderId: requestedOrderId });
+      finalOrderId = exists ? await nextNumericOrderId(type) : requestedOrderId;
+    } else if (type === 'POS') {
+      finalOrderId = `POS-${String((await getLatestPosBillNumber()) + 1).padStart(4, '0')}`;
+    } else if (type === 'DELIVERY' && body.source === 'POS') {
+      finalOrderId = `POS-DEL-${String((await getLatestPosDeliveryNumber()) + 1).padStart(4, '0')}`;
+    } else {
+      finalOrderId = await nextNumericOrderId(type);
+    }
 
     // Idempotent sync: if the same document id is being replayed, return the
     // existing record instead of creating a duplicate.
@@ -431,6 +451,19 @@ const getAllBills = async (req: IUserIdRequest, res: Response, next: NextFunctio
   }
 };
 
+const checkOrderId = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
+  try {
+    const { type, orderId: billOrderId } = req.params;
+    if (!type || !billOrderId) {
+      return res.status(400).send({ message: 'type and orderId are required' });
+    }
+    const exists = await Bill.exists({ type, orderId: billOrderId });
+    return res.status(200).send({ exists: !!exists });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const getSingleBill = async (req: IUserIdRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
@@ -493,5 +526,6 @@ export {
   getBillsOfType,
   getAllBills,
   getSingleBill,
+  checkOrderId,
   updateContent,
 };
