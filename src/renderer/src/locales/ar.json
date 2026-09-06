@@ -448,6 +448,7 @@
   "googleMapsApiKeyPlaceholder": "AIza...",
   "googleMapsApiKeyDesc": "يُستخدم لاختيار العنوان على الخريطة (الجزائر فقط). احصل على مفتاح من Google Cloud Console.",
   "pickOnMap": "الخريطة",
+  "hideMap": "إخفاء الخريطة",
   "pickAddressFromMap": "اختر العنوان من الخريطة",
   "loadingMap": "جارٍ تحميل الخريطة",
   "mapPickHint": "انقر على الخريطة أو اسحب العلامة لتعبئة العنوان.",

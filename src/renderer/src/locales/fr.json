@@ -461,6 +461,7 @@
   "googleMapsApiKeyPlaceholder": "AIza...",
   "googleMapsApiKeyDesc": "Utilisée pour choisir l'adresse sur la carte (Algérie uniquement). Obtenez une clé depuis Google Cloud Console.",
   "pickOnMap": "Carte",
+  "hideMap": "Masquer la carte",
   "pickAddressFromMap": "Choisir l'adresse sur la carte",
   "loadingMap": "Chargement de la carte",
   "mapPickHint": "Cliquez sur la carte ou déplacez le marqueur pour renseigner l'adresse.",

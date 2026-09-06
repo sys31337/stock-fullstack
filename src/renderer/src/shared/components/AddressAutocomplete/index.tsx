@@ -23,6 +23,8 @@ interface AddressAutocompleteProps {
   onPlaceSelect: (result: MapPickResult) => void;
   label?: string;
   errorMessage?: string;
+  /** Notifies the parent when the suggestion dropdown opens/closes. */
+  onOpenStateChange?: (open: boolean) => void;
 }
 
 interface Prediction {
@@ -49,6 +51,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   onPlaceSelect,
   label,
   errorMessage,
+  onOpenStateChange,
 }) => {
   const { data: settings } = useGetSettings();
   const mapsApiKey = settings?.googleMapsApiKey || '';
@@ -130,6 +133,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     return () => window.clearTimeout(timeout);
   }, [value, ready]);
 
+  const showDropdown = focused && (predictions.length > 0 || loading);
+
   // Position the portal dropdown under the input.
   useEffect(() => {
     const el = inputRef.current;
@@ -140,6 +145,28 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     const rect = el.getBoundingClientRect();
     setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
   }, [predictions, focused, loading]);
+
+  // Keep the dropdown glued to the input when the modal scrolls or the window resizes.
+  useEffect(() => {
+    if (!showDropdown) return;
+    const reposition = () => {
+      const el = inputRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    };
+    document.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => {
+      document.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+    };
+  }, [showDropdown]);
+
+  // Notify the parent about the dropdown state (so the map can ignore clicks meanwhile).
+  useEffect(() => {
+    onOpenStateChange?.(showDropdown);
+  }, [showDropdown, onOpenStateChange]);
 
   // Close the dropdown when clicking outside.
   useEffect(() => {
@@ -184,7 +211,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       }
       setPredictions([]);
       setFocused(false);
-      inputRef.current?.blur();
     },
     [onChange, onPlaceSelect]
   );
@@ -212,8 +238,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  const showDropdown = focused && (predictions.length > 0 || loading);
-
   return (
     <div className="w-full" data-address-autocomplete>
       {label && (
@@ -239,8 +263,15 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       {showDropdown && dropdownPos && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed z-[100001] rounded-lg border bg-popover shadow-xl text-popover-foreground overflow-hidden"
-              style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
+              data-address-autocomplete
+              className="fixed rounded-lg border bg-popover shadow-xl text-popover-foreground overflow-hidden"
+              style={{
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+                width: dropdownPos.width,
+                zIndex: 100002,
+                pointerEvents: 'auto',
+              }}
               onMouseDown={(e) => e.preventDefault() /* keep input focus while clicking */}
             >
               {loading && (

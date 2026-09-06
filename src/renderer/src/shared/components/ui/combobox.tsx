@@ -92,17 +92,22 @@ export function Combobox({
       </div>
 
       {open && (
-        <div className="absolute z-[80] mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
-          <div className="p-1">
+        <div className="absolute z-[80] mt-1 max-h-60 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md flex flex-col">
+          <div className="p-1 shrink-0">
             <input
+              ref={(el) => {
+                if (el && !el.hasAttribute('data-autofocused')) {
+                  el.setAttribute('data-autofocused', '');
+                  el.focus({ preventScroll: true });
+                }
+              }}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t('search')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              autoFocus
             />
           </div>
-          <div className="overflow-y-auto max-h-[200px]">
+          <div className="overflow-y-auto flex-1 min-h-0">
             {filteredOptions.length === 0 ? (
               loading ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">{t('loading')}...</div>

@@ -28,12 +28,14 @@ interface MapPickerProps {
   lng?: number;
   onPick: (result: MapPickResult) => void;
   onClose?: () => void;
+  /** Disable map interaction (e.g. while the address dropdown is open). */
+  interactive?: boolean;
 }
 
 const isValidCoordinate = (v: any): v is number =>
   typeof v === 'number' && !isNaN(v) && v !== 0;
 
-const MapPicker: React.FC<MapPickerProps> = ({ apiKey, lat, lng, onPick, onClose }) => {
+const MapPicker: React.FC<MapPickerProps> = ({ apiKey, lat, lng, onPick, onClose, interactive = true }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -174,7 +176,7 @@ const MapPicker: React.FC<MapPickerProps> = ({ apiKey, lat, lng, onPick, onClose
         <div
           ref={containerRef}
           className="h-full w-full"
-          style={{ minHeight: 256, transform: 'translateZ(0)' }}
+          style={{ minHeight: 256, transform: 'translateZ(0)', pointerEvents: interactive ? 'auto' : 'none' }}
         />
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted/40 text-muted-foreground">

@@ -46,6 +46,8 @@ const CustomerModal = ({ customer, type, trigger }: CustomerModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
+  const [showMap, setShowMap] = useState(false);
+  const [autocompleteOpen, setAutocompleteOpen] = useState(false);
   const [channels, setChannels] = useState<Record<Channel, boolean>>({ whatsapp: false, viber: false, telegram: false });
 
   const isEdit = !!customer;
@@ -64,6 +66,8 @@ const CustomerModal = ({ customer, type, trigger }: CustomerModalProps) => {
         viber: !!customer?.viber,
         telegram: !!customer?.telegram,
       });
+      setShowMap(false);
+      setAutocompleteOpen(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, customer]);
@@ -232,30 +236,52 @@ const CustomerModal = ({ customer, type, trigger }: CustomerModalProps) => {
             </div>
 
             <div className="col-span-full">
-              <AddressAutocomplete
-                value={values.address as string}
-                onChange={(v) => setFieldValue('address', v)}
-                onPlaceSelect={handlePlacePick}
-                label={t('address')}
-                errorMessage={getError('address')}
-              />
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <AddressAutocomplete
+                    value={values.address as string}
+                    onChange={(v) => setFieldValue('address', v)}
+                    onPlaceSelect={handlePlacePick}
+                    onOpenStateChange={setAutocompleteOpen}
+                    label={t('address')}
+                    errorMessage={getError('address')}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowMap((v) => !v)}
+                  className={cn(
+                    'h-10 shrink-0 gap-1.5 text-muted-foreground',
+                    showMap && 'border-primary text-primary'
+                  )}
+                  title={t('pickOnMap')}
+                >
+                  <MapPin className="h-4 w-4" />
+                  <span className="text-xs">{t(showMap ? 'hideMap' : 'pickOnMap')}</span>
+                </Button>
+              </div>
             </div>
 
-            <div className="col-span-full">
-              {mapsApiKey ? (
-                <MapPicker
-                  apiKey={mapsApiKey}
-                  lat={Number(values.addressLat) || undefined}
-                  lng={Number(values.addressLng) || undefined}
-                  onPick={handlePlacePick}
-                />
-              ) : (
-                <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-5 text-center">
-                  <MapPin className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">{t('mapsApiKeyMissing')}</p>
-                </div>
-              )}
-            </div>
+            {showMap && (
+              <div className="col-span-full">
+                {mapsApiKey ? (
+                  <MapPicker
+                    apiKey={mapsApiKey}
+                    lat={Number(values.addressLat) || undefined}
+                    lng={Number(values.addressLng) || undefined}
+                    onPick={handlePlacePick}
+                    interactive={!autocompleteOpen}
+                    onClose={() => setShowMap(false)}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-5 text-center">
+                    <MapPin className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">{t('mapsApiKeyMissing')}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="col-span-full sm:col-span-1">
               <CustomInput
