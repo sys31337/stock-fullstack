@@ -7,12 +7,20 @@ import type {
   RelayStateSnapshot,
   SyncStatusSnapshot,
 } from './relay';
+import type {
+  UpdateAvailableDto,
+  UpdateDownloadedDto,
+  UpdateErrorDto,
+  UpdatePreloadApi,
+  UpdateProgressDto,
+} from './updates';
 
 interface ElectronWindow extends Window {
   electron?: ElectronAPI;
   api?: {
     getBaseAppUrl: () => string;
     relay: RelayPreloadApi;
+    updates: UpdatePreloadApi;
   }
 }
 
@@ -57,6 +65,41 @@ const api: ElectronWindow['api'] = {
       const listener = (_e: IpcRendererEvent, message: import('./relay').SyncBroadcastMessage): void => cb(message);
       ipcRenderer.on('sync:data-change', listener);
       return () => { ipcRenderer.removeListener('sync:data-change', listener); };
+    },
+  },
+  updates: {
+    check: () => ipcRenderer.invoke('update:check'),
+    install: () => ipcRenderer.invoke('update:install'),
+    getStatus: () => ipcRenderer.invoke('update:get-status'),
+    onChecking: (cb: () => void) => {
+      const listener = (): void => cb();
+      ipcRenderer.on('update:checking', listener);
+      return () => { ipcRenderer.removeListener('update:checking', listener); };
+    },
+    onAvailable: (cb: (payload: UpdateAvailableDto) => void) => {
+      const listener = (_e: IpcRendererEvent, payload: UpdateAvailableDto): void => cb(payload);
+      ipcRenderer.on('update:available', listener);
+      return () => { ipcRenderer.removeListener('update:available', listener); };
+    },
+    onNotAvailable: (cb: () => void) => {
+      const listener = (): void => cb();
+      ipcRenderer.on('update:not-available', listener);
+      return () => { ipcRenderer.removeListener('update:not-available', listener); };
+    },
+    onProgress: (cb: (payload: UpdateProgressDto) => void) => {
+      const listener = (_e: IpcRendererEvent, payload: UpdateProgressDto): void => cb(payload);
+      ipcRenderer.on('update:download-progress', listener);
+      return () => { ipcRenderer.removeListener('update:download-progress', listener); };
+    },
+    onDownloaded: (cb: (payload: UpdateDownloadedDto) => void) => {
+      const listener = (_e: IpcRendererEvent, payload: UpdateDownloadedDto): void => cb(payload);
+      ipcRenderer.on('update:downloaded', listener);
+      return () => { ipcRenderer.removeListener('update:downloaded', listener); };
+    },
+    onError: (cb: (payload: UpdateErrorDto) => void) => {
+      const listener = (_e: IpcRendererEvent, payload: UpdateErrorDto): void => cb(payload);
+      ipcRenderer.on('update:error', listener);
+      return () => { ipcRenderer.removeListener('update:error', listener); };
     },
   },
 };

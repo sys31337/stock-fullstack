@@ -485,7 +485,7 @@ async function seedCustomers() {
       fullname: name,
       address: `${rand(1, 300)} Rue Example, ${pick(WILAYAS).split(' - ')[1]}`,
       phoneNumber: `05${rand(10, 99)} ${rand(100, 999)} ${rand(1000, 9999)}`,
-      email: `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@example.com`,
+      email: `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@solustock.net`,
       wilaya: pick(WILAYAS),
       hasWhatsapp: Math.random() > 0.4,
       rc: `${rand(10, 99)}/00-${rand(100000, 999999)}`,

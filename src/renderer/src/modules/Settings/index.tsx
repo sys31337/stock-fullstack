@@ -8,14 +8,16 @@ import { useToast } from '@web/shared/components/ui/use-toast';
 import showToast from '@web/shared/functions/showToast';
 import { useGetSettings, useUpdateSettings } from '@web/shared/hooks/useSettings';
 import { t } from 'i18next';
-import { Save, Loader2, Package, Building2, LayoutDashboard, X, Store } from 'lucide-react';
+import { Save, Loader2, Package, Building2, LayoutDashboard, X, Store, Download } from 'lucide-react';
 import { cn } from '@web/shared/utils/cn';
+import UpdatesTab from './UpdatesTab';
 
 const TABS = [
   { id: 'stock', label: 'stockTab', icon: Package },
   { id: 'company', label: 'companyTab', icon: Building2 },
   { id: 'dashboard', label: 'dashboardTab', icon: LayoutDashboard },
   { id: 'pos', label: 'posTab', icon: Store },
+  { id: 'updates', label: 'updatesTab', icon: Download },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -55,6 +57,13 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const [tvaEnabled, setTvaEnabled] = useState(true);
   const [allowPosCredit, setAllowPosCredit] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [appVersion, setAppVersion] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      window.api.updates.getStatus().then((s) => setAppVersion(s.currentVersion)).catch(() => {});
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isFetched && settings) {
@@ -151,7 +160,9 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
           </aside>
 
           <div className="flex-1 overflow-auto p-5">
-            {!isFetched ? (
+            {activeTab === 'updates' ? (
+              <UpdatesTab />
+            ) : !isFetched ? (
               <div className="flex items-center justify-center h-32 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 <span className="text-sm">{t('loading')}...</span>
@@ -360,6 +371,12 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
               </div>
             ) : null}
           </div>
+        </div>
+        <div className="flex items-center justify-between px-5 py-3 border-t border-border shrink-0">
+          <span className="text-xs text-muted-foreground">SoluStock</span>
+          <span className="text-xs font-medium text-foreground">
+            {t('currentVersion')} : v{appVersion || '…'}
+          </span>
         </div>
       </div>
     </>

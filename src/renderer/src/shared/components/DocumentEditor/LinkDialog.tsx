@@ -44,7 +44,7 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, initialUrl, onConfirm, on
             type="url"
             value={url}
             onChange={e => setUrl(e.target.value)}
-            placeholder="https://example.com"
+            placeholder="https://solustock.net"
             className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 mb-3"
           />
           <div className="flex justify-end gap-2">

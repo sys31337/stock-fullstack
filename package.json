@@ -1,10 +1,10 @@
 {
   "name": "solustock-20-desktop",
   "productName": "SoluStock 2.0",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "solustock.net",
   "homepage": ".",
   "scripts": {
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",

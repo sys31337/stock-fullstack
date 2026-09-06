@@ -9,6 +9,7 @@ import { setSkipDefaultSeeding } from './api/config/mongoose';
 import { createApiServer } from './api/main';
 import { getRelayManager } from './relay/manager';
 import { registerRelayIpc } from './relay/ipc';
+import { initUpdater, runStartupUpdateCheck } from './updater';
 
 if (is.dev) {
   try {
@@ -110,6 +111,7 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.electron');
 
+  initUpdater();
   registerRelayIpc();
   relayManager.start();
 
@@ -132,6 +134,14 @@ app.whenReady().then(async () => {
     dialog.showErrorBox('Database Error', `Failed to start MongoDB.\n\n${err.message}`);
     app.quit();
   });
+
+  if (!is.dev) {
+    // Look for a new release shortly after startup. Downloads run in the
+    // background and the user is only prompted once it is ready to install.
+    setTimeout(() => {
+      runStartupUpdateCheck();
+    }, 20000);
+  }
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
