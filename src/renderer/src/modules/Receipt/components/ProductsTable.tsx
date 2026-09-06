@@ -53,10 +53,11 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ productsValues, setProduc
   const handleProductSelect = (index: number, product: IProduct) => {
     const rowsInput = [...productsValues];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id: _productId, ...productData } = product;
+    const { id: _productId, buyPrice: _buyPrice, ...productData } = product;
     rowsInput[index] = {
       ...rowsInput[index],
       ...productData,
+      buyPrice: 0,
       quantity: 1,
       totalHT: 0,
       totalTTC: 0

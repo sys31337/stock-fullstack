@@ -287,6 +287,7 @@ const EditDeliveryBill: React.FC<EditDeliveryBillProps> = ({ billId, isOpen: pro
                     productsValues={productsValues}
                     setProductsValues={setProductsValues}
                     priceTier={priceTier}
+                    showBuyPrice={false}
                   />
                 </CardContent>
               </Card>

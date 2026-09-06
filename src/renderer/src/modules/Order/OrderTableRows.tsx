@@ -20,9 +20,10 @@ interface OrderTableRowsProps {
   handleProductSelect: (index: number, product: IProduct) => void;
   priceTier: number;
   showTva: boolean;
+  showBuyPrice?: boolean;
 }
 
-const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva }) => {
+const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, deleteTableRows, handleChange, handleProductSelect, priceTier, showTva, showBuyPrice = true }) => {
   const { defaultId: warehouse } = useAvailableWarehouses();
   const { data: allProducts, isFetched } = useGetAllProducts(warehouse ? { warehouse } : undefined);
   const { toast } = useToast();
@@ -209,13 +210,15 @@ const OrderTableRows: React.FC<OrderTableRowsProps> = ({ index, data, products, 
             readOnly
           />
 
-          <Input
-            name="buyPrice"
-            type="number"
-            className={cn(numCls, "w-[70px] shrink-0 font-medium", readonlyCls)}
-            value={buyPrice}
-            readOnly
-          />
+          {showBuyPrice && (
+            <Input
+              name="buyPrice"
+              type="number"
+              className={cn(numCls, "w-[70px] shrink-0 font-medium", readonlyCls)}
+              value={buyPrice}
+              readOnly
+            />
+          )}
 
           {showTva && (
             <div className="relative shrink-0">

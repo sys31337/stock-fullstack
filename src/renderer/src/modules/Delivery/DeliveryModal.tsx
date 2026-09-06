@@ -311,6 +311,7 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                     productsValues={productsValues}
                     setProductsValues={setProductsValues}
                     priceTier={priceTier}
+                    showBuyPrice={false}
                   />
                 </CardContent>
               </Card>

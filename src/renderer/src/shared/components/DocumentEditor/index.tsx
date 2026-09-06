@@ -227,12 +227,13 @@ ${bill.description ? `<table style="width:100%;border-collapse:collapse;margin-t
   const productRows = bill.products.map((p: any, k: number) => {
     const productTotal = Number(p.buyPrice) * Number(p.quantity) * Number(p.stack)
     const productTva = tvaEnabled ? Number(p.buyPrice) * Number(p.quantity) * Number(p.stack) * Number(p.tva || 0) / 100 : 0
+    const buyPriceCell = bill.type === 'DELIVERY' ? '' : `<td align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${p.buyPrice}`)}</td>`
     return `<tr>
       <td align="center" style="width:5%;border:1px solid #000;padding:5px 0;font-size:10px">${k + 1}</td>
       <td align="center" style="width:15%;border:1px solid #000;padding:5px 0;font-size:10px">${esc(p.barCode)}</td>
       <td align="center" style="width:35%;border:1px solid #000;padding:5px 0;font-size:10px">${esc(p.productName)}</td>
       <td align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px">${Number(p.quantity)} \u00D7 ${Number(p.stack)}</td>
-      <td align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${p.buyPrice}`)}</td>
+      ${buyPriceCell}
       <td align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${productTotal}`)}</td>
       <td align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;font-weight:bold">${price(`${productTotal + productTva}`)}</td>
     </tr>`
@@ -256,7 +257,7 @@ ${bill.description ? `<table style="width:100%;border-collapse:collapse;margin-t
     <th align="center" style="width:15%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">${esc(t('reference'))}</th>
     <th align="center" style="width:35%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">D\u00E9signation</th>
     <th align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Quantit\u00E9</th>
-    <th align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Prix</th>
+    ${bill.type === 'DELIVERY' ? '' : '<th align="center" style="width:10%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Prix</th>'}
     <th align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Total (HT)</th>
     <th align="center" style="width:12.5%;border:1px solid #000;padding:5px 0;font-size:10px;background:#ddd">Total (TTC)</th>
   </tr>

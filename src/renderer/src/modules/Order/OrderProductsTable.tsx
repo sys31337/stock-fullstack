@@ -13,6 +13,7 @@ interface OrderProductsTableProps {
   productsValues: IProduct[];
   setProductsValues: (v: IProduct[]) => void;
   priceTier: number;
+  showBuyPrice?: boolean;
 }
 
 const colorMap: Record<number, string> = {
@@ -21,7 +22,7 @@ const colorMap: Record<number, string> = {
   3: 'text-green-600',
 };
 
-const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues, setProductsValues, priceTier }) => {
+const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues, setProductsValues, priceTier, showBuyPrice = true }) => {
   const { data: settings } = useGetSettings();
   const showTva = settings?.tvaEnabled ?? true;
 
@@ -80,7 +81,7 @@ const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues,
           <span className="flex-1 min-w-[140px]">{t('designation')}</span>
           <span className="w-[50px] shrink-0 text-center">{t('qty')}</span>
           <span className="w-[50px] shrink-0 text-center">{t('units')}</span>
-          <span className="w-[70px] shrink-0 text-center">{t('buyPrice')}</span>
+          {showBuyPrice && <span className="w-[70px] shrink-0 text-center">{t('buyPrice')}</span>}
           {showTva && <span className="w-[45px] shrink-0 text-center">TVA</span>}
           <span className={cn("w-[80px] shrink-0 text-center font-bold", colorMap[priceTier])}>{t('price')}</span>
           <span className="w-[90px] shrink-0 text-right ml-1">{t('total')}</span>
@@ -106,6 +107,7 @@ const OrderProductsTable: React.FC<OrderProductsTableProps> = ({ productsValues,
           handleProductSelect={handleProductSelect}
           priceTier={priceTier}
           showTva={showTva}
+          showBuyPrice={showBuyPrice}
         />
       ))}
 
