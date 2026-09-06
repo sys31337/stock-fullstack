@@ -19,7 +19,6 @@ export interface UseUpdaterReturn {
   hasChecked: boolean;
   busy: boolean;
   check: () => Promise<void>;
-  install: () => Promise<boolean>;
 }
 
 /**
@@ -117,11 +116,6 @@ export function useUpdater(): UseUpdaterReturn {
     }
   };
 
-  const install = async (): Promise<boolean> => {
-    const ok = await window.api.updates.install();
-    return ok === true;
-  };
-
   return {
     phase,
     currentVersion,
@@ -132,6 +126,5 @@ export function useUpdater(): UseUpdaterReturn {
     hasChecked,
     busy,
     check,
-    install,
   };
 }

@@ -18,12 +18,13 @@ const updateSettingsSchema = Joi.object({
   website: Joi.string().allow('').optional(),
   email: Joi.string().allow('').optional(),
   wilaya: Joi.string().allow('').optional(),
+  googleMapsApiKey: Joi.string().allow('').optional(),
   accountNumber: Joi.string().allow('').optional(),
   rib: Joi.string().allow('').optional(),
   articleNumber: Joi.string().allow('').optional(),
   stamp: Joi.number().optional(),
   tva: Joi.number().optional(),
   tvaEnabled: Joi.boolean().optional(),
-}).min(1);
+}).min(1).unknown(true);
 
 export const updateSettingsValidator = validator.body(updateSettingsSchema);

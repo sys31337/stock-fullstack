@@ -12,6 +12,7 @@ import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
 import { useCreateBill } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
+import CustomerInfoButton from '@web/shared/components/CustomerInfoButton';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
 import CustomModal from '@web/shared/components/CustomModal';
@@ -362,6 +363,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ isOpen, onClose, initialHeldDat
                           />
                         </div>
                         <CustomerModal />
+                        <CustomerInfoButton customer={allCustomers?.find((c: any) => c._id === values.customer)} />
                       </div>
                     </div>
                   </div>

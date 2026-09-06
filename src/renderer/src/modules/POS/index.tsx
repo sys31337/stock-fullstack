@@ -38,6 +38,7 @@ import { CartItem, IPosSession } from '@web/shared/types/pos';
 import { IProduct } from '@web/shared/types/product';
 import { ICustomer } from '@web/shared/types/customer';
 import CustomerModal from '@web/shared/components/Customer';
+import CustomerInfoButton from '@web/shared/components/CustomerInfoButton';
 
 interface PosCategory {
   _id: string;
@@ -697,6 +698,7 @@ const POS: React.FC = () => {
                 </button>
               )}
             />
+            <CustomerInfoButton customer={customers?.find((c: ICustomer) => c._id === selectedCustomer)} />
           </div>
         </div>
 

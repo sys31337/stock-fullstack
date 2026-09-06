@@ -73,7 +73,7 @@ export function initUpdater(): void {
 
   autoUpdater.on('download-progress', (progress: ProgressInfo) => {
     broadcast('update:download-progress', {
-      percent: Math.round(progress.percent),
+      percent: progress.percent,
       transferred: progress.transferred,
       total: progress.total,
       bytesPerSecond: progress.bytesPerSecond,
@@ -85,6 +85,16 @@ export function initUpdater(): void {
     knownRemoteVersion = info.version;
     log(`update downloaded: v${info.version}`);
     broadcast('update:downloaded', { version: info.version });
+
+    if (installTriggered) return;
+    installTriggered = true;
+    // Silent install by design: no prompt, the app just restarts with the new
+    // version. The short delay lets the renderer paint the 'downloaded' state
+    // before we quit and the NSIS installer runs.
+    setTimeout(() => {
+      log('installing update silently');
+      autoUpdater.quitAndInstall(true, true);
+    }, 3000);
   });
 
   autoUpdater.on('error', (err: Error) => {
@@ -113,16 +123,6 @@ export function initUpdater(): void {
     } finally {
       checkInProgress = false;
     }
-  });
-
-  ipcMain.handle('update:install', () => {
-    if (installTriggered || !downloadedInfo) return false;
-    installTriggered = true;
-    // Give the ipcMain.handle() promise a chance to resolve before the app quits.
-    setImmediate(() => {
-      autoUpdater.quitAndInstall();
-    });
-    return true;
   });
 
   ipcMain.handle('update:get-status', () => ({

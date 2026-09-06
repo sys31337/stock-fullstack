@@ -15,7 +15,7 @@ import { useGetAllCustomers, useDeleteCustomer } from '@web/shared/hooks/useCust
 import { useToast } from '@web/shared/components/ui/use-toast'
 import { t } from 'i18next'
 import { AiFillDelete, AiFillEdit } from 'react-icons/ai'
-import { FaWhatsapp } from 'react-icons/fa'
+import { FaWhatsapp, FaViber, FaTelegram } from 'react-icons/fa'
 import { Search, Users, Send } from 'lucide-react'
 import RefreshButton from '@web/shared/components/RefreshButton'
 import Pagination from '@web/shared/components/Pagination'
@@ -25,7 +25,7 @@ import { AxiosError } from 'axios'
 import showToast from '@web/shared/functions/showToast'
 import { defaultId } from '@web/config'
 import { cn } from '@web/shared/utils/cn'
-import { getWilayaLabel } from '@web/config/wilayas'
+import { getWilayaLabel, getBaladiyaLabel } from '@web/config/wilayas'
 import i18next from 'i18next'
 
 export type CustomerType = 'All' | 'Client' | 'Supplier'
@@ -196,12 +196,22 @@ const CustomersList: React.FC<CustomersListProps> = ({ open, onOpenChange, initi
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        {customer.hasWhatsapp && <FaWhatsapp className="h-3.5 w-3.5 text-green-500" />}
-                        {customer.phoneNumber || '-'}
+                      <span className="inline-flex items-center gap-1.5 flex-wrap">
+                        {customer.phoneNumber && <span>{customer.phoneNumber}</span>}
+                        {(customer.whatsapp || customer.hasWhatsapp) && <FaWhatsapp className="h-3.5 w-3.5 text-green-500 shrink-0" title={customer.whatsapp || ''} />}
+                        {customer.viber && <FaViber className="h-3.5 w-3.5 text-purple-500 shrink-0" title={customer.viber} />}
+                        {customer.telegram && <FaTelegram className="h-3.5 w-3.5 text-blue-500 shrink-0" title={customer.telegram} />}
+                        {!customer.phoneNumber && !customer.whatsapp && !customer.viber && !customer.telegram && !customer.hasWhatsapp && '-'}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{getWilayaLabel(customer.wilaya, i18next.language)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="leading-tight">
+                        <div>{getWilayaLabel(customer.wilaya, i18next.language)}</div>
+                        {customer.baladiya && (
+                          <div className="text-[10px] text-muted-foreground/70">{getBaladiyaLabel(customer.wilaya, customer.baladiya, i18next.language)}</div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{customer.address || '-'}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{customer.nif || '-'}</TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">{customer.rc || '-'}</TableCell>

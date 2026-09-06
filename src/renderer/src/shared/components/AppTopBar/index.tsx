@@ -17,7 +17,6 @@ import AuditLogs from '@web/modules/AuditLogs'
 import Charges from '@web/modules/Charges'
 import SettingsDrawer from '@web/modules/Settings'
 import ConnectionDrawer from '@web/modules/Connection'
-import UpdaterPrompt from '@web/shared/components/UpdaterPrompt'
 import { useLogout } from '@web/shared/hooks/useAuthentication'
 import authService from '@web/shared/services/auth'
 import i18next, { t } from 'i18next'
@@ -475,7 +474,6 @@ const AppTopBar: React.FC<AppTopBarProps> = ({ children }) => {
         {openAllInvoices && <AllInvoices isTopBar open={openAllInvoices} onOpenChange={setOpenAllInvoices} />}
         <SettingsDrawer isOpen={openSettings} onClose={() => setOpenSettings(false)} />
         <ConnectionDrawer isOpen={openConnection} onClose={() => setOpenConnection(false)} />
-        <UpdaterPrompt />
       </div>
     </ModalContext.Provider>
   )

@@ -69,7 +69,6 @@ const api: ElectronWindow['api'] = {
   },
   updates: {
     check: () => ipcRenderer.invoke('update:check'),
-    install: () => ipcRenderer.invoke('update:install'),
     getStatus: () => ipcRenderer.invoke('update:get-status'),
     onChecking: (cb: () => void) => {
       const listener = (): void => cb();

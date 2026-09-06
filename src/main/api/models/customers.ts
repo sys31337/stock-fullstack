@@ -9,10 +9,17 @@ const customersSchema = new Schema({
   phoneNumber: String,
   email: String,
   wilaya: String,
+  daira: String,
+  baladiya: String,
+  addressLat: { type: Number, default: 0 },
+  addressLng: { type: Number, default: 0 },
   hasWhatsapp: {
     type: Boolean,
     default: false
   },
+  whatsapp: String,
+  viber: String,
+  telegram: String,
   rc: String,
   nif: String,
   nis: String,

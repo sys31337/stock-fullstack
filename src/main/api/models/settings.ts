@@ -16,6 +16,7 @@ const settingsSchema = new Schema({
   website: String,
   email: String,
   wilaya: String,
+  googleMapsApiKey: String,
   accountNumber: String,
   rib: String,
   articleNumber: String,

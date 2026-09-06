@@ -22,6 +22,7 @@ type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   handleChange?: (e: React.ChangeEvent<Any>) => void;
   setFieldValue?: (fieldName: string, value: Date | string) => void;
   handleBlur?: (e: React.FocusEvent<Any>) => void;
+  onSelectChange?: (fieldName: string, value: string) => void;
   defaultValue?: string | Date | number;
   value?: string | Date | number;
   errorMessage?: ReactNode;
@@ -60,6 +61,7 @@ const CustomInput = (props: CustomInputProps) => {
 
   const onSelectChange = (value: string) => {
     setFieldValue && setFieldValue(name, value);
+    props.onSelectChange && props.onSelectChange(name, value);
   };
 
   const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {

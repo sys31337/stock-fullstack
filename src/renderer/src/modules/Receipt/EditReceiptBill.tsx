@@ -14,6 +14,7 @@ import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useUpdateBill, useGetBillInfo } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
+import CustomerInfoButton from '@web/shared/components/CustomerInfoButton';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
 import CategoryModal from '@web/shared/components/Category';
@@ -310,6 +311,7 @@ const EditReceiptBill: React.FC<EditReceiptBillProps> = ({ justCreated, billId, 
                       className="mb-0 w-full"
                     />
                     <CustomerModal />
+                    <CustomerInfoButton customer={allCustomers?.find((c: any) => c._id === values.customer)} />
                   </div>
                   <div className="flex items-end gap-2">
                     <CustomInput

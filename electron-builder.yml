@@ -11,11 +11,8 @@ files:
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-extraResources:
-  - from: src/mongodb
-    to: mongodb
-    filter:
-      - '**/*'
+# mongod.exe + vc_redist.x64.exe are downloaded on first launch (see src/main/ensureMongodb.ts)
+# and are therefore no longer shipped inside the installer.
 asarUnpack:
   - resources/**
 win:

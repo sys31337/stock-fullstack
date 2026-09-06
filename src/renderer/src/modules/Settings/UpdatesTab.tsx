@@ -15,7 +15,6 @@ const UpdatesTab = () => {
     hasChecked,
     busy,
     check,
-    install,
   } = useUpdater();
 
   return (
@@ -59,11 +58,11 @@ const UpdatesTab = () => {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              {t('downloadProgress', { percent: progress?.percent ?? 0 })}
+              {t('downloadProgress', { percent: Math.round(progress?.percent ?? 0) })}
             </div>
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-primary transition-all"
+                className="h-full bg-primary transition-[width] duration-300 ease-out rounded-full"
                 style={{ width: `${progress?.percent ?? 0}%` }}
               />
             </div>
@@ -101,12 +100,6 @@ const UpdatesTab = () => {
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
-        {phase === 'downloaded' && (
-          <Button onClick={() => install()} className="gap-2">
-            <Download className="h-4 w-4" />
-            {t('restartNow')}
-          </Button>
-        )}
         <Button
           onClick={() => check()}
           disabled={busy || phase === 'checking'}

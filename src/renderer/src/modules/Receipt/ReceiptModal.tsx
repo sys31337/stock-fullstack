@@ -14,6 +14,7 @@ import { useGetAllCategories } from '@web/shared/hooks/useCategories';
 import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
+import CustomerInfoButton from '@web/shared/components/CustomerInfoButton';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
 import CategoryModal from '@web/shared/components/Category';
@@ -344,6 +345,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, initialHel
                           />
                         </div>
                         <CustomerModal />
+                        <CustomerInfoButton customer={allCustomers?.find((c: any) => c._id === values.customer)} />
                       </div>
                     </div>
                     <div>

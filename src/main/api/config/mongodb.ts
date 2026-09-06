@@ -103,7 +103,8 @@ function spawnMongod(port: number, extraArgs: string[] = []): ChildProcess {
   if (!fs.existsSync(mongodPath)) {
     throw new Error(
       `mongod.exe not found at "${mongodPath}".\n` +
-      'If VC++ Redistributable is missing, run vc_redist.x64.exe from the app resources.'
+      'It should be downloaded automatically on first launch.\n' +
+      'Check your internet connection and restart SoluStock.'
     );
   }
 

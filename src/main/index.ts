@@ -10,6 +10,7 @@ import { createApiServer } from './api/main';
 import { getRelayManager } from './relay/manager';
 import { registerRelayIpc } from './relay/ipc';
 import { initUpdater, runStartupUpdateCheck } from './updater';
+import { ensureMongodbBinaries } from './ensureMongodb';
 
 if (is.dev) {
   try {
@@ -126,6 +127,24 @@ app.whenReady().then(async () => {
   });
 
   server.on('error', (e) => console.error('[server] Error:', e));
+
+  if (!is.dev) {
+    // packaged app: mongod.exe + VC++ redistributable are not shipped, they are
+    // downloaded on first launch from the update server.
+    try {
+      await ensureMongodbBinaries();
+    } catch (err) {
+      console.error('Failed to prepare MongoDB:', err);
+      dialog.showErrorBox(
+        'Database Setup Error',
+        `SoluStock could not prepare its database engine.\n\n${
+          err instanceof Error ? err.message : String(err)
+        }\n\nCheck your internet connection and restart SoluStock.`
+      );
+      app.quit();
+      return;
+    }
+  }
 
   startMongoDB().then(() => {
     createWindow();

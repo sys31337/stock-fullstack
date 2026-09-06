@@ -49,6 +49,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
   const [website, setWebsite] = useState('');
   const [email, setEmail] = useState('');
   const [wilaya, setWilaya] = useState('');
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [rib, setRib] = useState('');
   const [articleNumber, setArticleNumber] = useState('');
@@ -82,6 +83,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       setWebsite(settings.website ?? '');
       setEmail(settings.email ?? '');
       setWilaya(settings.wilaya ?? '');
+      setGoogleMapsApiKey(settings.googleMapsApiKey ?? '');
       setAccountNumber(settings.accountNumber ?? '');
       setRib(settings.rib ?? '');
       setArticleNumber(settings.articleNumber ?? '');
@@ -101,7 +103,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
       return { dashboardStatsEnabled, dashboardStatsBlurred };
     }
     if (activeTab === 'company') {
-      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, accountNumber, rib, articleNumber, stamp, tva, tvaEnabled };
+      return { companyName, rc, nif, ai, nis, companyAddress, companyPhone, mobile, website, email, wilaya, googleMapsApiKey, accountNumber, rib, articleNumber, stamp, tva, tvaEnabled };
     }
     if (activeTab === 'pos') {
       return { allowPosCredit };
@@ -338,6 +340,16 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ isOpen, onClose }) => {
                   <div>
                     <Label className="text-sm font-medium">{t('wilaya')}</Label>
                     <Input value={wilaya} onChange={(e) => { setWilaya(e.target.value); setDirty(true); }} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">{t('googleMapsApiKey')}</Label>
+                    <Input
+                      value={googleMapsApiKey}
+                      onChange={(e) => { setGoogleMapsApiKey(e.target.value); setDirty(true); }}
+                      className="mt-1 font-mono"
+                      placeholder={t('googleMapsApiKeyPlaceholder')}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{t('googleMapsApiKeyDesc')}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>

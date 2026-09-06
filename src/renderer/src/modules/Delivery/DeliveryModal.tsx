@@ -10,10 +10,10 @@ import CustomInput from '@web/shared/components/CustomForm/Input'
 import OrderProductsTable from '@web/modules/Order/OrderProductsTable';
 import { price, randomId } from '@web/shared/functions/words';
 import { useGetAllCustomers } from '@web/shared/hooks/useCustomers';
-import { useSalespeople } from '@web/shared/hooks/useReports';
 import { useCreateBill, useGetLatestBillNumber } from '@web/shared/hooks/useBill';
 import { useGetSettings } from '@web/shared/hooks/useSettings';
 import CustomerModal from '@web/shared/components/Customer';
+import CustomerInfoButton from '@web/shared/components/CustomerInfoButton';
 import showToast from '@web/shared/functions/showToast';
 import { AxiosError } from 'axios';
 import CustomModal from '@web/shared/components/CustomModal';
@@ -42,7 +42,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
 
   const { toast } = useToast();
   const { data: allCustomers, refetch } = useGetAllCustomers();
-  const { data: salespeople } = useSalespeople();
   const { data: latestBillNumber, isFetched } = useGetLatestBillNumber('DELIVERY');
   const { mutateAsync: createBill } = useCreateBill();
   const { data: settings } = useGetSettings();
@@ -63,7 +62,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
     orderId: '',
     description: '',
     customer: '',
-    salesPerson: '',
     orderTotalHT: state.orderTotalHT,
     orderTotalTTC: state.orderTotalTTC,
     orderPaid: state.orderPaid,
@@ -182,7 +180,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
         orderId: String((latestBillNumber ?? 0) + 2),
         description: '',
         customer: '',
-        salesPerson: '',
         orderTotalHT: state.orderTotalHT,
         orderTotalTTC: state.orderTotalTTC,
         orderPaid: state.orderPaid,
@@ -238,7 +235,6 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
       orderId: String((latestBillNumber ?? 0) + 1),
       description: '',
       customer: '',
-      salesPerson: '',
       orderTotalHT: '0.00',
       orderTotalTTC: '0.00',
       orderPaid: '0.00',
@@ -372,22 +368,8 @@ const DeliveryModal: React.FC<DeliveryModalProps> = ({ isOpen, onClose, initialH
                           />
                         </div>
                         <CustomerModal />
+                        <CustomerInfoButton customer={allCustomers?.find((c: any) => c._id === values.customer)} />
                       </div>
-                    </div>
-                    <div>
-                      <Label className="text-[10px] font-medium text-muted-foreground mb-1 block">{t('salesPerson')}</Label>
-                      <CustomInput
-                        name="salesPerson"
-                        setFieldValue={setFieldValue}
-                        handleBlur={handleBlur}
-                        value={values.salesPerson}
-                        selectOptions={
-                          salespeople && salespeople.map((s) => ({ label: s.fullname, value: s._id }))
-                        }
-                        isSelect={true}
-                        inputSize="sm"
-                        className="[&_>div>div]:rounded-lg"
-                      />
                     </div>
                   </div>
                 </CardContent>
