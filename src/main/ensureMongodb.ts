@@ -6,6 +6,7 @@ import https from 'https';
 import path from 'path';
 import { URL } from 'url';
 import { promisify } from 'util';
+import { getMongoBinariesDir } from './api/config/mongodb';
 
 const execFileAsync = promisify(execFile);
 
@@ -26,10 +27,14 @@ function log(message: string): void {
   console.error(`[mongodb-bootstrap] ${message}`);
 }
 
-/** Where mongod.exe must end up for the packaged app (same place extraResources used to put it). */
+/**
+ * Where mongod.exe must live for the packaged app. Stored under %APPDATA%%
+ * instead of the install dir because the installer replaces that directory on
+ * every update — this folder survives updates (and so avoids re-downloading
+ * the ~55 MB binary on every release).
+ */
 function targetMongodPath(): string {
-  const resourcesPath = (process as any).resourcesPath as string | undefined;
-  return path.join(resourcesPath ?? app.getAppPath(), 'mongodb', 'mongod.exe');
+  return path.join(getMongoBinariesDir(), 'mongod.exe');
 }
 
 function removeQuietly(filePath: string): void {

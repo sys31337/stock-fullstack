@@ -380,6 +380,8 @@
   "downloadProgress": "Downloading… {{percent}}%",
   "updateDownloaded": "Update ready",
   "updateDownloadedMessage": "Version {{version}} has been downloaded. Restart SoluStock to apply it.",
+  "restartNow": "Restart now",
+  "later": "Later",
   "currentVersion": "Current version",
   "newVersion": "New version",
   "updateError": "Update failed",

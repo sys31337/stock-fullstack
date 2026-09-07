@@ -33,6 +33,7 @@ export interface UpdateErrorDto {
 
 export interface UpdatePreloadApi {
   check: () => Promise<UpdateCheckResultDto>;
+  install: () => Promise<boolean>;
   getStatus: () => Promise<UpdateStatusDto>;
   onChecking: (cb: () => void) => () => void;
   onAvailable: (cb: (payload: UpdateAvailableDto) => void) => () => void;

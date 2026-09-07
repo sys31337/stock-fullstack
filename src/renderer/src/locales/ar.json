@@ -370,6 +370,8 @@
   "downloadProgress": "جارٍ التنزيل… {{percent}}%",
   "updateDownloaded": "التحديث جاهز",
   "updateDownloadedMessage": "تم تنزيل الإصدار {{version}}. أعد تشغيل SoluStock لتثبيته.",
+  "restartNow": "إعادة التشغيل الآن",
+  "later": "لاحقًا",
   "currentVersion": "الإصدار الحالي",
   "newVersion": "الإصدار الجديد",
   "updateError": "فشل التحديث",

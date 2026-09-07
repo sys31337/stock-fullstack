@@ -380,6 +380,8 @@
   "downloadProgress": "Téléchargement… {{percent}}%",
   "updateDownloaded": "Mise à jour prête",
   "updateDownloadedMessage": "La version {{version}} a été téléchargée. Redémarrez SoluStock pour l'installer.",
+  "restartNow": "Redémarrer maintenant",
+  "later": "Plus tard",
   "currentVersion": "Version actuelle",
   "newVersion": "Nouvelle version",
   "updateError": "Échec de la mise à jour",

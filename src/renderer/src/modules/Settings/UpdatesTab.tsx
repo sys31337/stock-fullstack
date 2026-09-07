@@ -15,6 +15,7 @@ const UpdatesTab = () => {
     hasChecked,
     busy,
     check,
+    install,
   } = useUpdater();
 
   return (
@@ -100,6 +101,12 @@ const UpdatesTab = () => {
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
+        {phase === 'downloaded' && (
+          <Button onClick={() => install()} className="gap-2">
+            <Download className="h-4 w-4" />
+            {t('restartNow')}
+          </Button>
+        )}
         <Button
           onClick={() => check()}
           disabled={busy || phase === 'checking'}

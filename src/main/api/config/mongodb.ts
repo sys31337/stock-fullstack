@@ -15,7 +15,17 @@ function getMongodPath(): string {
     const p = path.join(resourcesPath, 'mongodb', 'mongod.exe');
     if (fs.existsSync(p)) return p;
   }
+  // The binary downloaded on first launch lives in the persistent user-data
+  // folder — the install directory is replaced on every update, but %APPDATA%
+  // is never touched by the installer.
+  const persisted = path.join(getMongoBinariesDir(), 'mongod.exe');
+  if (fs.existsSync(persisted)) return persisted;
   return path.join(process.cwd(), 'src', 'mongodb', 'mongod.exe');
+}
+
+/** Persistent folder for runtime-downloaded MongoDB binaries (survives updates). */
+export function getMongoBinariesDir(): string {
+  return path.join(getAppDataPath(), 'mongodb');
 }
 
 function getAppDataPath(): string {
