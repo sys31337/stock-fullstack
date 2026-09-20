@@ -14,7 +14,10 @@ import { AiFillRightCircle } from 'react-icons/ai';
 import { Search, Package } from 'lucide-react';
 import RefreshButton from '@web/shared/components/RefreshButton';
 import Pagination from '@web/shared/components/Pagination';
+import ExportMenu from '@web/shared/components/ExportMenu';
 import { price } from '@web/shared/functions/words';
+import { printHtml } from '@web/shared/functions/printHtml';
+import { exportXlsx } from '@web/shared/functions/exportXlsx';
 import { useGetAllProducts } from '@web/shared/hooks/useProducts';
 import ProductRow from '@web/modules/Products/ProductRow';
 import { IProduct } from '@web/shared/types/product';
@@ -55,6 +58,80 @@ const Products: React.FC<ProductsProps> = ({ isTopBar, open: controlledOpen, onO
     : products;
 
   const isControlled = controlledOpen !== undefined;
+
+  const escapeHtml = (value: string | number | null | undefined): string =>
+    String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[ch] as string);
+
+  const formatStock = (p: IProduct): string => {
+    const qty = Number(p.quantity) || 0;
+    const stk = Number(p.stack) || 0;
+    const res = Number(p.reserved) || 0;
+    return res > 0 ? `${qty} (${res}) × ${stk}` : `${qty} × ${stk}`;
+  };
+
+  // Export the current (filtered) listing.
+  const exportProductsToPdf = () => {
+    if (!filteredBills.length) return;
+    const rows = filteredBills
+      .map(
+        (p) => `
+        <tr>
+          <td class="mono">${escapeHtml(p.barCode)}</td>
+          <td>${escapeHtml(p.productName)}</td>
+          <td class="right mono">${formatStock(p)}</td>
+          <td class="right mono">${price(p.buyPrice)} DA</td>
+          <td class="right mono">${p.tva}%</td>
+          <td class="right mono">${price(p.sellPrice_1)} DA</td>
+          <td class="right mono">${price(p.sellPrice_2)} DA</td>
+          <td class="right mono">${price(p.sellPrice_3)} DA</td>
+        </tr>`,
+      )
+      .join('');
+    printHtml(`
+      <h1>${escapeHtml(t('productsList'))}</h1>
+      <p class="muted">${filteredBills.length} ${escapeHtml(t('items'))} — ${new Date().toLocaleDateString()}</p>
+      <hr class="divider">
+      <table>
+        <thead>
+          <tr>
+            <th>${escapeHtml(t('barCode'))}</th>
+            <th>${escapeHtml(t('productName'))}</th>
+            <th class="right">${escapeHtml(t('qté'))}</th>
+            <th class="right">${escapeHtml(t('buyPrice'))}</th>
+            <th class="right">${escapeHtml(t('tva'))}</th>
+            <th class="right">${escapeHtml(t('sellPrice_1'))}</th>
+            <th class="right">${escapeHtml(t('sellPrice_2'))}</th>
+            <th class="right">${escapeHtml(t('sellPrice_3'))}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  };
+
+  const exportProductsToExcel = () => {
+    if (!filteredBills.length) return;
+    exportXlsx(
+      'products',
+      t('productsList'),
+      [t('barCode'), t('productName'), t('qté'), t('buyPrice'), t('tva'), t('sellPrice_1'), t('sellPrice_2'), t('sellPrice_3')],
+      filteredBills.map((p) => [
+        p.barCode,
+        p.productName,
+        formatStock(p),
+        Number(p.buyPrice) || 0,
+        Number(p.tva) || 0,
+        Number(p.sellPrice_1) || 0,
+        Number(p.sellPrice_2) || 0,
+        Number(p.sellPrice_3) || 0,
+      ]),
+    );
+  };
 
   return (
     <>
@@ -100,6 +177,11 @@ const Products: React.FC<ProductsProps> = ({ isTopBar, open: controlledOpen, onO
             <div className="text-sm text-muted-foreground whitespace-nowrap">
               {filteredBills.length} {t('items')}
             </div>
+            <ExportMenu
+              onPdf={exportProductsToPdf}
+              onExcel={exportProductsToExcel}
+              disabled={!isFetched || !filteredBills.length}
+            />
             <RefreshButton onRefresh={() => refetch()} loading={isFetching} />
           </div>
 

@@ -81,7 +81,25 @@ const CustomModal = ({
     }
   };
 
+  // Radio/date pickers, dropdown menus and nested dialogs render their content
+  // in portals attached to <body>, i.e. outside the dialog DOM. Radix therefore
+  // reports clicks/focus on them as "outside" — which would dismiss the modal
+  // or (when confirmOnClose is on) erroneously pop the "Unsaved changes"
+  // confirm. Treat anything rendered through a Radix portal as part of the
+  // dialog so those controls stay usable (e.g. the bill date picker).
+  const isNestedPortalTarget = (e: Event): boolean => {
+    const original = (e as unknown as CustomEvent<{ originalEvent: Event }>)?.detail?.originalEvent;
+    const target = original?.target as Element | null;
+    return typeof target?.closest === 'function' && !!target.closest(
+      '[data-radix-popper-content-wrapper], [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"], [data-toast-viewport], [data-radix-toast-viewport]'
+    );
+  };
+
   const handleInteractOutside = (e: Event) => {
+    if (isNestedPortalTarget(e)) {
+      e.preventDefault();
+      return;
+    }
     if (confirmOnClose && !showConfirm) {
       e.preventDefault();
       setShowConfirm(true);

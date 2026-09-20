@@ -19,6 +19,9 @@ import { FaWhatsapp, FaViber, FaTelegram } from 'react-icons/fa'
 import { Search, Users, Send } from 'lucide-react'
 import RefreshButton from '@web/shared/components/RefreshButton'
 import Pagination from '@web/shared/components/Pagination'
+import ExportMenu from '@web/shared/components/ExportMenu'
+import { printHtml } from '@web/shared/functions/printHtml'
+import { exportXlsx } from '@web/shared/functions/exportXlsx'
 import TransactionModal from '@web/modules/Transactions/TransactionModal'
 import { ICustomer } from '@web/shared/types/customer'
 import { AxiosError } from 'axios'
@@ -81,6 +84,76 @@ const CustomersList: React.FC<CustomersListProps> = ({ open, onOpenChange, initi
 
   const isClient = (c: ICustomer) => c.type === 'Client'
 
+  const escapeHtml = (value: string | number | null | undefined): string =>
+    String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[ch] as string)
+
+  // Export the current (filtered + type-filtered) listing.
+  const exportCustomersToPdf = () => {
+    if (!filtered.length) return
+    const rows = filtered
+      .map(
+        (c) => `
+        <tr>
+          <td>${escapeHtml(t(isClient(c) ? 'client' : 'supplier'))}</td>
+          <td>${escapeHtml(c.fullname)}</td>
+          <td class="mono">${escapeHtml(c.phoneNumber || '')}</td>
+          <td>${escapeHtml(getWilayaLabel(c.wilaya, i18next.language))}</td>
+          <td>${escapeHtml(c.baladiya ? getBaladiyaLabel(c.wilaya, c.baladiya, i18next.language) : '')}</td>
+          <td>${escapeHtml(c.address || '')}</td>
+          <td class="mono">${escapeHtml(c.nif || '')}</td>
+          <td class="mono">${escapeHtml(c.rc || '')}</td>
+          <td class="right mono">${Number(c.credit || 0)}</td>
+        </tr>`,
+      )
+      .join('')
+    printHtml(`
+      <h1>${escapeHtml(t('customersAndSuppliers'))}</h1>
+      <p class="muted">${filtered.length} ${escapeHtml(t('items'))} — ${new Date().toLocaleDateString()}</p>
+      <hr class="divider">
+      <table>
+        <thead>
+          <tr>
+            <th>${escapeHtml(t('type'))}</th>
+            <th>${escapeHtml(t('fullname'))}</th>
+            <th>${escapeHtml(t('phoneNumber'))}</th>
+            <th>${escapeHtml(t('wilaya'))}</th>
+            <th>${escapeHtml(t('baladiya'))}</th>
+            <th>${escapeHtml(t('address'))}</th>
+            <th>${escapeHtml(t('nif'))}</th>
+            <th>${escapeHtml(t('rc'))}</th>
+            <th class="right">${escapeHtml(t('credit'))}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`)
+  }
+
+  const exportCustomersToExcel = () => {
+    if (!filtered.length) return
+    exportXlsx(
+      'customers-suppliers',
+      t('customersAndSuppliers'),
+      [t('type'), t('fullname'), t('phoneNumber'), t('wilaya'), t('baladiya'), t('address'), t('nif'), t('rc'), t('credit')],
+      filtered.map((c) => [
+        t(isClient(c) ? 'client' : 'supplier'),
+        c.fullname,
+        c.phoneNumber || '',
+        getWilayaLabel(c.wilaya, i18next.language),
+        c.baladiya ? getBaladiyaLabel(c.wilaya, c.baladiya, i18next.language) : '',
+        c.address || '',
+        c.nif || '',
+        c.rc || '',
+        Number(c.credit || 0),
+      ]),
+    )
+  }
+
   return (
     <CustomModal
       modalProps={{ size: 'full' }}
@@ -130,6 +203,11 @@ const CustomersList: React.FC<CustomersListProps> = ({ open, onOpenChange, initi
           <div className="text-sm text-muted-foreground whitespace-nowrap">
             {filtered.length} {t('items')}
           </div>
+          <ExportMenu
+            onPdf={exportCustomersToPdf}
+            onExcel={exportCustomersToExcel}
+            disabled={!isFetched || !filtered.length}
+          />
         </div>
 
         <div className="rounded-xl border border-border/60 overflow-hidden">

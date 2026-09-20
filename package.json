@@ -1,7 +1,7 @@
 {
   "name": "solustock-20-desktop",
   "productName": "SoluStock 2.0",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "solustock.net",
@@ -87,7 +87,8 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "vite-plugin-i18n-hot-reload": "^1.0.4",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^4.3.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-ts": "^1.0.0",
